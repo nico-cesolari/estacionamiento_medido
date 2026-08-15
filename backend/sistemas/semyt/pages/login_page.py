@@ -1,26 +1,25 @@
-# pages/login_page.py
+# sistemas/semyt/paginas/login_page.py
 # -----------------------------------------------------------------------------
-# Page Object async: encapsula TODOS los selectores para iniciar sesión en
-# los dos sistemas y para detectar si ya hay una sesión activa. Es la ÚNICA
-# fuente de verdad de estos selectores — antes existían 3 heurísticas
-# distintas repartidas entre login_semyt_paso.py, pagos_runner_async.py y
-# descargas_paralelas_paso.py.
+# Page Object async: login y detección de sesión activa en SEMyT.
+#
+# Movido desde "API-REST Payment/backend/pages/login_page.py". Ese
+# archivo tenía UNA sola clase `LoginPage` mezclando SEMyT y SIGI -- se
+# separa acá la mitad de SEMyT. La mitad de SIGI se moverá a
+# sistemas/sigi/paginas/login_page.py en la próxima etapa; hasta entonces
+# sigue viviendo en el proyecto original (ver shim en
+# API-REST Payment/backend/pages/login_page.py).
 # -----------------------------------------------------------------------------
 from urllib.parse import urlsplit
 
-from backend.configs import rutas, config
-from backend.models.credenciales import Credenciales
-from backend.utils.reintentos import asentar_sesion
+from sistemas.semyt.rutas import URL_SEMYT, semyt_login_obligatorio
+from sistemas.comun.playwright_utils import asentar_sesion  # noqa: F401  (re-exportado por compat)
 
-
-class LoginPage:
+class LoginSemytPage:
     def __init__(self, page):
         self.page = page
 
-    # --- SEMyT -----------------------------------------------------------
-
     def url_inicio_semyt(self) -> str:
-        partes = urlsplit(rutas.SEMYT_LOGIN)
+        partes = urlsplit(URL_SEMYT)
         return f"{partes.scheme}://{partes.netloc}/#/inicio"
 
     async def abrir_semyt_con_sesion(self):
@@ -63,8 +62,14 @@ class LoginPage:
         except Exception:
             pass
 
-    async def iniciar_sesion_semyt(self, credenciales: Credenciales):
-        await self.page.goto(rutas.SEMYT_LOGIN, wait_until="domcontentloaded", timeout=60000)
+    async def iniciar_sesion_semyt(self, credenciales) -> None:
+        """`credenciales`: objeto con .usuario y .contrasena (ej.
+        models.Credenciales de API-REST Payment, o cualquier otro con
+        esos dos atributos -- no se importa el tipo acá a propósito, para
+        no atar este módulo compartido al modelo de un solo proyecto)."""
+        semyt_login_obligatorio()  # falla explícito y claro si falta SEMYT_LOGIN
+        from sistemas.semyt.rutas import SEMYT_LOGIN
+        await self.page.goto(SEMYT_LOGIN, wait_until="domcontentloaded", timeout=60000)
         await self.page.locator("input[type='text']").fill(credenciales.usuario)
         await self.page.locator("input[type='password']").fill(credenciales.contrasena)
         await self.page.get_by_role("button", name="Ingresar").click()
@@ -83,44 +88,3 @@ class LoginPage:
             )
         except Exception:
             pass
-
-    # --- SIGI ----------------------------------------------------
-
-    async def abrir_sigi_login(self):
-        await self.page.goto(rutas.SIGI_LOGIN, wait_until="domcontentloaded", timeout=60000)
-
-    def _boton_ingresar_con_cidi(self):
-        boton_en_main = self.page.get_by_role("main").get_by_role("button", name="Ingresar con CiDi")
-        return boton_en_main
-
-    async def sesion_sigi_activa(self) -> bool:
-        """Además de decir si ya hay sesión, si hace falta reconfirmar el
-        rol (la SPA a veces lo vuelve a pedir aunque el login ya esté
-        hecho), lo hace acá mismo."""
-        boton_cidi = self._boton_ingresar_con_cidi()
-        sin_boton_cidi = await boton_cidi.count() == 0
-        if not sin_boton_cidi:
-            boton_cidi_general = self.page.get_by_role("button", name="Ingresar con CiDi")
-            sin_boton_cidi = await boton_cidi_general.count() == 0
-
-        if sin_boton_cidi:
-            boton_rol = self.page.get_by_role("button", name=config.ROL_A_SELECCIONAR)
-            if await boton_rol.count() > 0:
-                await boton_rol.click()
-                await asentar_sesion(self.page)
-        return sin_boton_cidi
-
-    async def iniciar_sesion_sigi_cidi(self, credenciales: Credenciales, rol: str):
-        boton_cidi = self.page.get_by_role("button", name="Ingresar con CiDi")
-        await boton_cidi.first.click()
-        await self.page.wait_for_selector("text=CUIL", timeout=30000)
-
-        campos = self.page.locator("input")
-        await campos.nth(2).fill(credenciales.usuario)
-        await campos.nth(4).fill(credenciales.contrasena)
-        await self.page.get_by_role("button", name="INGRESAR").click()
-
-        boton_rol = self.page.get_by_role("button", name=rol)
-        await boton_rol.wait_for(timeout=15000)
-        await boton_rol.click()
-        await asentar_sesion(self.page)

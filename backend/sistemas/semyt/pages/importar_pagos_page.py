@@ -1,6 +1,8 @@
-# pages/importar_pagos_page.py
+# sistemas/semyt/paginas/importar_pagos_page.py
 # -----------------------------------------------------------------------------
-# Page Object async: SEMyT - Procesamiento de información (cargar TXT de pagos).
+# Page Object async: SEMyT - Procesamiento de información (cargar TXT de
+# pagos). Movido desde
+# "API-REST Payment/backend/pages/importar_pagos_page.py" sin cambios.
 # -----------------------------------------------------------------------------
 import os
 from enum import Enum

@@ -1,9 +1,11 @@
-# pages/exportar_actas_page.py
+# sistemas/semyt/paginas/exportar_actas_page.py
 # -----------------------------------------------------------------------------
-# Page Object async: exportar/descargar el Excel de actas. Única fuente de
-# verdad de estos selectores (antes duplicado en pagos_runner_async.py y en
-# descargas_paralelas_paso.py, con manejo de errores ligeramente distinto
-# en cada copia).
+# Page Object async: exportar/descargar el Excel de actas. Movido desde
+# "API-REST Payment/backend/pages/exportar_actas_page.py" sin cambios de
+# lógica -- ya era la única fuente de verdad de estos selectores dentro
+# de ese proyecto (antes duplicado en pagos_runner_async.py y en
+# descargas_paralelas_paso.py). Ahora también disponible para backend/
+# (estacionamiento_medido) si necesita exportar actas por su cuenta.
 # -----------------------------------------------------------------------------
 import time
 

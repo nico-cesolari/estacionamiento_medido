@@ -228,3 +228,17 @@ docker compose ps
 
 # Dump desde adentro del contenedor
 docker compose exec -T postgres pg_dump -U nicolascesolari -d estacionamiento_medido > backup_$(date +%Y%m%d_%H%M).dump
+
+## GIT HUB
+# 1. Asegúrate de estar en la carpeta de tu proyecto y en la rama correcta (por ejemplo, main)
+git checkout main
+
+git remote add origin https://github.com/nico-cesolari/estacionamiento_medido 
+# 2. Agrega todos los archivos actuales al área de preparación
+git add .
+
+# 3. Registra un commit con los cambios
+git commit -m "Reemplazo completo del código"
+
+# 4. Fuerza el envío hacia el repositorio remoto
+git push origin main --force
