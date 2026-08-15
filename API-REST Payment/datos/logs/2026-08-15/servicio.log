@@ -6467,3 +6467,6 @@
 ❌ 'Actualizar pagos' terminó sin avisar (proceso caído).
 ❌ [Automático] 'pagos' falló (intento 1 de 4). Se reintenta a las 14:11.
 🤖 [Automático] Es hora de actualizar pagos (reintento 1 de 3). Arrancando...
+❌ 'Actualizar pagos' terminó sin avisar (proceso caído).
+❌ [Automático] 'pagos' falló (intento 2 de 4). Se reintenta a las 14:27.
+🤖 [Automático] Es hora de actualizar pagos (reintento 2 de 3). Arrancando...
