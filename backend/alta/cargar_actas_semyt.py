@@ -27,7 +27,6 @@ import asyncio
 import json
 import sys
 import traceback
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
@@ -40,7 +39,8 @@ sys.path.insert(0, str(CARPETA_BACKEND))
 
 from app.database import SessionLocal
 from app.models import models
-from app.pasos.navegador import PaginaConSesion, ruta_sesion
+from app.services.sistemas.comun.sesion import PaginaConSesion, ruta_sesion
+from app.paths import CARPETA_SESIONES_API_REST_PAYMENT
 from cargar_actas_semyt import (
     LABEL_FILTRO_NUMERO,
     TEXTO_BOTON_BUSCAR,
@@ -401,7 +401,7 @@ async def main(
         # SEMyT
         # -------------------------------------------------
 
-        archivo_sesion_semyt = ruta_sesion("sesion_semyt.json")
+        archivo_sesion_semyt = ruta_sesion("sesion_semyt.json", CARPETA_SESIONES_API_REST_PAYMENT)
         if not archivo_sesion_semyt.exists():
             log(
                 "SESION",
@@ -414,7 +414,8 @@ async def main(
 
         async with PaginaConSesion(
             "sesion_semyt.json",
-            URL_SEMYT,False
+            URL_SEMYT,
+            carpeta_sesiones=CARPETA_SESIONES_API_REST_PAYMENT,
         ) as page:
             # PaginaConSesion ya expone una Page, pero la función de fotos
             # necesita el BrowserContext para detectar una posible pestaña

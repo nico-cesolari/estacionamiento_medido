@@ -65,7 +65,8 @@ from app.models import models
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from app import crud  # noqa: F401
 from app.services.sistemas.sigi.reglas import reglas_sigi
-from app.pasos.navegador import PaginaConSesion
+from app.services.sistemas.comun.sesion import PaginaConSesion
+from app.paths import CARPETA_SESIONES_API_REST_PAYMENT
 from app.database import SessionLocal
 
 from app.services.sistemas.sigi.web import web_sigi
@@ -382,7 +383,10 @@ async def ejecutar_sincronizacion(db: Session, page, commit: bool = True) -> dic
 async def _main(commit: bool):
     db = SessionLocal()
     try:
-        async with PaginaConSesion(ARCHIVO_SESION, URL_SIGI, False) as page:
+        async with PaginaConSesion(
+            ARCHIVO_SESION, URL_SIGI,
+            carpeta_sesiones=CARPETA_SESIONES_API_REST_PAYMENT,
+        ) as page:
             resumen = await ejecutar_sincronizacion(db, page, commit=commit)
         log("FIN", str({k: v for k, v in resumen.items() if k != "detalle_posibles_eliminadas"}))
     finally:

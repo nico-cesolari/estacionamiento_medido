@@ -39,7 +39,8 @@ from sqlalchemy.orm import Session
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from app.database import SessionLocal
-from app.pasos.navegador import PaginaConSesion
+from app.services.sistemas.comun.sesion import PaginaConSesion
+from app.paths import CARPETA_SESIONES_API_REST_PAYMENT
 from app.services.sistemas.sigi.reglas import reglas_sigi
 from app.services.sistemas.sigi.web import web_sigi
 
@@ -155,7 +156,9 @@ async def ejecutar_alta(db: Session, page, commit: bool = True) -> dict:
 async def _main(commit: bool):
     db = SessionLocal()
     try:
-        async with PaginaConSesion(ARCHIVO_SESION, URL_SIGI) as page:
+        async with PaginaConSesion(
+            ARCHIVO_SESION, URL_SIGI, carpeta_sesiones=CARPETA_SESIONES_API_REST_PAYMENT
+        ) as page:
             resumen = await ejecutar_alta(db, page, commit=commit)
         web_sigi.log("FIN", str(resumen))
     finally:

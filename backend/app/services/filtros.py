@@ -75,19 +75,13 @@ def aplicar_filtros_registros(
         )
 
     if expediente:
-        query = query.filter(
-            models.Registro.expediente.ilike(expediente)
-        )
+        query = query.filter(models.Registro.expediente.ilike(f"%{expediente}%"))
 
     if acta:
-        query = query.filter(
-            models.Registro.acta.ilike(acta)
-        )
+        query = query.filter(models.Registro.acta.ilike(f"%{acta}%"))
 
     if causa:
-        query = query.filter(
-            models.Registro.causa.ilike(causa)
-        )
+        query = query.filter(models.Registro.causa.ilike(f"%{causa}%"))
 
     if patente:
         query = aplicar_filtro_patente(query, patente)

@@ -148,9 +148,6 @@ def aplicar_cambios_estado(
     for campo, valor in cambios.items():
         setattr(registro, campo, valor)
 
-        # Si se marca como Pagada manualmente, y todavía no tiene fecha de
-        # cobro (ej: no vino de una migración real), le ponemos la fecha
-        # de hoy. Si se desmarca, limpiamos la fecha.
         if campo == "estado_sigemi":
             if valor == models.EstadoSigemi.pagada and registro.fecha_cobro_sigemi is None:
                 registro.fecha_cobro_sigemi = momento
@@ -159,15 +156,15 @@ def aplicar_cambios_estado(
                 
             if valor not in (models.EstadoSigemi.archivada, models.EstadoSigemi.resuelta_sin_archivo):
                 registro.motivo_archivo_sigemi = None
-
+        if campo == "motivo_archivo_sigemi":
+            if valor == models.MotivoArchivoSigemi.por_pago and registro.fecha_cobro_sigemi is None:
+                registro.fecha_cobro_sigemi = momento
+            elif valor != models.MotivoArchivoSigemi.por_pago:
+                registro.fecha_cobro_sigemi = None
         if campo == "estado_sigi" and valor != models.EstadoSigi.archivada:
             registro.motivo_archivo_sigi = None
             registro.fecha_cobro_sigi = None
 
-        # Igual que con estado_sigemi/estado_semyt: si se marca el motivo de
-        # archivo SIGI como "Pagada" y todavía no tiene fecha de cobro, se
-        # completa con la fecha de hoy; si se cambia a otro motivo (o se
-        # limpia), se borra la fecha.
         if campo == "motivo_archivo_sigi":
             if valor == models.MotivoArchivoSigi.por_pago and registro.fecha_cobro_sigi is None:
                 registro.fecha_cobro_sigi = momento

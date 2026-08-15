@@ -35,7 +35,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import cast, Integer, or_
 
 from app.database import SessionLocal
-from app.pasos.navegador import PaginaConSesion
+from app.services.sistemas.comun.sesion import PaginaConSesion
+from app.paths import CARPETA_SESIONES_API_REST_PAYMENT
 from app.services.estados import aplicar_cambios_estado
 from app.pasos.procesar_actas_semyt import (
     ARCHIVO_SESION,
@@ -97,7 +98,9 @@ async def cambio_de_url(db: Session, commit: bool, limite: Optional[int]):
     registros = _registros_con_foto_existente(db, limite)
     actualizados, sin_cambios, no_encontrados, sin_imagen, errores = 0, 0, 0, 0, 0
 
-    async with PaginaConSesion(ARCHIVO_SESION, URL_SEMYT) as page:
+    async with PaginaConSesion(
+        ARCHIVO_SESION, URL_SEMYT, carpeta_sesiones=CARPETA_SESIONES_API_REST_PAYMENT
+    ) as page:
         contexto = page.context
         for registro in registros:
             try:

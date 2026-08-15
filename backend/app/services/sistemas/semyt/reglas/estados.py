@@ -47,6 +47,7 @@ _NOMBRES_ESTADO_SEMYT = {
     ESTADO_PAGADA_EN_JUZGADO: "pagada_en_juzgado",
     "RESUELTA EN JUZGADO": "resuelta_en_juzgado",
     "RECHAZADA": "rechazada",
+    "ELIMINADA": "eliminada",
 }
 
 

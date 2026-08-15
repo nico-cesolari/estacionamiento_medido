@@ -1,3 +1,4 @@
+# consistencia.py
 from app.models import models
 
 # ---------------------------------------------------------------------------
@@ -13,7 +14,10 @@ def categoria_sigemi(estado_sigemi, motivo_archivo_sigemi):
         return "PAGADA"
 
     if estado_sigemi == models.EstadoSigemi.archivada:
-        if motivo_archivo_sigemi == models.MotivoArchivoSigemi.por_pago:
+        if motivo_archivo_sigemi in (
+            models.MotivoArchivoSigemi.por_pago,
+            models.MotivoArchivoSigemi.por_pago_procuracion,
+        ):
             return "PAGADA"
 
         if motivo_archivo_sigemi is not None:
@@ -27,6 +31,7 @@ def categoria_sigemi(estado_sigemi, motivo_archivo_sigemi):
     if estado_sigemi in (
         models.EstadoSigemi.sin_resolucion,
         models.EstadoSigemi.en_procuracion,
+        models.EstadoSigemi.pendiente_procuracion,
         models.EstadoSigemi.archivada_sin_resolucion,
     ):
         return "VENCIDA"
@@ -46,7 +51,9 @@ def categoria_semyt(estado_semyt):
 
     if estado_semyt == models.EstadoSemyt.vencida:
         return "VENCIDA"
-
+    
+    if estado_semyt == models.EstadoSemyt.eliminada:
+        return "ELIMINADA"
     return None
 
 

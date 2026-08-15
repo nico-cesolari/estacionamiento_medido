@@ -5,24 +5,11 @@ from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
 from app.models import models
-
+from app.services.sistemas.comun.texto import limpiar_patente as _normalizar_patente_texto
 
 # ---------------------------------------------------------------------------
 # Normalización
 # ---------------------------------------------------------------------------
-
-def _normalizar_patente_texto(valor: str) -> str:
-    """
-    Normaliza una patente para comparar valores independientemente
-    del formato utilizado por el usuario.
-
-    Ejemplos:
-        QHL790   -> QHL790
-        QHL-790  -> QHL790
-        aa000aa  -> AA000AA
-    """
-    return re.sub(r"[^A-Za-z0-9]", "", valor or "").upper()
-
 
 def _columna_patente_normalizada():
     """Misma normalización que _normalizar_patente_texto, pero en SQL."""

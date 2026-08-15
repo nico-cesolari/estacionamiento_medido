@@ -27,14 +27,14 @@ import argparse
 import asyncio
 import sys
 from pathlib import Path
-
 from app.models import models
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from typing import Optional
 from sqlalchemy.orm import Session
 from app.database import SessionLocal
 from app.services.estados import aplicar_cambios_estado
-from app.pasos.navegador import PaginaConSesion
+from app.services.sistemas.comun.sesion import PaginaConSesion
+from app.paths import CARPETA_SESIONES_API_REST_PAYMENT
 from app.reglas.reglas_semyt import (
     ESTADOS_IGNORADOS_SEMYT, MAPA_ESTADO_SEMYT, ESTADO_PAGADA_EN_JUZGADO,
     pagada_en_juzgado_con_datos,
@@ -75,7 +75,9 @@ async def actualizar_actas_semyt(
 
     actualizados, sin_cambios, ignorados, no_encontrados, errores = 0, 0, 0, 0, 0
 
-    async with PaginaConSesion(ARCHIVO_SESION, URL_SEMYT) as page:
+    async with PaginaConSesion(
+        ARCHIVO_SESION, URL_SEMYT, carpeta_sesiones=CARPETA_SESIONES_API_REST_PAYMENT
+    ) as page:
         primera_iteracion = True
         for registro in registros_pendientes:
             if not primera_iteracion and delay > 0:

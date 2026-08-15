@@ -351,13 +351,13 @@ function categoriaEstadoVisual(campo, valor, motivo = null) {
     if (valor === "Pagada en Juzgado") return "pagada";
     if (valor === "Resuelta en Juzgado") return "resuelta";
     if (valor === "Rechazada") return "rechazada";
+    if (valor === "Eliminada") return "eliminada";
     return "vencida";
   }
 
   if (campo === "estado_sigi") {
     if (valor === "Archivada" && motivo === "Pagada") return "pagada";
     if (valor === "Archivada") return "resuelta";
-    if (valor === "Finalizada") return "resuelta";
     return "vencida";
   }
 

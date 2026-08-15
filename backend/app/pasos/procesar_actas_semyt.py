@@ -35,7 +35,8 @@ from sqlalchemy.orm import Session
 from ..models import models
 
 from app.services.estados import aplicar_cambios_estado
-from .navegador import PaginaConSesion
+from app.services.sistemas.comun.sesion import PaginaConSesion
+from app.paths import CARPETA_SESIONES_API_REST_PAYMENT
 from ..reglas.reglas_semyt import (
     ESTADOS_IGNORADOS_SEMYT, MAPA_ESTADO_SEMYT, ESTADO_PAGADA_EN_JUZGADO,
     COLUMNAS_TABLA, INDICE_COLUMNA_ESTADO, SELECTOR_FILAS_RESULTADO,
@@ -318,8 +319,9 @@ async def procesar_actas_semyt(
     creadas = ignoradas_en_creacion = errores_en_creacion = 0
     actualizados, sin_cambios, ignorados, errores = 0, 0, 0, 0
 
-    async with PaginaConSesion(ARCHIVO_SESION, URL_SEMYT) as page:
-
+    async with PaginaConSesion(
+        ARCHIVO_SESION, URL_SEMYT, carpeta_sesiones=CARPETA_SESIONES_API_REST_PAYMENT
+    ) as page:
         # --- 1) Crear actas nuevas del rango de fechas (por defecto, hoy) ---
         try:
             creadas, ignoradas_en_creacion, errores_en_creacion = await _crear_actas_nuevas(

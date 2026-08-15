@@ -10,12 +10,9 @@ requires-python = ">=3.11"
 dependencies = [
     "playwright",
     "sqlalchemy",
+    "python-dotenv",
 ]
 
-# Sólo se empaqueta "sistemas" -- "app" (el backend FastAPI) NO se instala
-# como librería: cada proyecto que lo necesite instala esto en modo
-# editable y sigue siendo dueño de su propio requirements.txt / venv /
-# entrypoint. Ver README para el "pip install -e" de cada lado.
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["sistemas*"]
+include = ["app*"]

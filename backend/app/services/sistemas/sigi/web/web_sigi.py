@@ -29,7 +29,7 @@ from typing import Awaitable, Callable, Optional
 from playwright.async_api import Error as PlaywrightError
 from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 
-from sistemas.comun.playwright_utils import esperar_red as _esperar_red_comun
+from app.services.sistemas.comun.playwright_utils import esperar_red as _esperar_red_comun
 
 # ---------------------------------------------------------------------------
 # Selectores (confirmados por HTML real -- ver historial de los 3 scripts

@@ -19,8 +19,8 @@
 # la configuración de un solo proyecto -- mismo criterio que
 # LoginSemytPage.iniciar_sesion_semyt con `credenciales`.
 # -----------------------------------------------------------------------------
-from sistemas.comun.playwright_utils import asentar_sesion
-from sistemas.sigi.rutas import SIGI_LOGIN, sigi_login_obligatorio
+from app.services.sistemas.comun.playwright_utils import asentar_sesion
+from app.services.sistemas.sigi.rutas import SIGI_LOGIN, sigi_login_obligatorio
 
 class LoginSigiPage:
     def __init__(self, page):

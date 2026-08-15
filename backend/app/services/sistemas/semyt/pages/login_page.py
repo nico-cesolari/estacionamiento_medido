@@ -10,11 +10,7 @@
 # API-REST Payment/backend/pages/login_page.py).
 # -----------------------------------------------------------------------------
 from urllib.parse import urlsplit
-
-from sistemas.semyt.rutas import URL_SEMYT, semyt_login_obligatorio
-# ^ arreglado: antes apuntaba a "sistemas.comun.playwright_utils" cuando el
-# archivo todavía vivía en sistemas/semyt/comun/ (no existía sistemas/comun/
-# como carpeta real). Ahora sí existe -- ver sistemas/comun/playwright_utils.py.
+from app.services.sistemas.semyt.rutas import URL_SEMYT, semyt_login_obligatorio
 
 class LoginSemytPage:
     def __init__(self, page):
@@ -70,7 +66,7 @@ class LoginSemytPage:
         esos dos atributos -- no se importa el tipo acá a propósito, para
         no atar este módulo compartido al modelo de un solo proyecto)."""
         semyt_login_obligatorio()  # falla explícito y claro si falta SEMYT_LOGIN
-        from sistemas.semyt.rutas import SEMYT_LOGIN
+        from app.services.sistemas.semyt.rutas import SEMYT_LOGIN
         await self.page.goto(SEMYT_LOGIN, wait_until="domcontentloaded", timeout=60000)
         await self.page.locator("input[type='text']").fill(credenciales.usuario)
         await self.page.locator("input[type='password']").fill(credenciales.contrasena)
