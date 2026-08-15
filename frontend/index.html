@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estacionamiento Medido - Municipalidad de Villa María</title>
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+<div class="layout">
+
+  <aside class="sidebar abierto" id="sidebar">
+    <div class="sidebar-usuario">
+      <div class="usuario-icono">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </div>
+      <div class="usuario-info">
+        <span class="usuario-nombre">Usuario</span>
+        <span class="usuario-rol">Juzgado de Faltas</span>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <button class="nav-item activo" data-vista="inicio">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Inicio
+      </button>
+      <button class="nav-item" data-vista="consultar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        Consultar Actas
+      </button>
+      <button class="nav-item" data-vista="exportar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15V3"/><path d="m7 10 5 5 5-5"/><path d="M20 21H4"/></svg>
+        Exportar Actas
+      </button>
+    </nav>
+  </aside>
+
+  <button id="btn-toggle-sidebar" class="btn-toggle-sidebar" aria-label="Abrir/cerrar menú">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+
+  <main class="contenido">
+
+    <!-- ================= VISTA: INICIO ================= -->
+    <section id="vista-inicio" class="vista">
+      <div class="pagina-inicio">
+        <div class="inicio-logo" aria-hidden="true">E</div>
+        <span class="inicio-texto">Estacionamiento<br>Medido</span>
+      </div>
+    </section>
+
+    <!-- ================= VISTA: CONSULTAR ACTAS ================= -->
+    <section id="vista-consultar" class="vista" hidden>
+
+      <header class="topbar">
+        <h1>Consultar Actas</h1>
+        <button id="btn-actualizar" class="link-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
+          Actualizar
+        </button>
+      </header>
+
+      <section class="card filtros">
+        <button id="btn-toggle-filtros" class="filtros-header" aria-expanded="true">
+          <span class="filtros-titulo">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+            Filtros
+          </span>
+          <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+
+        <div class="filtros-body" id="filtros-body">
+          <div class="filtros-grid">
+            <div class="campo">
+              <label for="f-sigemi">Estado de SIGEMI</label>
+              <select id="f-sigemi"><option value="">Todos</option></select>
+            </div>
+            <div class="campo">
+              <label for="f-semyt">Estado de SEMyT</label>
+              <select id="f-semyt"><option value="">Todos</option></select>
+            </div>
+            <div class="campo">
+              <label for="f-sigi">Estado de SIGI</label>
+              <select id="f-sigi"><option value="">Todos</option></select>
+            </div>
+            <div class="campo">
+              <label for="f-motivo-archivo">Motivo de archivo</label>
+              <select id="f-motivo-archivo"><option value="">Todos</option></select>
+            </div>
+            <div class="campo">
+              <label for="f-expediente">Número de Expediente</label>
+              <input id="f-expediente" type="text" placeholder="Ej: EXP-2024-000123">
+            </div>
+            <div class="campo">
+              <label for="f-acta">Número de Acta</label>
+              <input id="f-acta" type="text" placeholder="Ej: 12345">
+            </div>
+            <div class="campo">
+              <label for="f-causa">Número de Causa</label>
+              <input id="f-causa" type="text" placeholder="Ej: 89345">
+            </div>
+            <div class="campo">
+              <label for="f-patente">Patente</label>
+              <input id="f-patente" type="text" placeholder="Ej: ABC123">
+            </div>
+            <div class="campo">
+              <label for="f-juzgado">Juzgado</label>
+              <select id="f-juzgado">
+                <option value="">Todos</option>
+                <option value="1">Juzgado 1</option>
+                <option value="2">Juzgado 2</option>
+              </select>
+            </div>
+            <div class="campo">
+              <label for="f-fecha-desde">Fecha desde</label>
+              <input id="f-fecha-desde" type="date">
+            </div>
+            <div class="campo">
+              <label for="f-fecha-hasta">Fecha hasta</label>
+              <input id="f-fecha-hasta" type="date">
+            </div>
+            <div class="campo">
+              <label for="f-consistencia">Consistencia</label>
+              <select id="f-consistencia">
+                <option value="">Todos</option>
+                <option value="SI">Coincide</option>
+                <option value="NO">No coincide</option>
+                <option value="PENDIENTE">Pendiente</option>
+              </select>
+            </div>
+            <div class="campo campo-checkbox">
+              <label for="f-duplicadas">
+                <input id="f-duplicadas" type="checkbox">
+                Actas duplicadas
+              </label>
+            </div>
+            <div class="campo campo-checkbox">
+              <label for="f-reescritas" title="Mismo vehículo, mismo día y misma dirección, pero con distinto número de acta">
+                <input id="f-reescritas" type="checkbox">
+                Actas reescritas
+              </label>
+            </div>
+          </div>
+          <div class="filtros-acciones">
+            <span id="buscando" class="buscando" hidden>Buscando...</span>
+            <button id="btn-limpiar" class="btn btn-outline">Limpiar</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="card resultados">
+        <div class="resultados-header">
+          <h2>Resultados</h2>
+          <span id="contador" class="badge">0 registros encontrados</span>
+        </div>
+
+        <div class="tabla-wrap">
+          <table id="tabla">
+            <thead>
+              <tr>
+                <th>Identificadores</th>
+                <th>Foto</th>
+                <th>Patente</th>
+                <th>Dirección</th>
+                <th>Fecha Labrada</th>
+                <th>Estado SIGEMI</th>
+                <th>Estado SEMyT</th>
+                <th>Estado SIGI</th>
+                <th title="Compara el resultado de SIGEMI y SEMyT para la misma acta">Consistencia</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-body">
+              <!-- filas generadas por app.js -->
+            </tbody>
+          </table>
+          <p id="estado-vacio" class="estado-vacio" hidden>No se encontraron registros con esos filtros.</p>
+        </div>
+
+        <div class="paginacion">
+          <div id="paginas" class="paginas"></div>
+          <div class="por-pagina">
+            Mostrar
+            <select id="page-size">
+              <option value="10">10</option>
+              <option value="25">25</option>
+              <option value="50">50</option>
+            </select>
+            por página
+          </div>
+        </div>
+      </section>
+
+    </section>
+
+    <!-- ================= VISTA: EXPORTAR ACTAS ================= -->
+    <section id="vista-exportar" class="vista" hidden>
+      <header class="topbar">
+        <h1>Exportar Actas</h1>
+      </header>
+
+      <section class="card">
+        <h2>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+          Filtros del reporte
+        </h2>
+        <div class="ayuda-exportar">
+          <p>Elegí uno o más campos del acta (expediente, acta, causa, patente, dirección, fechas,
+          estados, etc.), indicá si el reporte tiene que incluir las actas que <strong>coinciden</strong>
+          o las que <strong>no coinciden</strong> con ese valor, y generá el archivo.</p>
+          <p>Si no agregás ningún filtro, el reporte incluye todas las actas.</p>
+        </div>
+
+        <div class="exportar-filtros-seccion">
+          <div class="filtros-grid filtros-grid-fechas">
+            <div class="campo">
+              <label for="fe-fecha-desde">Fecha desde</label>
+              <input id="fe-fecha-desde" type="date">
+            </div>
+            <div class="campo">
+              <label for="fe-fecha-hasta">Fecha hasta</label>
+              <input id="fe-fecha-hasta" type="date">
+            </div>
+          </div>
+
+          <div id="filtros-export-lista" class="filtros-export-lista"></div>
+        </div>
+
+        <button id="btn-agregar-filtro-export" type="button" class="btn btn-outline btn-agregar-filtro">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          Agregar filtro
+        </button>
+      </section>
+
+      <section class="card">
+        <div class="exportar-resumen">
+          <span id="exportar-contador" class="badge">Calculando coincidencias…</span>
+          <button id="btn-descargar-txt" type="button" class="btn btn-primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15V3"/><path d="m7 10 5 5 5-5"/><path d="M20 21H4"/></svg>
+            Generar y descargar reporte (.txt)
+          </button>
+        </div>
+        <p class="ayuda-exportar">
+          El reporte usa todas las columnas disponibles y las separa con <strong>|</strong> para
+          que sea fácil de abrir, filtrar o procesar como texto.
+        </p>
+      </section>
+    </section>
+
+  </main>
+</div>
+
+<div class="modal-foto-overlay" id="modal-foto" hidden>
+  <div class="modal-foto-contenido">
+    <button type="button" class="modal-foto-cerrar" id="modal-foto-cerrar" aria-label="Cerrar">&times;</button>
+    <img id="modal-foto-img" src="" alt="Foto del vehículo en grande">
+  </div>
+</div>
+
+<script src="/app.js"></script>
+</body>
+</html>

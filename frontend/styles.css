@@ -1,0 +1,869 @@
+:root {
+  --azul: #2563eb;
+  --azul-oscuro: #1d4ed8;
+  --azul-oscurisimo: #1e3a8a;
+  --texto: #1f2937;
+  --texto-suave: #6b7280;
+  --borde: #e5e7eb;
+  --fondo: #f3f4f6;
+  --blanco: #ffffff;
+
+  --verde-bg: #dcfce7; --verde-texto: #16a34a; --verde-borde: #86efac;
+  --amarillo-bg: #fef3c7; --amarillo-texto: #b45309; --amarillo-borde: #fcd34d;
+  --rojo-bg: #f8d5d5; --rojo-texto: #dc2626; --rojo-borde: #fca5a5;
+  --violeta-bg: #ede9fe; --violeta-texto: #7c3aed; --violeta-borde: #c4b5fd;
+  --gris-bg: #f3f4f6; --gris-texto: #6b7280; --gris-borde: #d1d5db;
+  --naranja-bg: #ffedd5; --naranja-texto: #c2410c; --naranja-borde: #fbc58b;
+  --celeste-bg: #dbeafe; --celeste-texto: #1d4ed8; --celeste-borde: #93c5fd;
+
+  --sidebar-ancho: 232px;
+}
+
+* { box-sizing: border-box; }
+
+/* ---------- Scrollbars: en Mac son finos/flotantes por defecto; en
+   Windows son gruesos y grises. Los estandarizamos para que se vea igual
+   en ambos, sobre todo en .tabla-wrap y en el sidebar. ---------- */
+
+* {
+  scrollbar-width: thin;                          /* Firefox */
+  scrollbar-color: #c7ccd4 transparent;            /* Firefox */
+}
+
+*::-webkit-scrollbar {                             /* Chrome / Edge / Safari */
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background-color: #c7ccd4;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background-color: #9aa1ad;
+}
+
+body {
+  margin: 0;
+  /* En Mac esto cae en San Francisco (-apple-system) y en Windows en
+     Segoe UI: son familias con métricas distintas (ancho, interlineado,
+     grosor de los pesos 600/700/800), y por eso el mismo CSS "se ve"
+     distinto en cada sistema. Si en algún momento se quiere que se vea
+     IDÉNTICO en ambos, la única forma es cargar una tipografía propia
+     (ej. Inter o Manrope vía @font-face/Google Fonts) en vez de depender
+     de la fuente del sistema. Mientras tanto dejamos el stack de sistema,
+     pero forzamos un renderizado más parejo posible. */
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: var(--fondo);
+  color: var(--texto);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* ---------- Layout general: sidebar + contenido ---------- */
+
+.layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: var(--sidebar-ancho);
+  flex-shrink: 0;
+  background: var(--blanco);
+  border-right: 1px solid var(--borde);
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+  transition: width 0.2s ease, padding 0.2s ease, border-color 0.2s ease;
+  z-index: 20;
+}
+
+/* El menú es desplegable: se puede cerrar (ancho 0) o abrir, en cualquier
+   tamaño de pantalla, con el botón de hamburguesa. */
+.sidebar:not(.abierto) {
+  width: 0;
+  padding-left: 0;
+  padding-right: 0;
+  border-right-color: transparent;
+}
+
+/* Los hijos mantienen su ancho "abierto" para que el contenido no se
+   deforme mientras el sidebar se colapsa/expande — sólo se recorta. */
+.sidebar > * {
+  width: calc(var(--sidebar-ancho) - 32px);
+  flex-shrink: 0;
+}
+
+.sidebar-usuario {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 4px 18px;
+  border-bottom: 1px solid var(--borde);
+}
+
+.usuario-icono {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: var(--fondo);
+  color: var(--azul);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+
+.usuario-info {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.3;
+  min-width: 0;
+}
+
+.usuario-nombre {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--texto);
+  white-space: nowrap;
+}
+
+.usuario-rol {
+  font-size: 12px;
+  color: var(--texto-suave);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 12px;
+  border: none;
+  background: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--texto-suave);
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+}
+
+.nav-item:hover { background: var(--fondo); color: var(--texto); }
+
+.nav-item.activo {
+  background: #eff6ff;
+  color: var(--azul);
+}
+
+.btn-toggle-sidebar {
+  display: flex;
+  position: fixed;
+  top: 16px; left: 16px;
+  z-index: 30;
+  width: 40px; height: 40px;
+  border-radius: 8px;
+  border: 1px solid var(--borde);
+  background: var(--blanco);
+  align-items: center; justify-content: center;
+  cursor: pointer;
+  color: var(--texto);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  transition: left 0.2s ease;
+}
+
+/* Cuando el sidebar está abierto, el botón se corre a su borde derecho;
+   cuando está cerrado, vuelve a la esquina para poder reabrirlo. */
+.sidebar.abierto + .btn-toggle-sidebar {
+  left: calc(var(--sidebar-ancho) + 12px);
+}
+
+.contenido {
+  flex: 1;
+  min-width: 0;
+  padding: 24px 28px;
+  padding-top: 76px;
+}
+
+.vista[hidden] { display: none; }
+
+/* ---------- Encabezado de cada vista ---------- */
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.topbar h1 { font-size: 24px; color: var(--texto); margin: 0; }
+
+.link-btn {
+  display: flex; align-items: center; gap: 6px;
+  background: none; border: none;
+  color: var(--azul); font-weight: 500; cursor: pointer;
+  font-size: 14px;
+}
+.link-btn:hover { text-decoration: underline; }
+
+.proximamente {
+  color: var(--texto-suave);
+  font-size: 14px;
+  margin: 0;
+}
+
+/* ---------- Vista Inicio: página vacía con el logo tipo señal ---------- */
+
+.pagina-inicio {
+  min-height: calc(100vh - 160px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  text-align: center;
+}
+
+.pagina-input::-webkit-outer-spin-button,
+.pagina-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.inicio-logo {
+  width: 150px; height: 150px;
+  border-radius: 50%;
+  background: var(--azul);
+  color: var(--blanco);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 90px;
+  line-height: 1;
+  border: 6px solid var(--azul-oscuro);
+  box-shadow: 0 12px 30px rgba(37, 99, 235, 0.35), inset 0 0 0 6px rgba(255, 255, 255, 0.18);
+}
+
+.inicio-texto {
+  font-weight: 700;
+  color: var(--azul-oscurisimo);
+  font-size: 26px;
+  line-height: 1.3;
+}
+
+/* ---------- Cards ---------- */
+
+.card {
+  background: var(--blanco);
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 20px;
+}
+
+.card h2 {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 17px; margin: 0 0 16px 0;
+}
+
+/* ---------- Filtros (búsqueda en vivo) — colapsables ---------- */
+
+.filtros-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  font: inherit;
+  color: var(--texto);
+}
+
+.filtros-titulo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.filtros-header .chevron {
+  color: var(--texto-suave);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.filtros-header[aria-expanded="false"] .chevron { transform: rotate(-90deg); }
+
+.filtros-body { margin-top: 16px; }
+.filtros-body[hidden] { display: none; }
+
+.filtros-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px 20px;
+}
+
+.campo { display: flex; flex-direction: column; gap: 6px; }
+.campo label { font-size: 13px; color: var(--texto-suave); }
+
+select, input[type="text"], input[type="date"] {
+  padding: 9px 12px;
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  font-size: 14px;
+  background: var(--blanco);
+  color: var(--texto);
+  width: 100%;
+}
+select:focus, input:focus { outline: 2px solid var(--azul); outline-offset: -1px; }
+input[type="date"] { min-width: 0; font-family: inherit; }
+
+/* Este select (el de los filtros, no el de estado) no tenía appearance:none,
+   así que mostraba la flecha nativa del navegador: en Mac/Safari es chiquita
+   y discreta, en Windows/Chrome es más grande y cuadrada. La reemplazamos
+   por una propia para que se vea igual en los dos sistemas. */
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' fill='none' stroke='%236b7280' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 32px;
+}
+
+/* El ícono de calendario de input[type="date"] es nativo del SO/navegador
+   (Windows lo dibuja distinto que macOS/Safari) y no se puede igualar del
+   todo por CSS. Al menos lo recoloreamos para que combine con la paleta
+   en vez de quedar gris nativo en Windows. */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(46%) sepia(0%) saturate(0%) hue-rotate(0deg);
+  cursor: pointer;
+}
+
+.filtros-acciones {
+  display: flex; align-items: center; justify-content: flex-end; gap: 12px;
+  margin-top: 18px;
+}
+
+.buscando {
+  font-size: 13px;
+  color: var(--azul);
+  font-style: italic;
+}
+
+.btn {
+  padding: 9px 18px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+.btn-outline { background: var(--blanco); border-color: var(--borde); color: var(--texto); }
+.btn-outline:hover { background: var(--fondo); }
+
+.btn-primary { background: var(--azul); border-color: var(--azul); color: var(--blanco); }
+.btn-primary:hover { background: var(--azul-oscuro); }
+.btn-primary:disabled { opacity: 0.6; cursor: default; }
+
+/* ---------- Exportar Actas: filtros libres + reporte .txt ---------- */
+
+.ayuda-exportar {
+  color: var(--texto-suave);
+  font-size: 13px;
+  line-height: 1.55;
+  margin: 12px 0 0 0;
+}
+.ayuda-exportar p { margin: 0; }
+.ayuda-exportar p + p { margin-top: 8px; }
+
+.exportar-filtros-seccion {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--borde);
+}
+.filtros-grid-fechas {
+  grid-template-columns: repeat(2, minmax(180px, 1fr));
+  max-width: 560px;
+}
+
+
+/* Espacio entre el texto explicativo de arriba y los combos de filtros
+   (rango de fechas + lista de filtros libres) de "Exportar Actas". */
+.rango-fechas-export {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(180px, 1fr));
+  gap: 16px 20px;
+  margin-top: 24px;
+}
+
+.filtros-export-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.filtro-export-fila {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1.4fr auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.fe-quitar {
+  width: 36px; height: 36px;
+  border-radius: 8px;
+  border: 1px solid var(--borde);
+  background: var(--blanco);
+  color: var(--rojo-texto);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.fe-quitar:hover { background: var(--rojo-bg); }
+
+.btn-agregar-filtro {
+  margin-top: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.exportar-resumen {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+/* ---------- Resultados / tabla ---------- */
+
+.resultados-header {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 14px;
+}
+.resultados-header h2 { margin: 0; }
+
+.badge {
+  background: var(--fondo);
+  color: var(--texto-suave);
+  font-size: 13px;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+.tabla-wrap { overflow-x: auto; }
+
+table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: auto; }
+
+thead th {
+  text-align: left;
+  padding: 8px 8px;
+  color: var(--texto-suave);
+  font-weight: 600;
+  border-bottom: 1px solid var(--borde);
+  white-space: nowrap;
+}
+
+#tabla thead th:nth-child(2),
+#tabla thead th:nth-child(3),
+#tabla thead th:nth-child(5),
+#tabla thead th:nth-child(6),
+#tabla thead th:nth-child(7),
+#tabla thead th:nth-child(8),
+#tabla thead th:nth-child(9) {
+  text-align: center;
+}
+
+tbody td {
+  padding: 8px;
+  border-bottom: 1px solid var(--borde);
+  vertical-align: middle;
+}
+
+tbody tr:hover { background: #fafafa; }
+
+/* Columna Identificadores: ancho mínimo compacto + separación a la derecha */
+#tabla thead th:nth-child(1),
+#tabla tbody td:nth-child(1) {
+  min-width: 140px;
+  padding-right: 14px;
+}
+
+/* Columna Foto: separación a la izquierda para no pegarla a Identificadores */
+#tabla thead th:nth-child(2),
+#tabla tbody td:nth-child(2) {
+  padding-left: 10px;
+}
+
+/* Columna Dirección: ancho mínimo compacto para que calle + altura entren */
+#tabla thead th:nth-child(4),
+#tabla tbody td:nth-child(4) {
+  min-width: 120px;
+  padding-right: 10px;
+}
+
+.expediente-cell { line-height: 1.4; }
+.expediente-cell .exp {
+  font-weight: 600;
+  white-space: nowrap; /* evita que EXP-2026-174813 se parta en dos líneas */
+}
+.expediente-cell .sub { color: var(--texto-suave); font-size: 12px; }
+
+.dato-vacio {
+  color: var(--texto-suave);
+  font-style: italic;
+  font-weight: 400;
+}
+/* JUZ-1 / JUZ-2: se destaca un poco más que el resto de las líneas
+   secundarias (ACT-/CAU-), porque es un dato que se pidió que sea
+   siempre bien visible. */
+.juzgado-linea {
+  font-weight: 700;
+  color: var(--azul-oscuro);
+}
+
+/* Consistencia + botón de actualizar comparten una sola celda, uno al
+   lado del otro con poco espacio entre sí (antes eran 2 columnas
+   separadas, con todo el padding de celda de por medio). */
+.consistencia-accion-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.consistencia-accion-cell > * {
+  flex-shrink: 0;
+}
+
+.foto-cell { padding-right: 10px; }
+.patente-cell { padding-left: 4px; font-weight: 600; white-space: nowrap; }
+
+.foto-vehiculo {
+  width: 46px; height: 34px;
+  object-fit: cover;
+  border-radius: 6px;
+  background: var(--fondo);
+  border: 1px solid var(--borde);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+.foto-vehiculo:hover { transform: scale(1.05); }
+
+/* ---------- Modal para ver la foto del vehículo en grande ---------- */
+.modal-foto-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 100;
+}
+.modal-foto-overlay[hidden] { display: none; }
+.modal-foto-contenido {
+  position: relative;
+  max-width: min(90vw, 720px);
+  max-height: 90vh;
+}
+.modal-foto-contenido img {
+  display: block;
+  max-width: 100%;
+  max-height: 90vh;
+  border-radius: 10px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+}
+.modal-foto-cerrar {
+  position: absolute;
+  top: -14px; right: -14px;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: var(--blanco);
+  color: var(--texto);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.direccion-cell { line-height: 1.4; }
+.direccion-cell .calle {
+  font-weight: 600;
+  white-space: normal; /* si el nombre de la calle es largo, envuelve por palabra completa */
+}
+.direccion-cell .sub {
+  color: var(--texto-suave);
+  font-size: 12px;
+  white-space: nowrap; /* la altura ("0-100") nunca se parte en dos líneas */
+}
+.fecha-labrada-fecha { font-weight: 600; white-space: nowrap; }
+.fecha-labrada-hora { color: var(--texto-suave); font-size: 12px; margin-top: 2px; white-space: nowrap; }
+
+/* ---------- Estados: rectangulares y más grandes, con fecha de cobro debajo ---------- */
+
+.estado-celda {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  align-items: flex-start;
+  min-width: 118px;
+}
+
+select.estado-select {
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 6px 24px 6px 8px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none; /* sin esto, Firefox en Windows muestra la flecha nativa del SO encima de la nuestra */
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 11px;
+
+  width: 100%;
+  min-width: 118px;
+  box-sizing: border-box;
+}
+
+.fecha-cobro {
+  font-size: 11px;
+  color: var(--texto-suave);
+  padding-left: 2px;
+}
+
+.fecha-cobro-sin-impacto { font-style: italic; opacity: 0.85; }
+
+/* Chip/etiqueta de estado: antes no tenía ninguna regla base (sólo color
+   y border-color por categoría), así que el fondo quedaba pegado al
+   texto sin caja ni borde real y se veía como un subrayado raro. */
+.estado-label {
+  display: inline-block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 4px 6px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.25;
+  text-align: center;
+  white-space: normal;
+}
+
+/* Estados agrupados por resultado de negocio:
+   Pagadas = verde, Resueltas = azul, Vencidas = crema. */
+.estado-categoria-pagada {
+  background: var(--verde-bg) !important;
+  color: var(--verde-texto) !important;
+  border-color: var(--verde-borde) !important;
+}
+.estado-categoria-resuelta {
+  background: var(--celeste-bg) !important;
+  color: var(--celeste-texto) !important;
+  border-color: var(--celeste-borde) !important;
+}
+.estado-categoria-rechazada {
+  background: var(--amarillo-bg) !important;
+  color: var(--amarillo-texto) !important;
+  border-color: var(--amarillo-borde) !important;
+}
+.estado-categoria-vencida {
+  background: var(--naranja-bg) !important;
+  color: var(--naranja-texto) !important;
+  border-color: var(--naranja-borde) !important;
+}
+.estado-categoria-vacio {
+  background: var(--blanco) !important;
+  color: var(--texto) !important;
+  border-color: var(--borde) !important;
+}
+
+/* Motivo de archivo (SIGEMI): sólo aparece cuando el estado es "Archivada". */
+select.motivo-archivo-select {
+  font-size: 12px;
+  padding: 6px 26px 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--gris-borde);
+  background-color: var(--gris-bg);
+  color: var(--texto);
+  cursor: pointer;
+  width: 100%;
+  min-width: 150px;
+}
+.motivo-archivo-texto { display: block; font-size: 12px; color: var(--texto-suave); margin-top: 2px; }
+/* Consistencia entre SIGEMI y SEMyT */
+.consistencia {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: help;
+}
+.consistencia-ok  { background: var(--verde-bg); color: var(--verde-texto); }
+.consistencia-mal { background: var(--rojo-bg); color: var(--rojo-texto); }
+.consistencia-nd  { background: var(--gris-bg); color: var(--texto-suave); }
+
+.btn-refrescar {
+  width: 28px; height: 28px;
+  border-radius: 8px;
+  border: 1px solid var(--borde);
+  background: var(--blanco);
+  color: var(--azul);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+}
+.btn-refrescar:hover { background: var(--fondo); }
+.btn-refrescar.girando svg { animation: girar 0.6s linear; }
+@keyframes girar { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+.estado-vacio {
+  text-align: center;
+  color: var(--texto-suave);
+  padding: 40px 0;
+}
+
+/* ---------- Paginación ---------- */
+
+.paginacion {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 18px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.paginas { display: flex; align-items: center; gap: 8px; }
+.paginas button {
+  min-width: 34px; height: 34px;
+  box-sizing: border-box;
+  border: 1px solid var(--borde);
+  background: var(--blanco);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  color: var(--texto);
+}
+.paginas button.activa { background: var(--azul); color: white; border-color: var(--azul); }
+.paginas button:disabled { opacity: 0.4; cursor: default; }
+.paginas span.puntos { padding: 6px 4px; color: var(--texto-suave); }
+
+.por-pagina {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 14px; color: var(--texto-suave);
+}
+.por-pagina select { width: auto; height: 34px; padding: 0 32px 0 10px; box-sizing: border-box; }
+.pagina-input {
+  width: 50px; height: 34px;
+  padding: 0 6px;
+  box-sizing: border-box;
+  border: 1px solid var(--borde);
+  border-radius: 6px;
+  text-align: center;
+  font-size: 14px;
+  line-height: normal;
+}
+/* En Windows, los input[type="number"] muestran flechitas nativas de
+   incrementar/decrementar; sin estas reglas queda un resto del spinner
+   (una línea) cruzando el número. En Mac no se nota porque el navegador
+   las dibuja distinto. Las ocultamos del todo en los dos motores. */
+.pagina-input {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+.pagina-input::-webkit-outer-spin-button,
+.pagina-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 0;
+}
+.pagina-input[type="number"] {
+  -moz-appearance: textfield;
+}
+.pagina-label { color: var(--texto-suave); line-height: 34px; }
+
+/* Acercar el botón de "acciones" (refrescar) a la columna de consistencia */
+thead th:nth-child(9), tbody td:nth-child(9) {
+  padding-right: 4px;
+}
+thead th:last-child, tbody td:last-child {
+  padding-left: 4px;
+  width: 44px;
+}
+/* Para actas duplicadas */
+.badge-duplicada {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--naranja-bg, #ffe4cc);
+  color: var(--naranja-texto, #b5501a);
+  border: 1px solid var(--naranja-borde, #f0954a);
+  vertical-align: middle;
+}
+/* Para actas reescritas */
+.badge-reescrita {
+  background: #fff3cd; /* o el color que uses para "atención" en tu paleta */
+  color: #664d03;
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 0.75rem;
+}
+/* ---------- Responsive ---------- */
+
+@media (max-width: 1000px) {
+  .filtros-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* En pantallas angostas, cuando el menú está abierto se muestra flotando
+   por encima del contenido (en vez de empujarlo) para no comerse toda la
+   pantalla con el contenido apretado detrás. */
+@media (max-width: 700px) {
+  .sidebar.abierto {
+    position: fixed;
+    left: 0; top: 0;
+    height: 100vh;
+    box-shadow: 4px 0 16px rgba(0,0,0,0.15);
+  }
+  .sidebar.abierto + .btn-toggle-sidebar { left: 16px; }
+
+  .filtro-export-fila { grid-template-columns: 1fr; }
+  .rango-fechas-export, .filtros-grid-fechas { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 560px) {
+  .filtros-grid { grid-template-columns: 1fr; }
+}

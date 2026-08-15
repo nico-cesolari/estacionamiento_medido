@@ -1,0 +1,34 @@
+CAMPOS:
+JUZGADO|ANIO|NUMERO|FECHA_ALTA|CAUSA_TIPO|LEY|TIPO|GRADO|ALERTA|OFICINA_INT_CODIGO|OFICINA_INT_DESC|SECRETARIA|ESTADO_ACTUAL|ESTADO_DESCRIPCION|ESTADO_FECHA|CAUSA_PADRE|VINCULACION_FECHA|TT2A300_ID|TT2A300_TT2A300_ID|INSPECTOR_NOMBRE|ACTA_ANIO|ACTA_OFICINA|ACTA_NUMERO|LABRADA_FECHA|ACTA_TIPO|ACTA_LEY|ACTA_GRADO|INSPECTOR_LEGAJO|ACTA_TT2A300_ID|TT2A200_ID
+
+Eliminar el estado "Eliminada"
+estados que si hay que tener en cuenta:
+NO CARGADA
+None (No la encuentra)
+
+Sin Resolucion
+1|2026|1003446|18/02/2026|Tr�nsito|||LEVE|Sin Resoluci�n||||SE|_SIN ESTADO_|18/02/2026|||652131||, |2025|FM|246101|15/12/2025|TR||LEVE|0|652131|794645
+
+Pasar a Procuracion
+2|2024|868037|04/12/2024|Tr�nsito|||LEVE|||||P|PASAR A PROCURACION|06/11/2025|||428076||, |2024|FM|890|27/06/2024|TR||LEVE|0|428076|447010
+
+En Procuracion
+1|2025|923017|21/03/2025|Tr�nsito|||LEVE|Juicio 000000141909 Saldo: $77.681,60||||PR|PROCURACION|02/09/2025|||521959||, |2025|FM|122163|13/03/2025|TR||LEVE|0|521959|541553
+
+Pago Voluntario
+1|2025|930288|21/04/2025|Tr�nsito|||LEVE|Sin Resoluci�n
+Pago Voluntario||||A|ARCHIVO|03/07/2025|||534203||, |2025|FM|110867|12/02/2025|TR||LEVE|0|534203|562638
+
+Archivada sin motivo (que tenga el estado_descripcion = archivado y que no tenga pago voluntario) que no tenga un motivo predefinido para que el usuario eliga el verdadero motivo 
+1|2025|933053|12/05/2025|Tr�nsito|||LEVE|||||A|ARCHIVO|02/03/2026|||546805||, |2025|FM|112059|15/02/2025|TR||LEVE|0|546805|660767
+
+Archivada por error: podriamos crear un nuevo estado(tambien en la base de datos) que se llame Archivada Sin Resolucion mismo color que una vencida, o se podria poner en rojo marcando error
+ej del registro:
+2|2025|975905|29/10/2025|Tr�nsito|||LEVE|Sin Resoluci�n||||A|ARCHIVO|02/03/2026|||614666||, |2025|FM|194078|25/08/2025|TR||LEVE|0|614666|755300
+
+Archivada por Pago Voluntario:
+2|2024|864599|10/07/2024|Tr�nsito|||LEVE|Sin Resoluci�n
+Pago Voluntario||||A|ARCHIVO|27/08/2024|||383814||, |2024|FM|1490|28/06/2024|TR||LEVE|0|383814|402247
+
+Resuelta sin archivar: se resolvio pero no se archivo
+1|2026|1006123|23/07/2026|Tr�nsito|||LEVE|||||SE|_SIN ESTADO_|23/07/2026|||656105||, |2026|FM|310410|11/05/2026|TR||LEVE|0|656105|798679

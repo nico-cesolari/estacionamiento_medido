@@ -1,0 +1,54 @@
+services:
+
+  db:
+    image: postgres:16
+    container_name: estacionamiento_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: estacionamiento_medido
+      POSTGRES_USER: nicolascesolari
+      POSTGRES_PASSWORD: juzgadovm19
+    ports:
+      - "1234:5432"                       # host:contenedor -> vos entrás por el 1234
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro   # se ejecuta SOLO la primera vez
+    networks:
+      - backend
+
+  postgrest:
+    image: postgrest/postgrest:v12.2.0
+    container_name: estacionamiento_api
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      PGRST_DB_URI: postgres://authenticator:authenticator_pass@db:5432/estacionamiento_medido
+      PGRST_DB_SCHEMAS: api
+      PGRST_DB_ANON_ROLE: web_anon
+      PGRST_OPENAPI_SERVER_PROXY_URI: http://127.0.0.1:3000
+    ports:
+      - "3000:3000"
+    networks:
+      - backend
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: estacionamiento_pgadmin
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      PGADMIN_DEFAULT_EMAIL: nicocesolariutn@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: n1c0lascesolari   # <-- password para ENTRAR a pgAdmin (no confundir con la de postgres)
+    ports:
+      - "5050:80"
+    networks:
+      - backend
+
+volumes:
+  db_data:
+
+networks:
+  backend:
+    driver: bridge

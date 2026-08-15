@@ -1,0 +1,2 @@
+"""traer los registros de los pagos de sigi, descargar pagos bien llenados completos. si no tiene fecha de pago, actualizarla a la fecha del recibo
+hacer bien las comapraciones y ver como funcione, si usa la fecha de carga como fecha de pago o si ya tiene una fecha de pago cargada, tanto sigi como sigemi, pueden tener fecha de pago, semyt no"""
