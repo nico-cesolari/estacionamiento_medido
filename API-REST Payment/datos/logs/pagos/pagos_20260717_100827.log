@@ -1,0 +1,42 @@
+[10:08:27] === Inicio de ejecución: pagos ===
+[10:08:28] ▶ [LoginSemytPaso] Iniciando...
+[10:08:28] ==================================================
+[10:08:28] 🚀 PASO: LoginSemytPaso
+[10:08:28] ==================================================
+[10:08:28] Abriendo SEMyT con sesión guardada...
+[10:09:06] ✅ Sesión existente detectada. Login omitido.
+[10:09:06] ✅ LoginSemytPaso finalizado.
+[10:09:06] ✓ [LoginSemytPaso] Completado.
+[10:09:06] ▶ [LoginJuzgadoPaso] Iniciando...
+[10:09:06] ==================================================
+[10:09:06] 🚀 PASO: LoginJuzgadoPaso
+[10:09:06] ==================================================
+[10:09:06] Abriendo sitio municipalidad (CiDi)...
+[10:09:17] ✅ Sesión existente detectada en Juzgado. Login omitido.
+[10:09:17] ✅ LoginJuzgadoPaso finalizado.
+[10:09:17] ✓ [LoginJuzgadoPaso] Completado.
+[10:09:17] ▶ [DescargarPagosPaso] Iniciando...
+[10:09:17] ==================================================
+[10:09:17] 🚀 PASO: DescargarPagosPaso
+[10:09:17] ==================================================
+[10:09:17] 📥 Descargando TXT de pagos desde el Juzgado...
+[10:09:45] ✅ TXT de pagos descargado en: backend/descargas/pagos/PAGOS DESCARGADOS.txt
+[10:09:45] ✅ DescargarPagosPaso finalizado.
+[10:09:45] ✓ [DescargarPagosPaso] Completado.
+[10:09:45] ▶ [ObtenerActasCrucePaso] Iniciando...
+[10:09:45] ==================================================
+[10:09:45] 🚀 PASO: ObtenerActasCrucePaso
+[10:09:45] ==================================================
+[10:09:45] 📥 Descargando Excel de actas vencidas para el cruce — SIGEMI (rango viejo)...
+[10:09:45] Fecha Desde: 27/06/2024
+[10:09:45] Fecha Hasta: 24/11/2025
+[10:09:45] Descargando Excel...
+[10:10:41] Archivo descargado en: backend/descargas/cache_actas_cruce/MULTAS_SIGEMI_CRUCE.xlsx
+[10:10:45] ✅ Excel de actas para el cruce (SIGEMI (rango viejo)) guardado en: backend/descargas/cache_actas_cruce/MULTAS_SIGEMI_CRUCE.xlsx
+[10:10:45] 📥 Descargando Excel de actas vencidas para el cruce — Juzgado (rango nuevo)...
+[10:10:45] Fecha Desde: 25/11/2025
+[10:10:45] Fecha Hasta: 17/07/2026
+[10:10:45] Descargando Excel...
+[10:18:18] 🛑 Cancelación recibida. Limpiando archivos generados en esta corrida...
+[10:18:18] 🧹 Archivo eliminado: backend/descargas/pagos/PAGOS DESCARGADOS.txt
+[10:18:18] 🧹 Archivo eliminado: backend/descargas/cache_actas_cruce/MULTAS_SIGEMI_CRUCE.xlsx

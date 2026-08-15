@@ -1,0 +1,13 @@
+[15:32:16] 🤖 [Automático] Es hora de actualizar pagos. Arrancando...
+[15:32:16] 🤖 Modo automático activado.
+[15:32:16]    Actualización de pagos: arrancando ya mismo.
+[15:32:16]    Próxima actualización de pagos + multas vencidas: 19/07/2026 01:00
+[15:32:31] ⏳ [Automático] Tocaba disparar 'pagos' pero ya hay una ejecución en curso (Actualizar pagos); esperando a que termine; se reintenta en breve sin perder el turno.
+[15:43:36] 🤖 [Automático] Es hora de actualizar pagos. Arrancando...
+[15:43:51] ⏳ [Automático] Tocaba disparar 'pagos' pero ya hay una ejecución en curso (Actualizar pagos); esperando a que termine; se reintenta en breve sin perder el turno.
+[15:53:56] 🤖 [Automático] Es hora de actualizar pagos. Arrancando...
+[15:54:11] ⏳ [Automático] Tocaba disparar 'pagos' pero ya hay una ejecución en curso (Actualizar pagos); esperando a que termine; se reintenta en breve sin perder el turno.
+[16:04:33] 🤖 [Automático] Es hora de actualizar pagos. Arrancando...
+[16:04:48] ⏳ [Automático] Tocaba disparar 'pagos' pero ya hay una ejecución en curso (Actualizar pagos); esperando a que termine; se reintenta en breve sin perder el turno.
+[16:08:54] 🤖 Modo automático desactivado. (Si había una ejecución en curso disparada por el automático, no se cancela sola: cancelala desde su propia opción si querés detenerla.)
+[16:08:55] 🤖 [Automático] 'pagos' fue cancelado manualmente durante una corrida automática; no se reintenta solo, se retoma en el horario normal.

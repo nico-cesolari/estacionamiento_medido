@@ -1,0 +1,389 @@
+Exception ignored while closing generator <coroutine object wait_for at 0x1086f2740>:
+Traceback (most recent call last):
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/tasks.py", line 488, in wait_for
+    return await fut
+  File "/Users/nicolascesolari/Proyectos/proyectoJuzgado/backend/orquestador/trabajador.py", line 158, in _correr_tipo
+    async with async_playwright() as playwright:
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/playwright/async_api/_context_manager.py", line 57, in __aexit__
+    await self._connection.stop_async()
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/playwright/_impl/_connection.py", line 323, in stop_async
+    self._transport.request_stop()
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/playwright/_impl/_transport.py", line 99, in request_stop
+    self._output.close()
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/streams.py", line 352, in close
+    return self._transport.close()
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/unix_events.py", line 792, in close
+    self.write_eof()
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/unix_events.py", line 778, in write_eof
+    self._loop.call_soon(self._call_connection_lost, None)
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/base_events.py", line 827, in call_soon
+    self._check_closed()
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/base_events.py", line 550, in _check_closed
+    raise RuntimeError('Event loop is closed')
+RuntimeError: Event loop is closed
+Task was destroyed but it is pending!
+task: <Task cancelling name='Task-1' coro=<wait_for() done, defined at /Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/tasks.py:440> wait_for=<Future pending cb=[Task.task_wakeup()]> cb=[ProtocolCallback.__init__.<locals>.cb() at /Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/playwright/_impl/_connection.py:230, <1 more>, ProtocolCallback.__init__.<locals>.cb() at /Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/playwright/_impl/_connection.py:230]>
+/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/resource_tracker.py:475: UserWarning: resource_tracker: There appear to be 3 leaked semaphore objects to clean up at shutdown: {'/mp-78_98807', '/mp-36to9y8g', '/mp-aa4bbv69'}
+  warnings.warn(
+Exception ignored while closing generator <coroutine object wait_for at 0x10b2fa740>:
+Traceback (most recent call last):
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/tasks.py", line 488, in wait_for
+    return await fut
+  File "/Users/nicolascesolari/Proyectos/proyectoJuzgado/backend/orquestador/trabajador.py", line 158, in _correr_tipo
+    async with async_playwright() as playwright:
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/playwright/async_api/_context_manager.py", line 57, in __aexit__
+    await self._connection.stop_async()
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/playwright/_impl/_connection.py", line 323, in stop_async
+    self._transport.request_stop()
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/playwright/_impl/_transport.py", line 99, in request_stop
+    self._output.close()
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/streams.py", line 352, in close
+    return self._transport.close()
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/unix_events.py", line 792, in close
+    self.write_eof()
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/unix_events.py", line 778, in write_eof
+    self._loop.call_soon(self._call_connection_lost, None)
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/base_events.py", line 827, in call_soon
+    self._check_closed()
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/base_events.py", line 550, in _check_closed
+    raise RuntimeError('Event loop is closed')
+RuntimeError: Event loop is closed
+Task was destroyed but it is pending!
+task: <Task cancelling name='Task-1' coro=<wait_for() done, defined at /Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/tasks.py:440> wait_for=<Future pending cb=[Task.task_wakeup()]> cb=[ProtocolCallback.__init__.<locals>.cb() at /Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/playwright/_impl/_connection.py:230, <1 more>, ProtocolCallback.__init__.<locals>.cb() at /Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/playwright/_impl/_connection.py:230]>
+/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/resource_tracker.py:475: UserWarning: resource_tracker: There appear to be 3 leaked semaphore objects to clean up at shutdown: {'/mp-vc38jfoo', '/mp-g_nrr3w7', '/mp-nrd55g4w'}
+  warnings.warn(
+ERROR: la variable de entorno 'SIGI_LOGIN' no está configurada.
+Creá un archivo '.env' (podés copiar '.env.ejemplo') y completá 'SIGI_LOGIN=tu_valor'.
+ERROR: la variable de entorno 'SIGI_LOGIN' no está configurada.
+Creá un archivo '.env' (podés copiar '.env.ejemplo') y completá 'SIGI_LOGIN=tu_valor'.
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    from multiprocessing.spawn import spawn_main; spawn_main(tracker_fd=8, pipe_handle=12)
+                                                  ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 122, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 131, in _main
+    prepare(preparation_data)
+    ~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 244, in prepare
+    _fixup_main_from_name(data['init_main_from_name'])
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 268, in _fixup_main_from_name
+    main_content = runpy.run_module(mod_name,
+                                    run_name="__mp_main__",
+                                    alter_sys=True)
+  File "<frozen runpy>", line 227, in run_module
+  File "<frozen runpy>", line 145, in _get_module_details
+ImportError: No module named backend.main
+Traceback (most recent call last):
+  File "<frozen runpy>", line 133, in _get_module_details
+  File "<frozen importlib.util>", line 90, in find_spec
+ModuleNotFoundError: No module named 'backend'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    from multiprocessing.spawn import spawn_main; spawn_main(tracker_fd=8, pipe_handle=12)
+                                                  ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 122, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 131, in _main
+    prepare(preparation_data)
+    ~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 244, in prepare
+    _fixup_main_from_name(data['init_main_from_name'])
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 268, in _fixup_main_from_name
+    main_content = runpy.run_module(mod_name,
+                                    run_name="__mp_main__",
+                                    alter_sys=True)
+  File "<frozen runpy>", line 227, in run_module
+  File "<frozen runpy>", line 142, in _get_module_details
+ImportError: Error while finding module specification for 'backend.main' (ModuleNotFoundError: No module named 'backend')
+Traceback (most recent call last):
+  File "<frozen runpy>", line 133, in _get_module_details
+  File "<frozen importlib.util>", line 90, in find_spec
+ModuleNotFoundError: No module named 'backend'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    from multiprocessing.spawn import spawn_main; spawn_main(tracker_fd=8, pipe_handle=12)
+                                                  ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 122, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 131, in _main
+    prepare(preparation_data)
+    ~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 244, in prepare
+    _fixup_main_from_name(data['init_main_from_name'])
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 268, in _fixup_main_from_name
+    main_content = runpy.run_module(mod_name,
+                                    run_name="__mp_main__",
+                                    alter_sys=True)
+  File "<frozen runpy>", line 227, in run_module
+  File "<frozen runpy>", line 142, in _get_module_details
+ImportError: Error while finding module specification for 'backend.main' (ModuleNotFoundError: No module named 'backend')
+Traceback (most recent call last):
+  File "<frozen runpy>", line 133, in _get_module_details
+  File "<frozen importlib.util>", line 90, in find_spec
+ModuleNotFoundError: No module named 'backend'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    from multiprocessing.spawn import spawn_main; spawn_main(tracker_fd=8, pipe_handle=12)
+                                                  ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 122, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 131, in _main
+    prepare(preparation_data)
+    ~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 244, in prepare
+    _fixup_main_from_name(data['init_main_from_name'])
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 268, in _fixup_main_from_name
+    main_content = runpy.run_module(mod_name,
+                                    run_name="__mp_main__",
+                                    alter_sys=True)
+  File "<frozen runpy>", line 227, in run_module
+  File "<frozen runpy>", line 142, in _get_module_details
+ImportError: Error while finding module specification for 'backend.main' (ModuleNotFoundError: No module named 'backend')
+Traceback (most recent call last):
+  File "<frozen runpy>", line 133, in _get_module_details
+  File "<frozen importlib.util>", line 90, in find_spec
+ModuleNotFoundError: No module named 'backend'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    from multiprocessing.spawn import spawn_main; spawn_main(tracker_fd=8, pipe_handle=12)
+                                                  ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 122, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 131, in _main
+    prepare(preparation_data)
+    ~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 244, in prepare
+    _fixup_main_from_name(data['init_main_from_name'])
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 268, in _fixup_main_from_name
+    main_content = runpy.run_module(mod_name,
+                                    run_name="__mp_main__",
+                                    alter_sys=True)
+  File "<frozen runpy>", line 227, in run_module
+  File "<frozen runpy>", line 142, in _get_module_details
+ImportError: Error while finding module specification for 'backend.main' (ModuleNotFoundError: No module named 'backend')
+Traceback (most recent call last):
+  File "<frozen runpy>", line 133, in _get_module_details
+  File "<frozen importlib.util>", line 90, in find_spec
+ModuleNotFoundError: No module named 'backend'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    from multiprocessing.spawn import spawn_main; spawn_main(tracker_fd=8, pipe_handle=12)
+                                                  ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 122, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 131, in _main
+    prepare(preparation_data)
+    ~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 244, in prepare
+    _fixup_main_from_name(data['init_main_from_name'])
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 268, in _fixup_main_from_name
+    main_content = runpy.run_module(mod_name,
+                                    run_name="__mp_main__",
+                                    alter_sys=True)
+  File "<frozen runpy>", line 227, in run_module
+  File "<frozen runpy>", line 142, in _get_module_details
+ImportError: Error while finding module specification for 'backend.main' (ModuleNotFoundError: No module named 'backend')
+Traceback (most recent call last):
+  File "<frozen runpy>", line 133, in _get_module_details
+  File "<frozen importlib.util>", line 90, in find_spec
+ModuleNotFoundError: No module named 'backend'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    from multiprocessing.spawn import spawn_main; spawn_main(tracker_fd=8, pipe_handle=12)
+                                                  ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 122, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 131, in _main
+    prepare(preparation_data)
+    ~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 244, in prepare
+    _fixup_main_from_name(data['init_main_from_name'])
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 268, in _fixup_main_from_name
+    main_content = runpy.run_module(mod_name,
+                                    run_name="__mp_main__",
+                                    alter_sys=True)
+  File "<frozen runpy>", line 227, in run_module
+  File "<frozen runpy>", line 142, in _get_module_details
+ImportError: Error while finding module specification for 'backend.main' (ModuleNotFoundError: No module named 'backend')
+Traceback (most recent call last):
+  File "<frozen runpy>", line 133, in _get_module_details
+  File "<frozen importlib.util>", line 90, in find_spec
+ModuleNotFoundError: No module named 'backend'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    from multiprocessing.spawn import spawn_main; spawn_main(tracker_fd=8, pipe_handle=12)
+                                                  ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 122, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 131, in _main
+    prepare(preparation_data)
+    ~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 244, in prepare
+    _fixup_main_from_name(data['init_main_from_name'])
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 268, in _fixup_main_from_name
+    main_content = runpy.run_module(mod_name,
+                                    run_name="__mp_main__",
+                                    alter_sys=True)
+  File "<frozen runpy>", line 227, in run_module
+  File "<frozen runpy>", line 142, in _get_module_details
+ImportError: Error while finding module specification for 'backend.main' (ModuleNotFoundError: No module named 'backend')
+Traceback (most recent call last):
+  File "<frozen runpy>", line 133, in _get_module_details
+  File "<frozen importlib.util>", line 90, in find_spec
+ModuleNotFoundError: No module named 'backend'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    from multiprocessing.spawn import spawn_main; spawn_main(tracker_fd=8, pipe_handle=12)
+                                                  ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 122, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 131, in _main
+    prepare(preparation_data)
+    ~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 244, in prepare
+    _fixup_main_from_name(data['init_main_from_name'])
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 268, in _fixup_main_from_name
+    main_content = runpy.run_module(mod_name,
+                                    run_name="__mp_main__",
+                                    alter_sys=True)
+  File "<frozen runpy>", line 227, in run_module
+  File "<frozen runpy>", line 142, in _get_module_details
+ImportError: Error while finding module specification for 'backend.main' (ModuleNotFoundError: No module named 'backend')
+Traceback (most recent call last):
+  File "<frozen runpy>", line 133, in _get_module_details
+  File "<frozen importlib.util>", line 90, in find_spec
+ModuleNotFoundError: No module named 'backend'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    from multiprocessing.spawn import spawn_main; spawn_main(tracker_fd=8, pipe_handle=12)
+                                                  ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 122, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 131, in _main
+    prepare(preparation_data)
+    ~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 244, in prepare
+    _fixup_main_from_name(data['init_main_from_name'])
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 268, in _fixup_main_from_name
+    main_content = runpy.run_module(mod_name,
+                                    run_name="__mp_main__",
+                                    alter_sys=True)
+  File "<frozen runpy>", line 227, in run_module
+  File "<frozen runpy>", line 142, in _get_module_details
+ImportError: Error while finding module specification for 'backend.main' (ModuleNotFoundError: No module named 'backend')
+Traceback (most recent call last):
+  File "<frozen runpy>", line 133, in _get_module_details
+  File "<frozen importlib.util>", line 90, in find_spec
+ModuleNotFoundError: No module named 'backend'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    from multiprocessing.spawn import spawn_main; spawn_main(tracker_fd=8, pipe_handle=12)
+                                                  ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 122, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 131, in _main
+    prepare(preparation_data)
+    ~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 244, in prepare
+    _fixup_main_from_name(data['init_main_from_name'])
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 268, in _fixup_main_from_name
+    main_content = runpy.run_module(mod_name,
+                                    run_name="__mp_main__",
+                                    alter_sys=True)
+  File "<frozen runpy>", line 227, in run_module
+  File "<frozen runpy>", line 142, in _get_module_details
+ImportError: Error while finding module specification for 'backend.main' (ModuleNotFoundError: No module named 'backend')
+Traceback (most recent call last):
+  File "<frozen runpy>", line 133, in _get_module_details
+  File "<frozen importlib.util>", line 90, in find_spec
+ModuleNotFoundError: No module named 'backend'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    from multiprocessing.spawn import spawn_main; spawn_main(tracker_fd=8, pipe_handle=12)
+                                                  ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 122, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 131, in _main
+    prepare(preparation_data)
+    ~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 244, in prepare
+    _fixup_main_from_name(data['init_main_from_name'])
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 268, in _fixup_main_from_name
+    main_content = runpy.run_module(mod_name,
+                                    run_name="__mp_main__",
+                                    alter_sys=True)
+  File "<frozen runpy>", line 227, in run_module
+  File "<frozen runpy>", line 142, in _get_module_details
+ImportError: Error while finding module specification for 'backend.main' (ModuleNotFoundError: No module named 'backend')
+Traceback (most recent call last):
+  File "<frozen runpy>", line 133, in _get_module_details
+  File "<frozen importlib.util>", line 90, in find_spec
+ModuleNotFoundError: No module named 'backend'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    from multiprocessing.spawn import spawn_main; spawn_main(tracker_fd=8, pipe_handle=12)
+                                                  ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 122, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 131, in _main
+    prepare(preparation_data)
+    ~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 244, in prepare
+    _fixup_main_from_name(data['init_main_from_name'])
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 268, in _fixup_main_from_name
+    main_content = runpy.run_module(mod_name,
+                                    run_name="__mp_main__",
+                                    alter_sys=True)
+  File "<frozen runpy>", line 227, in run_module
+  File "<frozen runpy>", line 142, in _get_module_details
+ImportError: Error while finding module specification for 'backend.main' (ModuleNotFoundError: No module named 'backend')

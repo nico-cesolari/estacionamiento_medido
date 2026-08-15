@@ -1,0 +1,532 @@
+
+🔐 Verificando sesiones (SEMyT y Juzgado)...
+▶ [LoginSemytPaso] Iniciando...
+
+==================================================
+🚀 PASO: LoginSemytPaso
+==================================================
+Abriendo SEMyT con sesión guardada...
+✅ Sesión existente detectada. Login omitido.
+✅ LoginSemytPaso finalizado.
+
+✓ [LoginSemytPaso] Completado.
+▶ [LoginJuzgadoPaso] Iniciando...
+
+==================================================
+🚀 PASO: LoginJuzgadoPaso
+==================================================
+Abriendo sitio municipalidad (CiDi)...
+✅ Sesión existente detectada en Juzgado. Login omitido.
+✅ LoginJuzgadoPaso finalizado.
+
+✓ [LoginJuzgadoPaso] Completado.
+✅ Sesiones listas. Si ya estabas logueado de antes, se reutilizó la sesión guardada y no se volvió a pedir usuario/contraseña.
+
+🤖 [Automático] Es hora de actualizar pagos. Arrancando...
+🤖 Modo automático activado.
+   Actualización de pagos: arrancando ya mismo.
+   Próxima actualización de pagos + multas vencidas: 19/07/2026 01:00
+✅ Servicio activo. Esperando la próxima ejecución programada...
+[ACTUALIZAR PAGOS · AUTO] === Inicio de ejecución: pagos ===
+[ACTUALIZAR PAGOS · AUTO] ▶ [LoginSemytPaso] Iniciando...
+[ACTUALIZAR PAGOS · AUTO] ==================================================
+[ACTUALIZAR PAGOS · AUTO] 🚀 PASO: LoginSemytPaso
+[ACTUALIZAR PAGOS · AUTO] ==================================================
+[ACTUALIZAR PAGOS · AUTO] Abriendo SEMyT con sesión guardada...
+[ACTUALIZAR PAGOS · AUTO] ✅ Sesión existente detectada. Login omitido.
+[ACTUALIZAR PAGOS · AUTO] ✅ LoginSemytPaso finalizado.
+[ACTUALIZAR PAGOS · AUTO] ✓ [LoginSemytPaso] Completado.
+[ACTUALIZAR PAGOS · AUTO] ▶ [LoginJuzgadoPaso] Iniciando...
+[ACTUALIZAR PAGOS · AUTO] ==================================================
+[ACTUALIZAR PAGOS · AUTO] 🚀 PASO: LoginJuzgadoPaso
+[ACTUALIZAR PAGOS · AUTO] ==================================================
+[ACTUALIZAR PAGOS · AUTO] Abriendo sitio municipalidad (CiDi)...
+[ACTUALIZAR PAGOS · AUTO] ✅ Sesión existente detectada en Juzgado. Login omitido.
+[ACTUALIZAR PAGOS · AUTO] ✅ LoginJuzgadoPaso finalizado.
+[ACTUALIZAR PAGOS · AUTO] ✓ [LoginJuzgadoPaso] Completado.
+[ACTUALIZAR PAGOS · AUTO] ▶ [DescargarPagosPaso] Iniciando...
+[ACTUALIZAR PAGOS · AUTO] ==================================================
+[ACTUALIZAR PAGOS · AUTO] 🚀 PASO: DescargarPagosPaso
+[ACTUALIZAR PAGOS · AUTO] ==================================================
+[ACTUALIZAR PAGOS · AUTO] 📥 Descargando TXT de pagos desde el Juzgado...
+⏳ [Automático] Tocaba disparar 'pagos' pero ya hay una ejecución en curso (Actualizar pagos); esperando a que termine; se reintenta en breve sin perder el turno.
+[ACTUALIZAR PAGOS · AUTO] ✅ TXT de pagos descargado en: backend/descargas/pagos/PAGOS DESCARGADOS.txt
+[ACTUALIZAR PAGOS · AUTO] ✅ DescargarPagosPaso finalizado.
+[ACTUALIZAR PAGOS · AUTO] ✓ [DescargarPagosPaso] Completado.
+[ACTUALIZAR PAGOS · AUTO] ▶ [ObtenerActasCrucePaso] Iniciando...
+[ACTUALIZAR PAGOS · AUTO] ==================================================
+[ACTUALIZAR PAGOS · AUTO] 🚀 PASO: ObtenerActasCrucePaso
+[ACTUALIZAR PAGOS · AUTO] ==================================================
+[ACTUALIZAR PAGOS · AUTO] 📥 Descargando Excel de actas vencidas para el cruce — SIGEMI (rango viejo)...
+[ACTUALIZAR PAGOS · AUTO] Fecha Desde: 27/06/2024
+[ACTUALIZAR PAGOS · AUTO] Fecha Hasta: 24/11/2025
+[ACTUALIZAR PAGOS · AUTO] Descargando Excel...
+[ACTUALIZAR PAGOS · AUTO] Archivo descargado en: backend/descargas/cache_actas_cruce/MULTAS_SIGEMI_CRUCE.xlsx
+[ACTUALIZAR PAGOS · AUTO] ✅ Excel de actas para el cruce (SIGEMI (rango viejo)) guardado en: backend/descargas/cache_actas_cruce/MULTAS_SIGEMI_CRUCE.xlsx
+[ACTUALIZAR PAGOS · AUTO] 📥 Descargando Excel de actas vencidas para el cruce — Juzgado (rango nuevo)...
+[ACTUALIZAR PAGOS · AUTO] Fecha Desde: 25/11/2025
+[ACTUALIZAR PAGOS · AUTO] Fecha Hasta: 18/07/2026
+[ACTUALIZAR PAGOS · AUTO] Descargando Excel...
+[ACTUALIZAR PAGOS · AUTO] Archivo descargado en: backend/descargas/cache_actas_cruce/MULTAS_JUZGADO_CRUCE.xlsx
+[ACTUALIZAR PAGOS · AUTO] ✅ Excel de actas para el cruce (Juzgado (rango nuevo)) guardado en: backend/descargas/cache_actas_cruce/MULTAS_JUZGADO_CRUCE.xlsx
+[ACTUALIZAR PAGOS · AUTO] ✅ ObtenerActasCrucePaso finalizado.
+[ACTUALIZAR PAGOS · AUTO] ✓ [ObtenerActasCrucePaso] Completado.
+[ACTUALIZAR PAGOS · AUTO] ▶ [CompararActasPaso] Iniciando...
+[ACTUALIZAR PAGOS · AUTO] ==================================================
+[ACTUALIZAR PAGOS · AUTO] 🚀 PASO: CompararActasPaso
+[ACTUALIZAR PAGOS · AUTO] ==================================================
+[ACTUALIZAR PAGOS · AUTO] 🔍 Comparando actas del SEMyT contra pagos del Juzgado...
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO] INICIANDO PROCESO DE GENERACIÓN DE PAGOS DESACTUALIZADOS
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO] 📂 Cargando archivos...
+[ACTUALIZAR PAGOS · AUTO]   ✓ Pagos: 14767 registros
+[ACTUALIZAR PAGOS · AUTO]   ✓ Excel SIGEMI (multas vencidas viejas): 104421 registros
+[ACTUALIZAR PAGOS · AUTO]   ✓ Excel Juzgado (multas vencidas nuevas): 39355 registros
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO] PASO 1: LLENANDO ACTA_NUMERO (búsqueda por patente + fecha, con desempate por hora)
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO] 📊 ESTADÍSTICAS DE LLENADO DE ACTAS:
+[ACTUALIZAR PAGOS · AUTO]   • Pagos con acta ORIGINAL: 1653
+[ACTUALIZAR PAGOS · AUTO]   • Pagos SIN acta (buscados): 13114
+[ACTUALIZAR PAGOS · AUTO]   • Pagos LLENADOS exitosamente: 6
+[ACTUALIZAR PAGOS · AUTO]   • Pagos NO encontrados en multas: 13108
+[ACTUALIZAR PAGOS · AUTO]   • Pagos SIN RESOLVER por desbalance de cantidades: 0
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO] PASO 1: LLENANDO ACTA_NUMERO (búsqueda por patente + fecha, con desempate por hora)
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO] 📊 ESTADÍSTICAS DE LLENADO DE ACTAS:
+[ACTUALIZAR PAGOS · AUTO]   • Pagos con acta ORIGINAL: 1659
+[ACTUALIZAR PAGOS · AUTO]   • Pagos SIN acta (buscados): 13108
+[ACTUALIZAR PAGOS · AUTO]   • Pagos LLENADOS exitosamente: 0
+[ACTUALIZAR PAGOS · AUTO]   • Pagos NO encontrados en multas: 13108
+[ACTUALIZAR PAGOS · AUTO]   • Pagos SIN RESOLVER por desbalance de cantidades: 0
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO] PASO 2: FILTRANDO PAGOS CON ACTA_NUMERO COMPLETO
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO] 📊 ESTADÍSTICAS DE FILTRADO:
+[ACTUALIZAR PAGOS · AUTO]   • Pagos TOTALES al inicio: 14767
+[ACTUALIZAR PAGOS · AUTO]   • Pagos CON acta (MANTIENEN): 1659
+[ACTUALIZAR PAGOS · AUTO]   • Pagos RECHAZADOS (sin coincidencias): 13108
+[ACTUALIZAR PAGOS · AUTO] ⚠️  Se eliminaron 13108 registros sin número de acta
+[ACTUALIZAR PAGOS · AUTO]      (recordá: esto incluye tanto pagos ya actualizados/pagados
+[ACTUALIZAR PAGOS · AUTO]       como pagos que quedaron sin resolver por desbalance en el Paso 1)
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO] PASO 2-bis: CONFIRMANDO VIGENCIA DE PAGOS DEL SISTEMA NUEVO (contra MULTAS_JUZGADO_CRUCE)
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO]   ⚠ 1650 pago(s) del sistema nuevo descartados: su acta ya no figura como vencida en MULTAS_JUZGADO_CRUCE (SEMyT ya los actualizó).
+[ACTUALIZAR PAGOS · AUTO]   • Pagos del sistema nuevo descartados por ya estar actualizados: 1650
+[ACTUALIZAR PAGOS · AUTO] 📂 Cargando maestro de causas SIGEMI...
+[ACTUALIZAR PAGOS · AUTO]   ✓ Causas totales (maestro): 134069 registros
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO] PASO 2.5: ARMANDO causas.txt SIMPLIFICADO (cruce contra total_causas_sigemi.txt)
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO]   • Actas vencidas viejas (multas): 104421
+[ACTUALIZAR PAGOS · AUTO]   • Causas totales en el maestro SIGEMI: 134069
+[ACTUALIZAR PAGOS · AUTO]   • Causas que coinciden (simplificado): 104421
+[ACTUALIZAR PAGOS · AUTO]   ✅ Archivo escrito: backend/descargas/causas/causas.txt
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO] PASO 3: LLENANDO CAUSA_NUMERO (según fecha de cambio de sistema, cruzando por acta + año)
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO] 📊 ESTADÍSTICAS DE LLENADO DE CAUSAS:
+[ACTUALIZAR PAGOS · AUTO]   • Pagos con causa ORIGINAL: 3
+[ACTUALIZAR PAGOS · AUTO]   • Causas encontradas en SIGEMI (actas viejas): 6
+[ACTUALIZAR PAGOS · AUTO]   • Causas NO encontradas en SIGEMI: 0
+[ACTUALIZAR PAGOS · AUTO]   • Causas asignadas automáticamente (actas nuevas): 0
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO] PASO 4: ORDENANDO POR FECHA Y ACTA_NUMERO
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO] ✓ Pagos ordenados correctamente
+[ACTUALIZAR PAGOS · AUTO]   • Primera entrada: Acta=188352, Fecha=12/08/2025
+[ACTUALIZAR PAGOS · AUTO]   • Última entrada: Acta=278410, Fecha=11/03/2026
+[ACTUALIZAR PAGOS · AUTO] 📝 Escribiendo archivo de salida...
+[ACTUALIZAR PAGOS · AUTO]   ✅ Archivo escrito: backend/descargas/pagos/PAGOS 20260718 153439.txt
+[ACTUALIZAR PAGOS · AUTO]   ✅ Total registros: 1119
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO] ✅ PROCESO COMPLETADO EXITOSAMENTE
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO] 📊 RESUMEN FINAL DEL PROCESAMIENTO:
+[ACTUALIZAR PAGOS · AUTO]   ENTRADA:
+[ACTUALIZAR PAGOS · AUTO]     • Pagos originales: 14767
+[ACTUALIZAR PAGOS · AUTO]     • Multas SIGEMI cargadas: 104421
+[ACTUALIZAR PAGOS · AUTO]     • Multas Juzgado cargadas: 39355
+[ACTUALIZAR PAGOS · AUTO]     • Causas simplificadas (usadas para el cruce): 104421
+[ACTUALIZAR PAGOS · AUTO]   PROCESO:
+[ACTUALIZAR PAGOS · AUTO]     • Pagos rechazados sigemi: 13108
+[ACTUALIZAR PAGOS · AUTO]     • Pagos rechazados juzgado: 1650
+[ACTUALIZAR PAGOS · AUTO]   SALIDA:
+[ACTUALIZAR PAGOS · AUTO]     • Pagos desactualizados procesados: 9
+[ACTUALIZAR PAGOS · AUTO]     • Archivo final: backend/descargas/pagos/PAGOS 20260718 153439.txt
+[ACTUALIZAR PAGOS · AUTO]     • Ordenados por fecha: SÍ ✓
+[ACTUALIZAR PAGOS · AUTO]     • Todos con ACTA_NUMERO: SÍ ✓
+[ACTUALIZAR PAGOS · AUTO]     • Todos con CAUSA_NUMERO: SÍ ✓
+[ACTUALIZAR PAGOS · AUTO] ✅ TXT de pagos (ya cruzado con actas y causas) generado en: backend/descargas/pagos/PAGOS 20260718 153439.txt
+[ACTUALIZAR PAGOS · AUTO] 🧹 TXT de pagos crudo eliminado (ya usado en el cruce): backend/descargas/pagos/PAGOS DESCARGADOS.txt
+[ACTUALIZAR PAGOS · AUTO] 🧹 Excel MULTAS_SIGEMI_CRUCE eliminado (ya usado en el cruce): backend/descargas/cache_actas_cruce/MULTAS_SIGEMI_CRUCE.xlsx
+[ACTUALIZAR PAGOS · AUTO] 🧹 Excel MULTAS_JUZGADO_CRUCE eliminado (ya usado en el cruce): backend/descargas/cache_actas_cruce/MULTAS_JUZGADO_CRUCE.xlsx
+[ACTUALIZAR PAGOS · AUTO] ✅ CompararActasPaso finalizado.
+[ACTUALIZAR PAGOS · AUTO] ✓ [CompararActasPaso] Completado.
+[ACTUALIZAR PAGOS · AUTO] === Ejecución finalizada con éxito ===
+🤖 [Automático] Es hora de actualizar pagos. Arrancando...
+[ACTUALIZAR PAGOS · AUTO] === Inicio de ejecución: pagos ===
+[ACTUALIZAR PAGOS · AUTO] ▶ [LoginSemytPaso] Iniciando...
+[ACTUALIZAR PAGOS · AUTO] ==================================================
+[ACTUALIZAR PAGOS · AUTO] 🚀 PASO: LoginSemytPaso
+[ACTUALIZAR PAGOS · AUTO] ==================================================
+[ACTUALIZAR PAGOS · AUTO] Abriendo SEMyT con sesión guardada...
+[ACTUALIZAR PAGOS · AUTO] ✅ Sesión existente detectada. Login omitido.
+[ACTUALIZAR PAGOS · AUTO] ✅ LoginSemytPaso finalizado.
+[ACTUALIZAR PAGOS · AUTO] ✓ [LoginSemytPaso] Completado.
+[ACTUALIZAR PAGOS · AUTO] ▶ [LoginJuzgadoPaso] Iniciando...
+[ACTUALIZAR PAGOS · AUTO] ==================================================
+[ACTUALIZAR PAGOS · AUTO] 🚀 PASO: LoginJuzgadoPaso
+[ACTUALIZAR PAGOS · AUTO] ==================================================
+[ACTUALIZAR PAGOS · AUTO] Abriendo sitio municipalidad (CiDi)...
+[ACTUALIZAR PAGOS · AUTO] ✅ Sesión existente detectada en Juzgado. Login omitido.
+[ACTUALIZAR PAGOS · AUTO] ✅ LoginJuzgadoPaso finalizado.
+[ACTUALIZAR PAGOS · AUTO] ✓ [LoginJuzgadoPaso] Completado.
+[ACTUALIZAR PAGOS · AUTO] ▶ [DescargarPagosPaso] Iniciando...
+[ACTUALIZAR PAGOS · AUTO] ==================================================
+[ACTUALIZAR PAGOS · AUTO] 🚀 PASO: DescargarPagosPaso
+[ACTUALIZAR PAGOS · AUTO] ==================================================
+[ACTUALIZAR PAGOS · AUTO] 📥 Descargando TXT de pagos desde el Juzgado...
+⏳ [Automático] Tocaba disparar 'pagos' pero ya hay una ejecución en curso (Actualizar pagos); esperando a que termine; se reintenta en breve sin perder el turno.
+[ACTUALIZAR PAGOS · AUTO] ✅ TXT de pagos descargado en: backend/descargas/pagos/PAGOS DESCARGADOS.txt
+[ACTUALIZAR PAGOS · AUTO] ✅ DescargarPagosPaso finalizado.
+[ACTUALIZAR PAGOS · AUTO] ✓ [DescargarPagosPaso] Completado.
+[ACTUALIZAR PAGOS · AUTO] ▶ [ObtenerActasCrucePaso] Iniciando...
+[ACTUALIZAR PAGOS · AUTO] ==================================================
+[ACTUALIZAR PAGOS · AUTO] 🚀 PASO: ObtenerActasCrucePaso
+[ACTUALIZAR PAGOS · AUTO] ==================================================
+[ACTUALIZAR PAGOS · AUTO] 📥 Descargando Excel de actas vencidas para el cruce — SIGEMI (rango viejo)...
+[ACTUALIZAR PAGOS · AUTO] Fecha Desde: 27/06/2024
+[ACTUALIZAR PAGOS · AUTO] Fecha Hasta: 24/11/2025
+[ACTUALIZAR PAGOS · AUTO] Descargando Excel...
+[ACTUALIZAR PAGOS · AUTO] Archivo descargado en: backend/descargas/cache_actas_cruce/MULTAS_SIGEMI_CRUCE.xlsx
+[ACTUALIZAR PAGOS · AUTO] ✅ Excel de actas para el cruce (SIGEMI (rango viejo)) guardado en: backend/descargas/cache_actas_cruce/MULTAS_SIGEMI_CRUCE.xlsx
+[ACTUALIZAR PAGOS · AUTO] 📥 Descargando Excel de actas vencidas para el cruce — Juzgado (rango nuevo)...
+[ACTUALIZAR PAGOS · AUTO] Fecha Desde: 25/11/2025
+[ACTUALIZAR PAGOS · AUTO] Fecha Hasta: 18/07/2026
+[ACTUALIZAR PAGOS · AUTO] Descargando Excel...
+[ACTUALIZAR PAGOS · AUTO] Archivo descargado en: backend/descargas/cache_actas_cruce/MULTAS_JUZGADO_CRUCE.xlsx
+[ACTUALIZAR PAGOS · AUTO] ✅ Excel de actas para el cruce (Juzgado (rango nuevo)) guardado en: backend/descargas/cache_actas_cruce/MULTAS_JUZGADO_CRUCE.xlsx
+[ACTUALIZAR PAGOS · AUTO] ✅ ObtenerActasCrucePaso finalizado.
+[ACTUALIZAR PAGOS · AUTO] ✓ [ObtenerActasCrucePaso] Completado.
+[ACTUALIZAR PAGOS · AUTO] ▶ [CompararActasPaso] Iniciando...
+[ACTUALIZAR PAGOS · AUTO] ==================================================
+[ACTUALIZAR PAGOS · AUTO] 🚀 PASO: CompararActasPaso
+[ACTUALIZAR PAGOS · AUTO] ==================================================
+[ACTUALIZAR PAGOS · AUTO] 🔍 Comparando actas del SEMyT contra pagos del Juzgado...
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO] INICIANDO PROCESO DE GENERACIÓN DE PAGOS DESACTUALIZADOS
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO] 📂 Cargando archivos...
+[ACTUALIZAR PAGOS · AUTO]   ✓ Pagos: 14768 registros
+[ACTUALIZAR PAGOS · AUTO]   ✓ Excel SIGEMI (multas vencidas viejas): 104421 registros
+[ACTUALIZAR PAGOS · AUTO]   ✓ Excel Juzgado (multas vencidas nuevas): 39355 registros
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO] PASO 1: LLENANDO ACTA_NUMERO (búsqueda por patente + fecha, con desempate por hora)
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO] 📊 ESTADÍSTICAS DE LLENADO DE ACTAS:
+[ACTUALIZAR PAGOS · AUTO]   • Pagos con acta ORIGINAL: 1653
+[ACTUALIZAR PAGOS · AUTO]   • Pagos SIN acta (buscados): 13115
+[ACTUALIZAR PAGOS · AUTO]   • Pagos LLENADOS exitosamente: 7
+[ACTUALIZAR PAGOS · AUTO]   • Pagos NO encontrados en multas: 13108
+[ACTUALIZAR PAGOS · AUTO]   • Pagos SIN RESOLVER por desbalance de cantidades: 0
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO] PASO 1: LLENANDO ACTA_NUMERO (búsqueda por patente + fecha, con desempate por hora)
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO] 📊 ESTADÍSTICAS DE LLENADO DE ACTAS:
+[ACTUALIZAR PAGOS · AUTO]   • Pagos con acta ORIGINAL: 1660
+[ACTUALIZAR PAGOS · AUTO]   • Pagos SIN acta (buscados): 13108
+[ACTUALIZAR PAGOS · AUTO]   • Pagos LLENADOS exitosamente: 0
+[ACTUALIZAR PAGOS · AUTO]   • Pagos NO encontrados en multas: 13108
+[ACTUALIZAR PAGOS · AUTO]   • Pagos SIN RESOLVER por desbalance de cantidades: 0
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO] PASO 2: FILTRANDO PAGOS CON ACTA_NUMERO COMPLETO
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO] 📊 ESTADÍSTICAS DE FILTRADO:
+[ACTUALIZAR PAGOS · AUTO]   • Pagos TOTALES al inicio: 14768
+[ACTUALIZAR PAGOS · AUTO]   • Pagos CON acta (MANTIENEN): 1660
+[ACTUALIZAR PAGOS · AUTO]   • Pagos RECHAZADOS (sin coincidencias): 13108
+[ACTUALIZAR PAGOS · AUTO] ⚠️  Se eliminaron 13108 registros sin número de acta
+[ACTUALIZAR PAGOS · AUTO]      (recordá: esto incluye tanto pagos ya actualizados/pagados
+[ACTUALIZAR PAGOS · AUTO]       como pagos que quedaron sin resolver por desbalance en el Paso 1)
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO] PASO 2-bis: CONFIRMANDO VIGENCIA DE PAGOS DEL SISTEMA NUEVO (contra MULTAS_JUZGADO_CRUCE)
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO]   ⚠ 1650 pago(s) del sistema nuevo descartados: su acta ya no figura como vencida en MULTAS_JUZGADO_CRUCE (SEMyT ya los actualizó).
+[ACTUALIZAR PAGOS · AUTO]   • Pagos del sistema nuevo descartados por ya estar actualizados: 1650
+[ACTUALIZAR PAGOS · AUTO] 📂 Cargando maestro de causas SIGEMI...
+[ACTUALIZAR PAGOS · AUTO]   ✓ Causas totales (maestro): 134069 registros
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO] PASO 2.5: ARMANDO causas.txt SIMPLIFICADO (cruce contra total_causas_sigemi.txt)
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO]   • Actas vencidas viejas (multas): 104421
+[ACTUALIZAR PAGOS · AUTO]   • Causas totales en el maestro SIGEMI: 134069
+[ACTUALIZAR PAGOS · AUTO]   • Causas que coinciden (simplificado): 104421
+[ACTUALIZAR PAGOS · AUTO]   ✅ Archivo escrito: backend/descargas/causas/causas.txt
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO] PASO 3: LLENANDO CAUSA_NUMERO (según fecha de cambio de sistema, cruzando por acta + año)
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO] 📊 ESTADÍSTICAS DE LLENADO DE CAUSAS:
+[ACTUALIZAR PAGOS · AUTO]   • Pagos con causa ORIGINAL: 3
+[ACTUALIZAR PAGOS · AUTO]   • Causas encontradas en SIGEMI (actas viejas): 7
+[ACTUALIZAR PAGOS · AUTO]   • Causas NO encontradas en SIGEMI: 0
+[ACTUALIZAR PAGOS · AUTO]   • Causas asignadas automáticamente (actas nuevas): 0
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO] PASO 4: ORDENANDO POR FECHA Y ACTA_NUMERO
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO] ✓ Pagos ordenados correctamente
+[ACTUALIZAR PAGOS · AUTO]   • Primera entrada: Acta=171706, Fecha=01/07/2025
+[ACTUALIZAR PAGOS · AUTO]   • Última entrada: Acta=278410, Fecha=11/03/2026
+[ACTUALIZAR PAGOS · AUTO] 📝 Escribiendo archivo de salida...
+[ACTUALIZAR PAGOS · AUTO]   ✅ Archivo escrito: backend/descargas/pagos/PAGOS 20260718 154458.txt
+[ACTUALIZAR PAGOS · AUTO]   ✅ Total registros: 1228
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO] ✅ PROCESO COMPLETADO EXITOSAMENTE
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO] 📊 RESUMEN FINAL DEL PROCESAMIENTO:
+[ACTUALIZAR PAGOS · AUTO]   ENTRADA:
+[ACTUALIZAR PAGOS · AUTO]     • Pagos originales: 14768
+[ACTUALIZAR PAGOS · AUTO]     • Multas SIGEMI cargadas: 104421
+[ACTUALIZAR PAGOS · AUTO]     • Multas Juzgado cargadas: 39355
+[ACTUALIZAR PAGOS · AUTO]     • Causas simplificadas (usadas para el cruce): 104421
+[ACTUALIZAR PAGOS · AUTO]   PROCESO:
+[ACTUALIZAR PAGOS · AUTO]     • Pagos rechazados sigemi: 13108
+[ACTUALIZAR PAGOS · AUTO]     • Pagos rechazados juzgado: 1650
+[ACTUALIZAR PAGOS · AUTO]   SALIDA:
+[ACTUALIZAR PAGOS · AUTO]     • Pagos desactualizados procesados: 10
+[ACTUALIZAR PAGOS · AUTO]     • Archivo final: backend/descargas/pagos/PAGOS 20260718 154458.txt
+[ACTUALIZAR PAGOS · AUTO]     • Ordenados por fecha: SÍ ✓
+[ACTUALIZAR PAGOS · AUTO]     • Todos con ACTA_NUMERO: SÍ ✓
+[ACTUALIZAR PAGOS · AUTO]     • Todos con CAUSA_NUMERO: SÍ ✓
+[ACTUALIZAR PAGOS · AUTO] ✅ TXT de pagos (ya cruzado con actas y causas) generado en: backend/descargas/pagos/PAGOS 20260718 154458.txt
+[ACTUALIZAR PAGOS · AUTO] 🧹 TXT de pagos crudo eliminado (ya usado en el cruce): backend/descargas/pagos/PAGOS DESCARGADOS.txt
+[ACTUALIZAR PAGOS · AUTO] 🧹 Excel MULTAS_SIGEMI_CRUCE eliminado (ya usado en el cruce): backend/descargas/cache_actas_cruce/MULTAS_SIGEMI_CRUCE.xlsx
+[ACTUALIZAR PAGOS · AUTO] 🧹 Excel MULTAS_JUZGADO_CRUCE eliminado (ya usado en el cruce): backend/descargas/cache_actas_cruce/MULTAS_JUZGADO_CRUCE.xlsx
+[ACTUALIZAR PAGOS · AUTO] ✅ CompararActasPaso finalizado.
+[ACTUALIZAR PAGOS · AUTO] ✓ [CompararActasPaso] Completado.
+[ACTUALIZAR PAGOS · AUTO] === Ejecución finalizada con éxito ===
+🤖 [Automático] Es hora de actualizar pagos. Arrancando...
+[ACTUALIZAR PAGOS · AUTO] === Inicio de ejecución: pagos ===
+[ACTUALIZAR PAGOS · AUTO] ▶ [LoginSemytPaso] Iniciando...
+[ACTUALIZAR PAGOS · AUTO] ==================================================
+[ACTUALIZAR PAGOS · AUTO] 🚀 PASO: LoginSemytPaso
+[ACTUALIZAR PAGOS · AUTO] ==================================================
+[ACTUALIZAR PAGOS · AUTO] Abriendo SEMyT con sesión guardada...
+[ACTUALIZAR PAGOS · AUTO] ✅ Sesión existente detectada. Login omitido.
+[ACTUALIZAR PAGOS · AUTO] ✅ LoginSemytPaso finalizado.
+[ACTUALIZAR PAGOS · AUTO] ✓ [LoginSemytPaso] Completado.
+[ACTUALIZAR PAGOS · AUTO] ▶ [LoginJuzgadoPaso] Iniciando...
+[ACTUALIZAR PAGOS · AUTO] ==================================================
+[ACTUALIZAR PAGOS · AUTO] 🚀 PASO: LoginJuzgadoPaso
+[ACTUALIZAR PAGOS · AUTO] ==================================================
+[ACTUALIZAR PAGOS · AUTO] Abriendo sitio municipalidad (CiDi)...
+[ACTUALIZAR PAGOS · AUTO] ✅ Sesión existente detectada en Juzgado. Login omitido.
+[ACTUALIZAR PAGOS · AUTO] ✅ LoginJuzgadoPaso finalizado.
+[ACTUALIZAR PAGOS · AUTO] ✓ [LoginJuzgadoPaso] Completado.
+[ACTUALIZAR PAGOS · AUTO] ▶ [DescargarPagosPaso] Iniciando...
+[ACTUALIZAR PAGOS · AUTO] ==================================================
+[ACTUALIZAR PAGOS · AUTO] 🚀 PASO: DescargarPagosPaso
+[ACTUALIZAR PAGOS · AUTO] ==================================================
+[ACTUALIZAR PAGOS · AUTO] 📥 Descargando TXT de pagos desde el Juzgado...
+⏳ [Automático] Tocaba disparar 'pagos' pero ya hay una ejecución en curso (Actualizar pagos); esperando a que termine; se reintenta en breve sin perder el turno.
+[ACTUALIZAR PAGOS · AUTO] ✅ TXT de pagos descargado en: backend/descargas/pagos/PAGOS DESCARGADOS.txt
+[ACTUALIZAR PAGOS · AUTO] ✅ DescargarPagosPaso finalizado.
+[ACTUALIZAR PAGOS · AUTO] ✓ [DescargarPagosPaso] Completado.
+[ACTUALIZAR PAGOS · AUTO] ▶ [ObtenerActasCrucePaso] Iniciando...
+[ACTUALIZAR PAGOS · AUTO] ==================================================
+[ACTUALIZAR PAGOS · AUTO] 🚀 PASO: ObtenerActasCrucePaso
+[ACTUALIZAR PAGOS · AUTO] ==================================================
+[ACTUALIZAR PAGOS · AUTO] 📥 Descargando Excel de actas vencidas para el cruce — SIGEMI (rango viejo)...
+[ACTUALIZAR PAGOS · AUTO] Fecha Desde: 27/06/2024
+[ACTUALIZAR PAGOS · AUTO] Fecha Hasta: 24/11/2025
+[ACTUALIZAR PAGOS · AUTO] Descargando Excel...
+[ACTUALIZAR PAGOS · AUTO] Archivo descargado en: backend/descargas/cache_actas_cruce/MULTAS_SIGEMI_CRUCE.xlsx
+[ACTUALIZAR PAGOS · AUTO] ✅ Excel de actas para el cruce (SIGEMI (rango viejo)) guardado en: backend/descargas/cache_actas_cruce/MULTAS_SIGEMI_CRUCE.xlsx
+[ACTUALIZAR PAGOS · AUTO] 📥 Descargando Excel de actas vencidas para el cruce — Juzgado (rango nuevo)...
+[ACTUALIZAR PAGOS · AUTO] Fecha Desde: 25/11/2025
+[ACTUALIZAR PAGOS · AUTO] Fecha Hasta: 18/07/2026
+[ACTUALIZAR PAGOS · AUTO] Descargando Excel...
+[ACTUALIZAR PAGOS · AUTO] Archivo descargado en: backend/descargas/cache_actas_cruce/MULTAS_JUZGADO_CRUCE.xlsx
+[ACTUALIZAR PAGOS · AUTO] ✅ Excel de actas para el cruce (Juzgado (rango nuevo)) guardado en: backend/descargas/cache_actas_cruce/MULTAS_JUZGADO_CRUCE.xlsx
+[ACTUALIZAR PAGOS · AUTO] ✅ ObtenerActasCrucePaso finalizado.
+[ACTUALIZAR PAGOS · AUTO] ✓ [ObtenerActasCrucePaso] Completado.
+[ACTUALIZAR PAGOS · AUTO] ▶ [CompararActasPaso] Iniciando...
+[ACTUALIZAR PAGOS · AUTO] ==================================================
+[ACTUALIZAR PAGOS · AUTO] 🚀 PASO: CompararActasPaso
+[ACTUALIZAR PAGOS · AUTO] ==================================================
+[ACTUALIZAR PAGOS · AUTO] 🔍 Comparando actas del SEMyT contra pagos del Juzgado...
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO] INICIANDO PROCESO DE GENERACIÓN DE PAGOS DESACTUALIZADOS
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO] 📂 Cargando archivos...
+[ACTUALIZAR PAGOS · AUTO]   ✓ Pagos: 14768 registros
+[ACTUALIZAR PAGOS · AUTO]   ✓ Excel SIGEMI (multas vencidas viejas): 104421 registros
+[ACTUALIZAR PAGOS · AUTO]   ✓ Excel Juzgado (multas vencidas nuevas): 39355 registros
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO] PASO 1: LLENANDO ACTA_NUMERO (búsqueda por patente + fecha, con desempate por hora)
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO] 📊 ESTADÍSTICAS DE LLENADO DE ACTAS:
+[ACTUALIZAR PAGOS · AUTO]   • Pagos con acta ORIGINAL: 1653
+[ACTUALIZAR PAGOS · AUTO]   • Pagos SIN acta (buscados): 13115
+[ACTUALIZAR PAGOS · AUTO]   • Pagos LLENADOS exitosamente: 7
+[ACTUALIZAR PAGOS · AUTO]   • Pagos NO encontrados en multas: 13108
+[ACTUALIZAR PAGOS · AUTO]   • Pagos SIN RESOLVER por desbalance de cantidades: 0
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO] PASO 1: LLENANDO ACTA_NUMERO (búsqueda por patente + fecha, con desempate por hora)
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO] 📊 ESTADÍSTICAS DE LLENADO DE ACTAS:
+[ACTUALIZAR PAGOS · AUTO]   • Pagos con acta ORIGINAL: 1660
+[ACTUALIZAR PAGOS · AUTO]   • Pagos SIN acta (buscados): 13108
+[ACTUALIZAR PAGOS · AUTO]   • Pagos LLENADOS exitosamente: 0
+[ACTUALIZAR PAGOS · AUTO]   • Pagos NO encontrados en multas: 13108
+[ACTUALIZAR PAGOS · AUTO]   • Pagos SIN RESOLVER por desbalance de cantidades: 0
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO] PASO 2: FILTRANDO PAGOS CON ACTA_NUMERO COMPLETO
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO] 📊 ESTADÍSTICAS DE FILTRADO:
+[ACTUALIZAR PAGOS · AUTO]   • Pagos TOTALES al inicio: 14768
+[ACTUALIZAR PAGOS · AUTO]   • Pagos CON acta (MANTIENEN): 1660
+[ACTUALIZAR PAGOS · AUTO]   • Pagos RECHAZADOS (sin coincidencias): 13108
+[ACTUALIZAR PAGOS · AUTO] ⚠️  Se eliminaron 13108 registros sin número de acta
+[ACTUALIZAR PAGOS · AUTO]      (recordá: esto incluye tanto pagos ya actualizados/pagados
+[ACTUALIZAR PAGOS · AUTO]       como pagos que quedaron sin resolver por desbalance en el Paso 1)
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO] PASO 2-bis: CONFIRMANDO VIGENCIA DE PAGOS DEL SISTEMA NUEVO (contra MULTAS_JUZGADO_CRUCE)
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO]   ⚠ 1650 pago(s) del sistema nuevo descartados: su acta ya no figura como vencida en MULTAS_JUZGADO_CRUCE (SEMyT ya los actualizó).
+[ACTUALIZAR PAGOS · AUTO]   • Pagos del sistema nuevo descartados por ya estar actualizados: 1650
+[ACTUALIZAR PAGOS · AUTO] 📂 Cargando maestro de causas SIGEMI...
+[ACTUALIZAR PAGOS · AUTO]   ✓ Causas totales (maestro): 134069 registros
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO] PASO 2.5: ARMANDO causas.txt SIMPLIFICADO (cruce contra total_causas_sigemi.txt)
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO]   • Actas vencidas viejas (multas): 104421
+[ACTUALIZAR PAGOS · AUTO]   • Causas totales en el maestro SIGEMI: 134069
+[ACTUALIZAR PAGOS · AUTO]   • Causas que coinciden (simplificado): 104421
+[ACTUALIZAR PAGOS · AUTO]   ✅ Archivo escrito: backend/descargas/causas/causas.txt
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO] PASO 3: LLENANDO CAUSA_NUMERO (según fecha de cambio de sistema, cruzando por acta + año)
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO] 📊 ESTADÍSTICAS DE LLENADO DE CAUSAS:
+[ACTUALIZAR PAGOS · AUTO]   • Pagos con causa ORIGINAL: 3
+[ACTUALIZAR PAGOS · AUTO]   • Causas encontradas en SIGEMI (actas viejas): 7
+[ACTUALIZAR PAGOS · AUTO]   • Causas NO encontradas en SIGEMI: 0
+[ACTUALIZAR PAGOS · AUTO]   • Causas asignadas automáticamente (actas nuevas): 0
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO] PASO 4: ORDENANDO POR FECHA Y ACTA_NUMERO
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO] ✓ Pagos ordenados correctamente
+[ACTUALIZAR PAGOS · AUTO]   • Primera entrada: Acta=171706, Fecha=01/07/2025
+[ACTUALIZAR PAGOS · AUTO]   • Última entrada: Acta=278410, Fecha=11/03/2026
+[ACTUALIZAR PAGOS · AUTO] 📝 Escribiendo archivo de salida...
+[ACTUALIZAR PAGOS · AUTO]   ✅ Archivo escrito: backend/descargas/pagos/PAGOS 20260718 155520.txt
+[ACTUALIZAR PAGOS · AUTO]   ✅ Total registros: 1228
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO] ✅ PROCESO COMPLETADO EXITOSAMENTE
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO] 📊 RESUMEN FINAL DEL PROCESAMIENTO:
+[ACTUALIZAR PAGOS · AUTO]   ENTRADA:
+[ACTUALIZAR PAGOS · AUTO]     • Pagos originales: 14768
+[ACTUALIZAR PAGOS · AUTO]     • Multas SIGEMI cargadas: 104421
+[ACTUALIZAR PAGOS · AUTO]     • Multas Juzgado cargadas: 39355
+[ACTUALIZAR PAGOS · AUTO]     • Causas simplificadas (usadas para el cruce): 104421
+[ACTUALIZAR PAGOS · AUTO]   PROCESO:
+[ACTUALIZAR PAGOS · AUTO]     • Pagos rechazados sigemi: 13108
+[ACTUALIZAR PAGOS · AUTO]     • Pagos rechazados juzgado: 1650
+[ACTUALIZAR PAGOS · AUTO]   SALIDA:
+[ACTUALIZAR PAGOS · AUTO]     • Pagos desactualizados procesados: 10
+[ACTUALIZAR PAGOS · AUTO]     • Archivo final: backend/descargas/pagos/PAGOS 20260718 155520.txt
+[ACTUALIZAR PAGOS · AUTO]     • Ordenados por fecha: SÍ ✓
+[ACTUALIZAR PAGOS · AUTO]     • Todos con ACTA_NUMERO: SÍ ✓
+[ACTUALIZAR PAGOS · AUTO]     • Todos con CAUSA_NUMERO: SÍ ✓
+[ACTUALIZAR PAGOS · AUTO] ✅ TXT de pagos (ya cruzado con actas y causas) generado en: backend/descargas/pagos/PAGOS 20260718 155520.txt
+[ACTUALIZAR PAGOS · AUTO] 🧹 TXT de pagos crudo eliminado (ya usado en el cruce): backend/descargas/pagos/PAGOS DESCARGADOS.txt
+[ACTUALIZAR PAGOS · AUTO] 🧹 Excel MULTAS_SIGEMI_CRUCE eliminado (ya usado en el cruce): backend/descargas/cache_actas_cruce/MULTAS_SIGEMI_CRUCE.xlsx
+[ACTUALIZAR PAGOS · AUTO] 🧹 Excel MULTAS_JUZGADO_CRUCE eliminado (ya usado en el cruce): backend/descargas/cache_actas_cruce/MULTAS_JUZGADO_CRUCE.xlsx
+[ACTUALIZAR PAGOS · AUTO] ✅ CompararActasPaso finalizado.
+[ACTUALIZAR PAGOS · AUTO] ✓ [CompararActasPaso] Completado.
+[ACTUALIZAR PAGOS · AUTO] === Ejecución finalizada con éxito ===
+🤖 [Automático] Es hora de actualizar pagos. Arrancando...
+[ACTUALIZAR PAGOS · AUTO] === Inicio de ejecución: pagos ===
+[ACTUALIZAR PAGOS · AUTO] ▶ [LoginSemytPaso] Iniciando...
+[ACTUALIZAR PAGOS · AUTO] ==================================================
+[ACTUALIZAR PAGOS · AUTO] 🚀 PASO: LoginSemytPaso
+[ACTUALIZAR PAGOS · AUTO] ==================================================
+[ACTUALIZAR PAGOS · AUTO] Abriendo SEMyT con sesión guardada...
+[ACTUALIZAR PAGOS · AUTO] ✅ Sesión existente detectada. Login omitido.
+[ACTUALIZAR PAGOS · AUTO] ✅ LoginSemytPaso finalizado.
+[ACTUALIZAR PAGOS · AUTO] ✓ [LoginSemytPaso] Completado.
+[ACTUALIZAR PAGOS · AUTO] ▶ [LoginJuzgadoPaso] Iniciando...
+[ACTUALIZAR PAGOS · AUTO] ==================================================
+[ACTUALIZAR PAGOS · AUTO] 🚀 PASO: LoginJuzgadoPaso
+[ACTUALIZAR PAGOS · AUTO] ==================================================
+[ACTUALIZAR PAGOS · AUTO] Abriendo sitio municipalidad (CiDi)...
+[ACTUALIZAR PAGOS · AUTO] ✅ Sesión existente detectada en Juzgado. Login omitido.
+[ACTUALIZAR PAGOS · AUTO] ✅ LoginJuzgadoPaso finalizado.
+[ACTUALIZAR PAGOS · AUTO] ✓ [LoginJuzgadoPaso] Completado.
+[ACTUALIZAR PAGOS · AUTO] ▶ [DescargarPagosPaso] Iniciando...
+[ACTUALIZAR PAGOS · AUTO] ==================================================
+[ACTUALIZAR PAGOS · AUTO] 🚀 PASO: DescargarPagosPaso
+[ACTUALIZAR PAGOS · AUTO] ==================================================
+[ACTUALIZAR PAGOS · AUTO] 📥 Descargando TXT de pagos desde el Juzgado...
+⏳ [Automático] Tocaba disparar 'pagos' pero ya hay una ejecución en curso (Actualizar pagos); esperando a que termine; se reintenta en breve sin perder el turno.
+[ACTUALIZAR PAGOS · AUTO] ✅ TXT de pagos descargado en: backend/descargas/pagos/PAGOS DESCARGADOS.txt
+[ACTUALIZAR PAGOS · AUTO] ✅ DescargarPagosPaso finalizado.
+[ACTUALIZAR PAGOS · AUTO] ✓ [DescargarPagosPaso] Completado.
+[ACTUALIZAR PAGOS · AUTO] ▶ [ObtenerActasCrucePaso] Iniciando...
+[ACTUALIZAR PAGOS · AUTO] ==================================================
+[ACTUALIZAR PAGOS · AUTO] 🚀 PASO: ObtenerActasCrucePaso
+[ACTUALIZAR PAGOS · AUTO] ==================================================
+[ACTUALIZAR PAGOS · AUTO] 📥 Descargando Excel de actas vencidas para el cruce — SIGEMI (rango viejo)...
+[ACTUALIZAR PAGOS · AUTO] Fecha Desde: 27/06/2024
+[ACTUALIZAR PAGOS · AUTO] Fecha Hasta: 24/11/2025
+[ACTUALIZAR PAGOS · AUTO] Descargando Excel...
+[ACTUALIZAR PAGOS · AUTO] Archivo descargado en: backend/descargas/cache_actas_cruce/MULTAS_SIGEMI_CRUCE.xlsx
+[ACTUALIZAR PAGOS · AUTO] ✅ Excel de actas para el cruce (SIGEMI (rango viejo)) guardado en: backend/descargas/cache_actas_cruce/MULTAS_SIGEMI_CRUCE.xlsx
+[ACTUALIZAR PAGOS · AUTO] 📥 Descargando Excel de actas vencidas para el cruce — Juzgado (rango nuevo)...
+[ACTUALIZAR PAGOS · AUTO] Fecha Desde: 25/11/2025
+[ACTUALIZAR PAGOS · AUTO] Fecha Hasta: 18/07/2026
+[ACTUALIZAR PAGOS · AUTO] Descargando Excel...
+[ACTUALIZAR PAGOS · AUTO] Archivo descargado en: backend/descargas/cache_actas_cruce/MULTAS_JUZGADO_CRUCE.xlsx
+[ACTUALIZAR PAGOS · AUTO] ✅ Excel de actas para el cruce (Juzgado (rango nuevo)) guardado en: backend/descargas/cache_actas_cruce/MULTAS_JUZGADO_CRUCE.xlsx
+[ACTUALIZAR PAGOS · AUTO] ✅ ObtenerActasCrucePaso finalizado.
+[ACTUALIZAR PAGOS · AUTO] ✓ [ObtenerActasCrucePaso] Completado.
+[ACTUALIZAR PAGOS · AUTO] ▶ [CompararActasPaso] Iniciando...
+[ACTUALIZAR PAGOS · AUTO] ==================================================
+[ACTUALIZAR PAGOS · AUTO] 🚀 PASO: CompararActasPaso
+[ACTUALIZAR PAGOS · AUTO] ==================================================
+[ACTUALIZAR PAGOS · AUTO] 🔍 Comparando actas del SEMyT contra pagos del Juzgado...
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO] INICIANDO PROCESO DE GENERACIÓN DE PAGOS DESACTUALIZADOS
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO] 📂 Cargando archivos...
+[ACTUALIZAR PAGOS · AUTO]   ✓ Pagos: 14768 registros
+[ACTUALIZAR PAGOS · AUTO]   ✓ Excel SIGEMI (multas vencidas viejas): 104421 registros
+[ACTUALIZAR PAGOS · AUTO]   ✓ Excel Juzgado (multas vencidas nuevas): 39355 registros
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO] PASO 1: LLENANDO ACTA_NUMERO (búsqueda por patente + fecha, con desempate por hora)
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO] 📊 ESTADÍSTICAS DE LLENADO DE ACTAS:
+[ACTUALIZAR PAGOS · AUTO]   • Pagos con acta ORIGINAL: 1653
+[ACTUALIZAR PAGOS · AUTO]   • Pagos SIN acta (buscados): 13115
+[ACTUALIZAR PAGOS · AUTO]   • Pagos LLENADOS exitosamente: 7
+[ACTUALIZAR PAGOS · AUTO]   • Pagos NO encontrados en multas: 13108
+[ACTUALIZAR PAGOS · AUTO]   • Pagos SIN RESOLVER por desbalance de cantidades: 0
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+[ACTUALIZAR PAGOS · AUTO] PASO 1: LLENANDO ACTA_NUMERO (búsqueda por patente + fecha, con desempate por hora)
+[ACTUALIZAR PAGOS · AUTO] ================================================================================
+
+👋 Deteniendo servicio: cancelando procesos activos antes de salir...
+🤖 Modo automático desactivado. (Si había una ejecución en curso disparada por el automático, no se cancela sola: cancelala desde su propia opción si querés detenerla.)
+🛑 Cancelando 'Actualizar pagos'... (le damos unos segundos para que limpie solo)
+[ACTUALIZAR PAGOS · AUTO] 🛑 Cancelación recibida. Limpiando archivos generados en esta corrida...
+[ACTUALIZAR PAGOS · AUTO] 🧹 Archivo eliminado: backend/descargas/pagos/PAGOS DESCARGADOS.txt
+[ACTUALIZAR PAGOS · AUTO] 🧹 Archivo eliminado: backend/descargas/cache_actas_cruce/MULTAS_SIGEMI_CRUCE.xlsx
+[ACTUALIZAR PAGOS · AUTO] 🧹 Archivo eliminado: backend/descargas/cache_actas_cruce/MULTAS_JUZGADO_CRUCE.xlsx
+[ACTUALIZAR PAGOS · AUTO] ❌ === Ejecución cancelada por el usuario ===
+🤖 [Automático] 'pagos' fue cancelado manualmente durante una corrida automática; no se reintenta solo, se retoma en el horario normal.
+✅ 'Actualizar pagos' cancelado.
+✅ Servicio detenido de forma prolija.

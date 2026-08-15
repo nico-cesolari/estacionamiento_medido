@@ -1,0 +1,148 @@
+[15:06:03] === Inicio de ejecución: pagos ===
+[15:06:05] ▶ [LoginSemytPaso] Iniciando...
+[15:06:05] ==================================================
+[15:06:05] 🚀 PASO: LoginSemytPaso
+[15:06:05] ==================================================
+[15:06:06] Abriendo SEMyT...
+[15:06:08] ✅ [SEMyT] Sesión existente detectada. Login omitido.
+[15:06:09] ✅ LoginSemytPaso finalizado. (⏱ 3.7s)
+[15:06:09] ✓ [LoginSemytPaso] Completado.
+[15:06:09] ▶ [LoginJuzgadoPaso] Iniciando...
+[15:06:09] ==================================================
+[15:06:09] 🚀 PASO: LoginJuzgadoPaso
+[15:06:09] ==================================================
+[15:06:09] Abriendo sitio municipalidad (CiDi)...
+[15:06:10] ✅ [Juzgado] Sesión existente detectada. Login omitido.
+[15:06:11] ✅ LoginJuzgadoPaso finalizado. (⏱ 2.1s)
+[15:06:11] ✓ [LoginJuzgadoPaso] Completado.
+[15:06:11] ▶ [DescargasParalelasPaso] Iniciando...
+[15:06:11] ==================================================
+[15:06:11] 🚀 PASO: DescargasParalelasPaso
+[15:06:11] ==================================================
+[15:06:12] 📤 Arrancando las 3 descargas en paralelo (mismo browser, páginas separadas)...
+[15:06:12] Fecha Desde: 27/06/2024
+[15:06:12] Fecha Hasta: 24/11/2025
+[15:06:12] Fecha Desde: 25/11/2025
+[15:06:12] Fecha Hasta: 24/07/2026
+[15:06:12] Descargando Excel...
+[15:06:12] Descargando Excel...
+[15:06:23] Archivo descargado en: backend/descargas/cache_actas_cruce/MULTAS_JUZGADO_CRUCE.xlsx
+[15:06:30] ⏱ [actas_juzgado] completado en 18.4s
+[15:06:32] Archivo descargado en: backend/descargas/cache_actas_cruce/MULTAS_SIGEMI_CRUCE.xlsx
+[15:06:48] ⏱ [actas_sigemi] completado en 36.4s
+[15:06:48] ✅ TXT de pagos descargado en: backend/descargas/pagos/2026-07-24/PAGOS DESCARGADOS.txt
+[15:06:49] ⏱ [pagos_txt] completado en 36.5s
+[15:06:49] ⏱ TOTAL descargas en paralelo: 36.5s
+[15:06:49] ✅ DescargasParalelasPaso finalizado. (⏱ 37.8s)
+[15:06:49] ✓ [DescargasParalelasPaso] Completado.
+[15:06:49] ▶ [CompararActasPaso] Iniciando...
+[15:06:49] ==================================================
+[15:06:49] 🚀 PASO: CompararActasPaso
+[15:06:49] ==================================================
+[15:06:49] 🔍 Comparando actas del SEMyT contra pagos del Juzgado...
+[15:06:49] ================================================================================
+[15:06:49] INICIANDO PROCESO DE GENERACIÓN DE PAGOS DESACTUALIZADOS
+[15:06:49] ================================================================================
+[15:06:49] 📂 Cargando archivos...
+[15:06:49]   ✓ Pagos: 17146 registros
+[15:07:05]   ✓ Excel SIGEMI (multas vencidas viejas): 103458 registros
+[15:07:11]   ✓ Excel Juzgado (multas vencidas nuevas): 39965 registros
+[15:07:14] ================================================================================
+[15:07:14] PASO 1: LLENANDO ACTA_NUMERO (búsqueda por patente + fecha, con desempate por hora)
+[15:07:14] ================================================================================
+[15:07:20] 📊 ESTADÍSTICAS DE LLENADO DE ACTAS:
+[15:07:20]   • Pagos con acta ORIGINAL: 3038
+[15:07:20]   • Pagos SIN acta (buscados): 14108
+[15:07:20]   • Pagos LLENADOS exitosamente: 3
+[15:07:20]   • Pagos NO encontrados en multas: 14105
+[15:07:20]   • Pagos SIN RESOLVER por desbalance de cantidades: 0
+[15:07:21] ================================================================================
+[15:07:21] PASO 1: LLENANDO ACTA_NUMERO (búsqueda por patente + fecha, con desempate por hora)
+[15:07:21] ================================================================================
+[15:07:26] 📊 ESTADÍSTICAS DE LLENADO DE ACTAS:
+[15:07:26]   • Pagos con acta ORIGINAL: 3041
+[15:07:26]   • Pagos SIN acta (buscados): 14105
+[15:07:26]   • Pagos LLENADOS exitosamente: 0
+[15:07:26]   • Pagos NO encontrados en multas: 14105
+[15:07:26]   • Pagos SIN RESOLVER por desbalance de cantidades: 0
+[15:07:26] ⏱ PASO 1 (llenar actas): 14.7s
+[15:07:26] ================================================================================
+[15:07:26] PASO 2: FILTRANDO PAGOS CON ACTA_NUMERO COMPLETO
+[15:07:26] ================================================================================
+[15:07:26] 📊 ESTADÍSTICAS DE FILTRADO:
+[15:07:26]   • Pagos TOTALES al inicio: 17146
+[15:07:26]   • Pagos CON acta (MANTIENEN): 3041
+[15:07:26]   • Pagos RECHAZADOS (sin coincidencias): 14105
+[15:07:26] ⚠️  Se eliminaron 14105 registros sin número de acta
+[15:07:26]      (recordá: esto incluye tanto pagos ya actualizados/pagados
+[15:07:26]       como pagos que quedaron sin resolver por desbalance en el Paso 1)
+[15:07:26] ================================================================================
+[15:07:26] PASO 2-bis: CONFIRMANDO VIGENCIA DE PAGOS DEL SISTEMA NUEVO (contra MULTAS_JUZGADO_CRUCE)
+[15:07:26] ================================================================================
+[15:07:27]   ⚠ 3034 pago(s) del sistema nuevo descartados: su acta ya no figura como vencida en MULTAS_JUZGADO_CRUCE (SEMyT ya los actualizó).
+[15:07:27]   • Pagos del sistema nuevo descartados por ya estar actualizados: 3034
+[15:07:27] ⏱ PASO 2 (filtrar): 1.0s
+[15:07:27] 📂 Cargando maestro de causas SIGEMI...
+[15:07:27]   ✓ Causas totales (maestro): 134069 registros
+[15:07:27] ⏱ PASO 2.5 (causas simplificado): 0.1s
+[15:07:27] ================================================================================
+[15:07:27] PASO 2.5: ARMANDO causas.txt SIMPLIFICADO (cruce contra total_causas_sigemi.txt)
+[15:07:27] ================================================================================
+[15:07:29]   • Actas vencidas viejas (multas): 103458
+[15:07:29]   • Causas totales en el maestro SIGEMI: 134069
+[15:07:29]   • Causas que coinciden (simplificado): 103130
+[15:07:29]   ✅ Archivo escrito: backend/descargas/causas/causas.txt
+[15:07:30] ⏱ PASO 2.5 (causas simplificado): 2.4s
+[15:07:30] ================================================================================
+[15:07:30] PASO 3: LLENANDO CAUSA_NUMERO (según fecha de cambio de sistema, cruzando por acta + año)
+[15:07:30] ================================================================================
+[15:07:30] 📊 ESTADÍSTICAS DE LLENADO DE CAUSAS:
+[15:07:30]   • Pagos con causa ORIGINAL: 4
+[15:07:30]   • Causas encontradas en SIGEMI (actas viejas): 3
+[15:07:30]   • Causas NO encontradas en SIGEMI: 0
+[15:07:30]   • Causas asignadas automáticamente (actas nuevas): 0
+[15:07:30] ⏱ PASO 3 (llenar causas): 0.0s
+[15:07:30] ================================================================================
+[15:07:30] PASO 4: ORDENANDO POR FECHA Y ACTA_NUMERO
+[15:07:30] ================================================================================
+[15:07:30] ✓ Pagos ordenados correctamente
+[15:07:30]   • Primera entrada: Acta=121771, Fecha=12/03/2025
+[15:07:30]   • Última entrada: Acta=278429, Fecha=11/03/2026
+[15:07:30] 📝 Escribiendo archivo de salida...
+[15:07:30]   ✅ Archivo escrito: backend/descargas/pagos/2026-07-24/PAGOS 20260724 150649.txt
+[15:07:30]   ✅ Total registros: 858
+[15:07:30] ⏱ PASO 4 (ordenar y escribir): 0.0s
+[15:07:30] ================================================================================
+[15:07:30] ✅ PROCESO COMPLETADO EXITOSAMENTE
+[15:07:30] ================================================================================
+[15:07:30] 📊 RESUMEN FINAL DEL PROCESAMIENTO:
+[15:07:30]   ENTRADA:
+[15:07:30]     • Pagos originales: 17146
+[15:07:30]     • Multas SIGEMI cargadas: 103458
+[15:07:30]     • Multas Juzgado cargadas: 39965
+[15:07:30]     • Causas simplificadas (usadas para el cruce): 103130
+[15:07:30]   PROCESO:
+[15:07:30]     • Pagos rechazados sigemi: 14105
+[15:07:30]     • Pagos rechazados juzgado: 3034
+[15:07:30]   SALIDA:
+[15:07:30]     • Pagos desactualizados procesados: 7
+[15:07:30]     • Archivo final: backend/descargas/pagos/2026-07-24/PAGOS 20260724 150649.txt
+[15:07:30]     • Ordenados por fecha: SÍ ✓
+[15:07:30]     • Todos con ACTA_NUMERO: SÍ ✓
+[15:07:30]     • Todos con CAUSA_NUMERO: SÍ ✓
+[15:07:30] ✅ TXT de pagos (ya cruzado con actas y causas) generado en: backend/descargas/pagos/2026-07-24/PAGOS 20260724 150649.txt
+[15:07:30] 🧹 TXT de pagos crudo eliminado (ya usado en el cruce): backend/descargas/pagos/2026-07-24/PAGOS DESCARGADOS.txt
+[15:07:30] 🧹 Excel MULTAS_SIGEMI_CRUCE eliminado (ya usado en el cruce): backend/descargas/cache_actas_cruce/MULTAS_SIGEMI_CRUCE.xlsx
+[15:07:30] 🧹 Excel MULTAS_JUZGADO_CRUCE eliminado (ya usado en el cruce): backend/descargas/cache_actas_cruce/MULTAS_JUZGADO_CRUCE.xlsx
+[15:07:30] ✅ CompararActasPaso finalizado. (⏱ 41.2s)
+[15:07:30] ✓ [CompararActasPaso] Completado.
+[15:07:30] ▶ [CargarPagosPaso] Iniciando...
+[15:07:30] ==================================================
+[15:07:30] 🚀 PASO: CargarPagosPaso
+[15:07:30] ==================================================
+[15:07:30] 📤 Subiendo TXT de pagos al SEMyT...
+[15:07:33] ✅ Importación de pagos completada con éxito.
+[15:07:33] ✅ Archivo TXT de pagos cargado en el SEMyT correctamente.
+[15:07:33] ✅ CargarPagosPaso finalizado. (⏱ 3.2s)
+[15:07:33] ✓ [CargarPagosPaso] Completado.
+[15:07:33] === Ejecución finalizada con éxito ===

@@ -1,0 +1,72 @@
+[16:04:33] === Inicio de ejecución: pagos ===
+[16:04:35] ▶ [LoginSemytPaso] Iniciando...
+[16:04:35] ==================================================
+[16:04:35] 🚀 PASO: LoginSemytPaso
+[16:04:35] ==================================================
+[16:04:36] Abriendo SEMyT con sesión guardada...
+[16:04:38] ✅ Sesión existente detectada. Login omitido.
+[16:04:39] ✅ LoginSemytPaso finalizado.
+[16:04:39] ✓ [LoginSemytPaso] Completado.
+[16:04:39] ▶ [LoginJuzgadoPaso] Iniciando...
+[16:04:39] ==================================================
+[16:04:39] 🚀 PASO: LoginJuzgadoPaso
+[16:04:39] ==================================================
+[16:04:39] Abriendo sitio municipalidad (CiDi)...
+[16:04:40] ✅ Sesión existente detectada en Juzgado. Login omitido.
+[16:04:40] ✅ LoginJuzgadoPaso finalizado.
+[16:04:40] ✓ [LoginJuzgadoPaso] Completado.
+[16:04:40] ▶ [DescargarPagosPaso] Iniciando...
+[16:04:40] ==================================================
+[16:04:40] 🚀 PASO: DescargarPagosPaso
+[16:04:40] ==================================================
+[16:04:40] 📥 Descargando TXT de pagos desde el Juzgado...
+[16:05:02] ✅ TXT de pagos descargado en: backend/descargas/pagos/PAGOS DESCARGADOS.txt
+[16:05:02] ✅ DescargarPagosPaso finalizado.
+[16:05:02] ✓ [DescargarPagosPaso] Completado.
+[16:05:02] ▶ [ObtenerActasCrucePaso] Iniciando...
+[16:05:02] ==================================================
+[16:05:02] 🚀 PASO: ObtenerActasCrucePaso
+[16:05:02] ==================================================
+[16:05:02] 📥 Descargando Excel de actas vencidas para el cruce — SIGEMI (rango viejo)...
+[16:05:02] Fecha Desde: 27/06/2024
+[16:05:02] Fecha Hasta: 24/11/2025
+[16:05:02] Descargando Excel...
+[16:05:19] Archivo descargado en: backend/descargas/cache_actas_cruce/MULTAS_SIGEMI_CRUCE.xlsx
+[16:05:42] ✅ Excel de actas para el cruce (SIGEMI (rango viejo)) guardado en: backend/descargas/cache_actas_cruce/MULTAS_SIGEMI_CRUCE.xlsx
+[16:05:42] 📥 Descargando Excel de actas vencidas para el cruce — Juzgado (rango nuevo)...
+[16:05:42] Fecha Desde: 25/11/2025
+[16:05:42] Fecha Hasta: 18/07/2026
+[16:05:42] Descargando Excel...
+[16:05:53] Archivo descargado en: backend/descargas/cache_actas_cruce/MULTAS_JUZGADO_CRUCE.xlsx
+[16:06:01] ✅ Excel de actas para el cruce (Juzgado (rango nuevo)) guardado en: backend/descargas/cache_actas_cruce/MULTAS_JUZGADO_CRUCE.xlsx
+[16:06:01] ✅ ObtenerActasCrucePaso finalizado.
+[16:06:01] ✓ [ObtenerActasCrucePaso] Completado.
+[16:06:01] ▶ [CompararActasPaso] Iniciando...
+[16:06:01] ==================================================
+[16:06:01] 🚀 PASO: CompararActasPaso
+[16:06:01] ==================================================
+[16:06:01] 🔍 Comparando actas del SEMyT contra pagos del Juzgado...
+[16:06:01] ================================================================================
+[16:06:01] INICIANDO PROCESO DE GENERACIÓN DE PAGOS DESACTUALIZADOS
+[16:06:01] ================================================================================
+[16:06:01] 📂 Cargando archivos...
+[16:06:01]   ✓ Pagos: 14768 registros
+[16:06:21]   ✓ Excel SIGEMI (multas vencidas viejas): 104421 registros
+[16:06:29]   ✓ Excel Juzgado (multas vencidas nuevas): 39355 registros
+[16:08:10] ================================================================================
+[16:08:10] PASO 1: LLENANDO ACTA_NUMERO (búsqueda por patente + fecha, con desempate por hora)
+[16:08:10] ================================================================================
+[16:08:18] 📊 ESTADÍSTICAS DE LLENADO DE ACTAS:
+[16:08:18]   • Pagos con acta ORIGINAL: 1653
+[16:08:18]   • Pagos SIN acta (buscados): 13115
+[16:08:18]   • Pagos LLENADOS exitosamente: 7
+[16:08:18]   • Pagos NO encontrados en multas: 13108
+[16:08:18]   • Pagos SIN RESOLVER por desbalance de cantidades: 0
+[16:08:53] ================================================================================
+[16:08:53] PASO 1: LLENANDO ACTA_NUMERO (búsqueda por patente + fecha, con desempate por hora)
+[16:08:53] ================================================================================
+[16:08:54] 🛑 Cancelación recibida. Limpiando archivos generados en esta corrida...
+[16:08:54] 🧹 Archivo eliminado: backend/descargas/pagos/PAGOS DESCARGADOS.txt
+[16:08:54] 🧹 Archivo eliminado: backend/descargas/cache_actas_cruce/MULTAS_SIGEMI_CRUCE.xlsx
+[16:08:54] 🧹 Archivo eliminado: backend/descargas/cache_actas_cruce/MULTAS_JUZGADO_CRUCE.xlsx
+[16:08:55] ❌ === Ejecución cancelada por el usuario ===

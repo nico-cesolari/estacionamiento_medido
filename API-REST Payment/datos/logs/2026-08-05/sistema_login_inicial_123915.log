@@ -1,0 +1,56 @@
+Error durante la verificación inicial de sesiones.
+Tipo: TimeoutError
+Mensaje: Page.goto: Timeout 60000ms exceeded.
+Call log:
+  - navigating to "https://ciudad.villamaria.gob.ar/#/inicio", waiting until "domcontentloaded"
+
+
+Traceback (most recent call last):
+  File "/Users/nicolascesolari/Proyectos/proyectoJuzgado/backend/orquestador/app.py", line 74, in iniciar
+    self._verificar_y_guardar_sesiones()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/Users/nicolascesolari/Proyectos/proyectoJuzgado/backend/orquestador/app.py", line 161, in _verificar_y_guardar_sesiones
+    asyncio.run(self._verificar_y_guardar_sesiones_async(forzar_headless))
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/runners.py", line 205, in run
+    return runner.run(main)
+           ~~~~~~~~~~^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/runners.py", line 128, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/base_events.py", line 719, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "/Users/nicolascesolari/Proyectos/proyectoJuzgado/backend/orquestador/app.py", line 169, in _verificar_y_guardar_sesiones_async
+    await LoginProyectoWorkflow(navegador).ejecutar(
+    ...<2 lines>...
+    )
+  File "/Users/nicolascesolari/Proyectos/proyectoJuzgado/backend/workflows/workflow_base.py", line 35, in ejecutar
+    await paso.ejecutar(contexto)
+  File "/Users/nicolascesolari/Proyectos/proyectoJuzgado/backend/pasos/login_semyt_paso.py", line 29, in ejecutar
+    await login_page.abrir_semyt_con_sesion()
+  File "/Users/nicolascesolari/Proyectos/proyectoJuzgado/backend/pages/login_page.py", line 27, in abrir_semyt_con_sesion
+    await self.page.goto(self.url_inicio_semyt(), wait_until="domcontentloaded", timeout=60000)
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/playwright/async_api/_generated.py", line 9611, in goto
+    await self._impl_obj.goto(
+    ...<4 lines>...
+    )
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/playwright/_impl/_page.py", line 557, in goto
+    return await self._main_frame.goto(**locals_to_params(locals()))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/playwright/_impl/_frame.py", line 156, in goto
+    await self._channel.send(
+        "goto", self._navigation_timeout, locals_to_params(locals())
+    )
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/playwright/_impl/_connection.py", line 69, in send
+    return await self._connection.wrap_api_call(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/playwright/_impl/_connection.py", line 559, in wrap_api_call
+    raise rewrite_error(error, f"{parsed_st['apiName']}: {error}") from None
+playwright._impl._errors.TimeoutError: Page.goto: Timeout 60000ms exceeded.
+Call log:
+  - navigating to "https://ciudad.villamaria.gob.ar/#/inicio", waiting until "domcontentloaded"
+

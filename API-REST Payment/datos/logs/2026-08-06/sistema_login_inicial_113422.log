@@ -1,0 +1,57 @@
+Error durante la verificación inicial de sesiones.
+Tipo: TimeoutError
+Mensaje: Locator.wait_for: Timeout 15000ms exceeded.
+Call log:
+  - waiting for get_by_role("button", name="Auxiliar") to be visible
+
+
+Traceback (most recent call last):
+  File "/Users/nicolascesolari/Proyectos/estacionamiento_medido/API-REST Payment/backend/orquestador/app.py", line 74, in iniciar
+    self._verificar_y_guardar_sesiones()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/Users/nicolascesolari/Proyectos/estacionamiento_medido/API-REST Payment/backend/orquestador/app.py", line 161, in _verificar_y_guardar_sesiones
+    asyncio.run(self._verificar_y_guardar_sesiones_async(forzar_headless))
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/runners.py", line 205, in run
+    return runner.run(main)
+           ~~~~~~~~~~^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/runners.py", line 128, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/base_events.py", line 719, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "/Users/nicolascesolari/Proyectos/estacionamiento_medido/API-REST Payment/backend/orquestador/app.py", line 169, in _verificar_y_guardar_sesiones_async
+    await LoginProyectoWorkflow(navegador).ejecutar(
+    ...<2 lines>...
+    )
+  File "/Users/nicolascesolari/Proyectos/estacionamiento_medido/API-REST Payment/backend/workflows/workflow_base.py", line 38, in ejecutar
+    await paso.ejecutar(contexto)
+  File "/Users/nicolascesolari/Proyectos/estacionamiento_medido/API-REST Payment/backend/pasos/login_sigi_paso.py", line 27, in ejecutar
+    await autenticacion.asegurar_sesion_sigi(credenciales, config.ROL_A_SELECCIONAR)
+  File "/Users/nicolascesolari/Proyectos/estacionamiento_medido/API-REST Payment/backend/services/autenticacion_service.py", line 33, in asegurar_sesion_sigi
+    await self.login_page.iniciar_sesion_sigi_cidi(credenciales, rol)
+  File "/Users/nicolascesolari/Proyectos/estacionamiento_medido/API-REST Payment/backend/pages/login_page.py", line 124, in iniciar_sesion_sigi_cidi
+    await boton_rol.wait_for(timeout=15000)
+  File "/Users/nicolascesolari/Proyectos/estacionamiento_medido/venv/lib/python3.14/site-packages/playwright/async_api/_generated.py", line 20507, in wait_for
+    await self._impl_obj.wait_for(timeout=to_milliseconds(timeout), state=state)
+  File "/Users/nicolascesolari/Proyectos/estacionamiento_medido/venv/lib/python3.14/site-packages/playwright/_impl/_locator.py", line 748, in wait_for
+    await self._frame.wait_for_selector(
+        self._selector, strict=True, timeout=timeout, state=state
+    )
+  File "/Users/nicolascesolari/Proyectos/estacionamiento_medido/venv/lib/python3.14/site-packages/playwright/_impl/_frame.py", line 394, in wait_for_selector
+    await self._channel.send(
+        "waitForSelector", self._timeout, locals_to_params(locals())
+    )
+  File "/Users/nicolascesolari/Proyectos/estacionamiento_medido/venv/lib/python3.14/site-packages/playwright/_impl/_connection.py", line 76, in send
+    return await self._connection.wrap_api_call(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/Users/nicolascesolari/Proyectos/estacionamiento_medido/venv/lib/python3.14/site-packages/playwright/_impl/_connection.py", line 632, in wrap_api_call
+    raise rewrite_error(error, f"{parsed_st['apiName']}: {error}") from None
+playwright._impl._errors.TimeoutError: Locator.wait_for: Timeout 15000ms exceeded.
+Call log:
+  - waiting for get_by_role("button", name="Auxiliar") to be visible
+

@@ -1,0 +1,30 @@
+Error durante la verificación inicial de sesiones.
+Tipo: AttributeError
+Mensaje: 'AutenticacionService' object has no attribute 'asegurar_sesion_SIGI'
+
+Traceback (most recent call last):
+  File "/Users/nicolascesolari/Proyectos/proyectoJuzgado/backend/orquestador/app.py", line 74, in iniciar
+    self._verificar_y_guardar_sesiones()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/Users/nicolascesolari/Proyectos/proyectoJuzgado/backend/orquestador/app.py", line 161, in _verificar_y_guardar_sesiones
+    asyncio.run(self._verificar_y_guardar_sesiones_async(forzar_headless))
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/runners.py", line 205, in run
+    return runner.run(main)
+           ~~~~~~~~~~^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/runners.py", line 128, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/base_events.py", line 719, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "/Users/nicolascesolari/Proyectos/proyectoJuzgado/backend/orquestador/app.py", line 169, in _verificar_y_guardar_sesiones_async
+    await LoginProyectoWorkflow(navegador).ejecutar(
+    ...<2 lines>...
+    )
+  File "/Users/nicolascesolari/Proyectos/proyectoJuzgado/backend/workflows/workflow_base.py", line 35, in ejecutar
+    await paso.ejecutar(contexto)
+  File "/Users/nicolascesolari/Proyectos/proyectoJuzgado/backend/pasos/login_sigi_paso.py", line 27, in ejecutar
+    await autenticacion.asegurar_sesion_SIGI(credenciales, config.ROL_A_SELECCIONAR)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'AutenticacionService' object has no attribute 'asegurar_sesion_SIGI'. Did you mean: 'asegurar_sesion_sigi'?
