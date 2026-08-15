@@ -9,7 +9,7 @@
 import os
 
 from backend.orquestador.excepciones import NoHayActasParaActualizar, RangoDeFechasInvalido
-from backend.pages.exportar_actas_page import (
+from ....backend.app.services.sistemas.semyt.pages.exportar_actas_page import (
     ExportarActasPage,
     CartelSinActasSemyt,
     CartelFechaInvalidaSemyt,

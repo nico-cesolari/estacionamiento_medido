@@ -8,7 +8,7 @@
 import os
 
 from backend.pages.descargar_pagos_page import DescargarPagosPage
-from backend.pages.importar_pagos_page import ImportarPagosPage, ResultadoImportacionPagos
+from ....backend.app.services.sistemas.semyt.pages.importar_pagos_page import ImportarPagosPage, ResultadoImportacionPagos
 from backend.utils.utils import Utilidades
 
 class PagosService:

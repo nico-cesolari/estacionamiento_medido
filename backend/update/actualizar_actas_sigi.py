@@ -1,5 +1,5 @@
 """
-NO SE
+VERIFICAR FUNCIONALIDAD
 Sincronización de actas SIGI -- reemplaza el par llenar_actas_sigi.py +
 actualizar_actas_sigi.py por UN SOLO recorrido de la grilla.
 
@@ -8,7 +8,7 @@ expediente (filtro + Enter + esperar refresco) por cada registro con
 expediente en la DB -- un viaje de ida y vuelta a SIGI por registro.
 Este script en cambio recorre la tabla UNA vez, fila por fila (como ya
 hacía llenar_actas_sigi.py para el alta), y decide para cada fila:
-
+  1) Trae de la base de datos todos los expedientes que no
   1) Lee expediente + estado DIRECTO de la grilla (sin abrir detalle).
   2) Si ese expediente YA está en la DB (`todos_los_expedientes_cargados`):
        - si el registro está archivada -> estado terminal, se saltea sin
@@ -48,6 +48,7 @@ Uso standalone:
 También se puede importar `ejecutar_sincronizacion(db, page, commit=True)`
 desde procesar_actas_sigi.py, en reemplazo de las llamadas separadas a
 ejecutar_alta + ejecutar_actualizacion.
+------------------------------------------------------------------------
 """
 import argparse
 import asyncio
@@ -67,111 +68,30 @@ from app.services.sistemas.sigi.reglas import reglas_sigi
 from app.pasos.navegador import PaginaConSesion
 from app.database import SessionLocal
 
-# Reusamos TODA la infraestructura de Playwright ya probada en el alta --
-# paginación, esperas, estrategias de click sobre el ojito, etc. No tiene
-# sentido tener dos copias de esto que se puedan desincronizar. Si en algún
-# momento molesta importar desde "alta", lo ideal es extraer estas
-# funciones a un módulo compartido (ej. app/pasos/sigi_grilla.py) -- lo
-# dejo así por ahora para no tocar más archivos de los necesarios.
-from alta.llenar_actas_sigi import (
+from app.services.sistemas.sigi.web import web_sigi
+from app.services.sistemas.sigi.web.web_sigi import (
     log,
-    _esperar_red,
-    _indice_columna,
-    _leer_celdas_con_reintento,
-    _leer_primer_texto,
-    _leer_primer_numero_acta,
-    _leer_numero_pagina_actual,
-    _describir_elemento,
-    _esperar_tabla_lista,
-    _scroll_y_detectar_filas_nuevas,
-    _asegurar_pagina,
-    _hay_pagina_siguiente,
-    _ir_a_pagina_siguiente,
-    _filtrar_por_tipo_acta_estacionamiento,
-    _seleccionar_paginado_50,
+    esperar_red as _esperar_red,
+    indice_columna as _indice_columna,
+    leer_celdas_con_reintento as _leer_celdas_con_reintento,
+    leer_primer_texto as _leer_primer_texto,
+    leer_numero_acta as _leer_primer_numero_acta,
+    esperar_tabla_lista as _esperar_tabla_lista,
+    scroll_y_detectar_filas_nuevas as _scroll_y_detectar_filas_nuevas,
+    asegurar_pagina as _asegurar_pagina,
+    hay_pagina_siguiente as _hay_pagina_siguiente,
+    ir_a_pagina_siguiente as _ir_a_pagina_siguiente,
+    filtrar_por_tipo_acta_estacionamiento as _filtrar_por_tipo_acta_estacionamiento,
+    seleccionar_paginado_50 as _seleccionar_paginado_50,
     SELECTOR_FILAS_RESULTADO,
-    SELECTOR_BOTON_VER,
     SELECTOR_BOTON_VOLVER,
     SELECTOR_MOTIVO_EN_DETALLE,
     TEXTO_HEADER_EXPEDIENTE,
     TEXTO_HEADER_ESTADO,
-    URL_SIGI,
-    ARCHIVO_SESION,
 )
+from alta.llenar_actas_sigi import URL_SIGI, ARCHIVO_SESION
 
 MAX_INTENTOS_FILA = 3
-
-
-async def _reubicar_boton_ver(fila):
-    """Vuelve a pedir el locator del botón 'Ver' DESDE CERO.
-
-    Por qué hace falta -- este es el fix del bug de "a veces no
-    clickea": en la versión anterior (llenar_actas_sigi.py) el locator
-    `candidatos_ver` se armaba UNA vez al principio del intento y se
-    reusaba en las 4 estrategias de click sucesivas. Si la fila se
-    re-renderiza (ej. por el fetch async que completa la columna ESTADO)
-    justo entre que armamos ese locator y que probamos la 2da/3ra
-    estrategia, el locator sigue "vivo" (Playwright no tira error al
-    armarlo) pero apunta a un nodo que ya no es el real -- el click
-    puede salir sin excepción y no hacer nada, o pegarle a otro
-    elemento. Por eso cada estrategia pide el locator de nuevo, igual
-    que ya se hacía con `filas`/`fila` entre reintentos completos."""
-    return fila.locator(SELECTOR_BOTON_VER)
-
-
-async def _abrir_detalle_de_fila(page, fila, pagina_actual: int, fila_idx: int) -> bool:
-    """Prueba varias formas de clickear el ojito, re-ubicando el botón
-    ANTES DE CADA intento (ver _reubicar_boton_ver). Devuelve True si el
-    detalle terminó abierto de verdad (chequeado, no asumido)."""
-    tab_actas = page.get_by_role("button", name="Actas", exact=True)
-    boton_volver = page.locator(SELECTOR_BOTON_VOLVER)
-
-    async def _detalle_abierto(timeout=12000):
-        transcurrido, intervalo = 0, 250
-        while transcurrido < timeout:
-            if await tab_actas.count() or await boton_volver.count():
-                return True
-            await page.wait_for_timeout(intervalo)
-            transcurrido += intervalo
-        return False
-
-    estrategias = [
-        ("click normal", lambda loc: loc.first.click(timeout=4000)),
-        ("click forzado (force=True)", lambda loc: loc.first.click(timeout=3000, force=True)),
-        ("el.click() vía JS", lambda loc: loc.first.evaluate("el => el.click()")),
-        ("MouseEvent despachado vía JS", lambda loc: loc.first.evaluate(
-            "el => el.dispatchEvent(new MouseEvent('click', {bubbles: true, cancelable: true, view: window}))"
-        )),
-    ]
-
-    for nombre, hacer_click in estrategias:
-        candidatos_ver = await _reubicar_boton_ver(fila)  # <- SIEMPRE fresco
-        if await candidatos_ver.count() == 0:
-            log("DEBUG-VER", f"  ⚠️ '{nombre}': el botón 'Ver' ya no está en la fila "
-                              f"(re-render entre estrategias) -- reintento con locator fresco falló también")
-            continue
-        try:
-            await hacer_click(candidatos_ver)
-        except Exception as exc:
-            log("DEBUG-VER", f"  ⚠️ '{nombre}' en 'Ver' falló: {exc}")
-            continue
-
-        try:
-            await fila.wait_for(state="detached", timeout=6000)
-        except PlaywrightTimeoutError:
-            log("FILA", f"  ↻ '{nombre}' no tuvo ningún efecto visible, probando la siguiente estrategia...")
-            continue
-
-        if await _detalle_abierto(timeout=12000):
-            if nombre != "click normal":
-                log("FILA", f"  👁️ el detalle abrió con '{nombre}'")
-            return True
-        log("FILA", f"  ⚠️ '{nombre}': la fila se desprendió pero el detalle no pintó en 12s, margen extra...")
-        return await _detalle_abierto(timeout=8000)
-
-    log("FILA", f"  ⚠️ Página {pagina_actual}, fila {fila_idx + 1}: ninguna estrategia de click "
-                f"abrió el detalle -- salteo esta fila (seguimos en el listado).")
-    return False
 
 
 async def _procesar_fila_sincronizacion(
@@ -207,7 +127,7 @@ async def _procesar_fila_sincronizacion(
                     log("FILA", f"  ⚠️ Página {pagina_actual}, fila {fila_idx + 1}: sigue sin datos, salteo.")
                     return
                 await page.wait_for_timeout(500)
-                await _esperar_tabla_lista(page)
+                await _esperar_tabla_lista(page, min_filas=fila_idx + 1)
                 continue
 
             expediente_norm = reglas_sigi.normalizar_expediente(expediente_fila)
@@ -244,7 +164,8 @@ async def _procesar_fila_sincronizacion(
             log("FILA", f"Página {pagina_actual}, fila {fila_idx + 1}: expediente {expediente_fila} "
                         f"desconocido -> abriendo detalle para leer el acta...")
 
-            if not await _abrir_detalle_de_fila(page, fila, pagina_actual, fila_idx):
+            etiqueta = f"Página {pagina_actual}, fila {fila_idx + 1}: "
+            if not await web_sigi.abrir_detalle_de_fila(page, fila, etiqueta_log=etiqueta):
                 contadores["errores"] += 1
                 return
 

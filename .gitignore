@@ -7,4 +7,5 @@
 __pycache__/
 .venv/
 *.egg-info/
-backend/sistemas/sigemi/archivos/*.txt
+backend/service/sistemas/sigemi/archivos/*.txt
+API-REST Payment/datos/

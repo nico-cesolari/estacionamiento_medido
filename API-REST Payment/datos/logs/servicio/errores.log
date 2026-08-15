@@ -1199,3 +1199,115 @@ Traceback (most recent call last):
   File "/Users/nicolascesolari/Proyectos/estacionamiento_medido/API-REST Payment/backend/pasos/login_semyt_paso.py", line 7, in <module>
     from app.services.sistemas.semyt.pages.login_page import LoginSemytPage
 ModuleNotFoundError: No module named 'app'
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    from multiprocessing.spawn import spawn_main; spawn_main(tracker_fd=8, pipe_handle=12)
+                                                  ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 122, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 131, in _main
+    prepare(preparation_data)
+    ~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 244, in prepare
+    _fixup_main_from_name(data['init_main_from_name'])
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 268, in _fixup_main_from_name
+    main_content = runpy.run_module(mod_name,
+                                    run_name="__mp_main__",
+                                    alter_sys=True)
+  File "<frozen runpy>", line 231, in run_module
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "/Users/nicolascesolari/Proyectos/estacionamiento_medido/API-REST Payment/backend/main.py", line 29, in <module>
+    from backend.orquestador.app import Aplicacion
+  File "/Users/nicolascesolari/Proyectos/estacionamiento_medido/API-REST Payment/backend/orquestador/app.py", line 32, in <module>
+    from backend.workflows.login_workflow import LoginProyectoWorkflow
+  File "/Users/nicolascesolari/Proyectos/estacionamiento_medido/API-REST Payment/backend/workflows/login_workflow.py", line 2, in <module>
+    from backend.pasos.login_semyt_paso import LoginSEMyTPaso
+  File "/Users/nicolascesolari/Proyectos/estacionamiento_medido/API-REST Payment/backend/pasos/login_semyt_paso.py", line 7, in <module>
+    from app.services.sistemas.semyt.pages.login_page import LoginSemytPage
+ModuleNotFoundError: No module named 'app'
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    from multiprocessing.spawn import spawn_main; spawn_main(tracker_fd=8, pipe_handle=12)
+                                                  ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 122, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 131, in _main
+    prepare(preparation_data)
+    ~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 244, in prepare
+    _fixup_main_from_name(data['init_main_from_name'])
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 268, in _fixup_main_from_name
+    main_content = runpy.run_module(mod_name,
+                                    run_name="__mp_main__",
+                                    alter_sys=True)
+  File "<frozen runpy>", line 231, in run_module
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "/Users/nicolascesolari/Proyectos/estacionamiento_medido/API-REST Payment/backend/main.py", line 29, in <module>
+    from backend.orquestador.app import Aplicacion
+  File "/Users/nicolascesolari/Proyectos/estacionamiento_medido/API-REST Payment/backend/orquestador/app.py", line 32, in <module>
+    from backend.workflows.login_workflow import LoginProyectoWorkflow
+  File "/Users/nicolascesolari/Proyectos/estacionamiento_medido/API-REST Payment/backend/workflows/login_workflow.py", line 2, in <module>
+    from backend.pasos.login_semyt_paso import LoginSEMyTPaso
+  File "/Users/nicolascesolari/Proyectos/estacionamiento_medido/API-REST Payment/backend/pasos/login_semyt_paso.py", line 7, in <module>
+    from app.services.sistemas.semyt.pages.login_page import LoginSemytPage
+ModuleNotFoundError: No module named 'app'
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    from multiprocessing.spawn import spawn_main; spawn_main(tracker_fd=8, pipe_handle=12)
+                                                  ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 122, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 131, in _main
+    prepare(preparation_data)
+    ~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 244, in prepare
+    _fixup_main_from_name(data['init_main_from_name'])
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 268, in _fixup_main_from_name
+    main_content = runpy.run_module(mod_name,
+                                    run_name="__mp_main__",
+                                    alter_sys=True)
+  File "<frozen runpy>", line 231, in run_module
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "/Users/nicolascesolari/Proyectos/estacionamiento_medido/API-REST Payment/backend/main.py", line 29, in <module>
+    from backend.orquestador.app import Aplicacion
+  File "/Users/nicolascesolari/Proyectos/estacionamiento_medido/API-REST Payment/backend/orquestador/app.py", line 32, in <module>
+    from backend.workflows.login_workflow import LoginProyectoWorkflow
+  File "/Users/nicolascesolari/Proyectos/estacionamiento_medido/API-REST Payment/backend/workflows/login_workflow.py", line 2, in <module>
+    from backend.pasos.login_semyt_paso import LoginSEMyTPaso
+  File "/Users/nicolascesolari/Proyectos/estacionamiento_medido/API-REST Payment/backend/pasos/login_semyt_paso.py", line 7, in <module>
+    from app.services.sistemas.semyt.pages.login_page import LoginSemytPage
+ModuleNotFoundError: No module named 'app'
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    from multiprocessing.spawn import spawn_main; spawn_main(tracker_fd=8, pipe_handle=12)
+                                                  ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 122, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 131, in _main
+    prepare(preparation_data)
+    ~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 244, in prepare
+    _fixup_main_from_name(data['init_main_from_name'])
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/spawn.py", line 268, in _fixup_main_from_name
+    main_content = runpy.run_module(mod_name,
+                                    run_name="__mp_main__",
+                                    alter_sys=True)
+  File "<frozen runpy>", line 231, in run_module
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "/Users/nicolascesolari/Proyectos/estacionamiento_medido/API-REST Payment/backend/main.py", line 29, in <module>
+    from backend.orquestador.app import Aplicacion
+  File "/Users/nicolascesolari/Proyectos/estacionamiento_medido/API-REST Payment/backend/orquestador/app.py", line 32, in <module>
+    from backend.workflows.login_workflow import LoginProyectoWorkflow
+  File "/Users/nicolascesolari/Proyectos/estacionamiento_medido/API-REST Payment/backend/workflows/login_workflow.py", line 2, in <module>
+    from backend.pasos.login_semyt_paso import LoginSEMyTPaso
+  File "/Users/nicolascesolari/Proyectos/estacionamiento_medido/API-REST Payment/backend/pasos/login_semyt_paso.py", line 7, in <module>
+    from app.services.sistemas.semyt.pages.login_page import LoginSemytPage
+ModuleNotFoundError: No module named 'app'

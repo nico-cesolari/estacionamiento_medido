@@ -1,6 +1,6 @@
 # pasos/cargar_pagos_paso.py
 from backend.pasos.paso_base import PasoBase
-from backend.pages.importar_pagos_page import ResultadoImportacionPagos
+from ....backend.app.services.sistemas.semyt.pages.importar_pagos_page import ResultadoImportacionPagos
 from backend.services.pagos_service import PagosService
 from backend.utils.utils import Utilidades
 

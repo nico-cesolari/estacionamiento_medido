@@ -6,7 +6,7 @@ from sqlalchemy.orm import Query
 
 from app.models import models
 from app.services.duplicados import aplicar_filtro_patente
-from app.services.filtros import aplicar_rango_fechas
+from app.services.query_helpers import aplicar_rango_fechas
 
 # ---------------------------------------------------------------------------
 # Campos disponibles para "Exportar Actas"
@@ -89,35 +89,9 @@ CAMPOS_EXPORTABLES = {
 # ---------------------------------------------------------------------------
 # Filtros
 # ---------------------------------------------------------------------------
-
-def aplicar_rango_fechas(
-    query,
-    columna,
-    fecha_desde: Optional[date],
-    fecha_hasta: Optional[date],
-):
-    """
-    Filtra una columna DateTime entre fecha_desde y fecha_hasta,
-    ambos inclusive.
-
-    fecha_hasta incluye todo ese día.
-    """
-    if fecha_desde:
-        query = query.filter(
-            columna >= datetime.combine(
-                fecha_desde,
-                datetime.min.time(),
-            )
-        )
-
-    if fecha_hasta:
-        siguiente = (
-            datetime.combine(fecha_hasta, datetime.min.time())
-            + timedelta(days=1)
-        )
-        query = query.filter(columna < siguiente)
-
-    return query
+# aplicar_rango_fechas ahora vive en app/services/query_helpers.py (antes
+# había una copia idéntica acá y otra en services/filtros.py -- un solo
+# lugar previene que se corrija en uno y se olviden del otro).
 
 
 def aplicar_filtros_avanzados(
@@ -238,30 +212,32 @@ def aplicar_filtros_avanzados(
 # Consultas para exportación
 # ---------------------------------------------------------------------------
 
+def _query_para_exportar(
+    db,
+    filtros: List[dict],
+    fecha_desde: Optional[date] = None,
+    fecha_hasta: Optional[date] = None,
+):
+    """Arma la query base compartida por contar_para_exportar y
+    buscar_para_exportar/iterar_para_exportar -- antes esta construcción
+    (mismo filtro, mismo rango de fechas) estaba repetida en las dos
+    funciones públicas."""
+    query = db.query(models.Registro)
+    query = aplicar_filtros_avanzados(query, filtros)
+    query = aplicar_rango_fechas(
+        query, models.Registro.fecha_hora, fecha_desde, fecha_hasta
+    )
+    return query
+
+
 def contar_para_exportar(
     db,
     filtros: List[dict],
     fecha_desde: Optional[date] = None,
     fecha_hasta: Optional[date] = None,
 ) -> int:
-    """
-    Cuenta cuántas actas cumplen los filtros sin traerlas desde la DB.
-    """
-    query = db.query(models.Registro)
-
-    query = aplicar_filtros_avanzados(
-        query,
-        filtros,
-    )
-
-    query = aplicar_rango_fechas(
-        query,
-        models.Registro.fecha_hora,
-        fecha_desde,
-        fecha_hasta,
-    )
-
-    return query.count()
+    """Cuenta cuántas actas cumplen los filtros sin traerlas desde la DB."""
+    return _query_para_exportar(db, filtros, fecha_desde, fecha_hasta).count()
 
 
 def buscar_para_exportar(
@@ -272,23 +248,16 @@ def buscar_para_exportar(
 ):
     """
     Trae todas las actas que cumplen los filtros para generar el reporte.
+
+    OJO CON EL VOLUMEN: esto trae TODO el resultado a memoria con .all().
+    Con filtros amplios y una tabla de 160k+ filas (ver nota en
+    models.Registro) esto puede tardar y consumir bastante RAM. Si en
+    algún momento /exportar/txt se pone lento, usar
+    iterar_para_exportar() de acá abajo en vez de esta función, y
+    generar_reporte_txt_streaming() en vez de generar_reporte_txt().
     """
-    query = db.query(models.Registro)
-
-    query = aplicar_filtros_avanzados(
-        query,
-        filtros,
-    )
-
-    query = aplicar_rango_fechas(
-        query,
-        models.Registro.fecha_hora,
-        fecha_desde,
-        fecha_hasta,
-    )
-
     return (
-        query
+        _query_para_exportar(db, filtros, fecha_desde, fecha_hasta)
         .order_by(
             models.Registro.fecha_hora.desc().nullslast(),
             models.Registro.id.desc(),
@@ -297,100 +266,140 @@ def buscar_para_exportar(
     )
 
 
+def iterar_para_exportar(
+    db,
+    filtros: List[dict],
+    fecha_desde: Optional[date] = None,
+    fecha_hasta: Optional[date] = None,
+    tamano_lote: int = 1000,
+):
+    """
+    Versión en streaming de buscar_para_exportar: recorre los resultados
+    en lotes de `tamano_lote` en vez de traer todo a memoria de una.
+    Usar junto con generar_reporte_txt_streaming() para exportaciones
+    grandes sin picos de RAM.
+
+    No aplica order_by por fecha (ORDER BY + yield_per en un rango grande
+    puede forzar un sort completo antes de poder iterar) -- si el reporte
+    necesita orden estable, ordenar el archivo resultante aparte o pedir
+    ORDER BY id, que sí usa el índice primario.
+    """
+    return (
+        _query_para_exportar(db, filtros, fecha_desde, fecha_hasta)
+        .order_by(models.Registro.id.asc())
+        .yield_per(tamano_lote)
+    )
+
+
 # ---------------------------------------------------------------------------
 # Generación del TXT
 # ---------------------------------------------------------------------------
 
+COLUMNAS_REPORTE = [
+    "JUZGADO",
+    "EXPEDIENTE",
+    "ACTA_NUMERO",
+    "CAUSA_NUMERO",
+    "PATENTE",
+    "DIRECCION",
+    "FECHA_LABRADA",
+    "ESTADO_SIGEMI",
+    "MOTIVO_ARCHIVO_SIGEMI",
+    "ESTADO_SEMYT",
+    "ESTADO_SIGI",
+    "MOTIVO_ARCHIVO_SIGI",
+    "CONSISTENCIA",
+    "FECHA_COBRO_SIGI",
+    "FECHA_COBRO_SIGEMI",
+]
+
+
 def _fmt_fecha(fecha):
     if not fecha:
         return ""
-
     return fecha.strftime("%d/%m/%Y %H:%M")
+
+
+def _limpiar(valor):
+    if valor is None:
+        return ""
+    texto = str(valor).strip()
+    if texto in ("None", "null", "nan", "NaN", "-"):
+        return ""
+    return texto.replace("|", "/").replace("\n", " ").replace("\r", " ")
+
+
+def _estado(valor):
+    return valor.value if hasattr(valor, "value") else (valor or "")
+
+
+def _fila_reporte(registro) -> str:
+    consistente = registro.consistente
+    if consistente is True:
+        consistencia = "CONSISTENTE"
+    elif consistente is False:
+        consistencia = "INCONSISTENTE"
+    else:
+        consistencia = "PENDIENTE"
+
+    fila = [
+        registro.juzgado,
+        registro.expediente,
+        registro.acta,
+        registro.causa,
+        registro.patente,
+        registro.direccion,
+        _fmt_fecha(registro.fecha_hora),
+        _estado(registro.estado_sigemi),
+        _estado(registro.motivo_archivo_sigemi),
+        _estado(registro.estado_semyt),
+        _estado(registro.estado_sigi),
+        _estado(registro.motivo_archivo_sigi),
+        consistencia,
+        _fmt_fecha(registro.fecha_cobro_sigi),
+        _fmt_fecha(registro.fecha_cobro_sigemi),
+    ]
+    return "|".join(_limpiar(valor) for valor in fila)
 
 
 def generar_reporte_txt(
     registros,
-    filtros: List[dict],
+    filtros: List[dict] = None,
     fecha_desde: Optional[date] = None,
     fecha_hasta: Optional[date] = None,
 ) -> str:
     """
-    Genera el reporte delimitado por |, con una fila por acta.
+    Genera el reporte delimitado por |, con una fila por acta, a partir de
+    una lista/iterable YA TRAÍDA (ver buscar_para_exportar). `filtros`,
+    `fecha_desde`, `fecha_hasta` no se usan acá -- se mantienen en la
+    firma por compatibilidad con el caller existente en el router.
     """
-    columnas = [
-        "JUZGADO",
-        "EXPEDIENTE",
-        "ACTA_NUMERO",
-        "CAUSA_NUMERO",
-        "PATENTE",
-        "DIRECCION",
-        "FECHA_LABRADA",
-        "ESTADO_SIGEMI",
-        "MOTIVO_ARCHIVO_SIGEMI",
-        "ESTADO_SEMYT",
-        "ESTADO_SIGI",
-        "MOTIVO_ARCHIVO_SIGI",
-        "CONSISTENCIA",
-        "FECHA_COBRO_SIGI",
-        "FECHA_COBRO_SIGEMI",
-    ]
-
-    def limpiar(valor):
-        if valor is None:
-            return ""
-
-        texto = str(valor).strip()
-
-        if texto in ("None", "null", "nan", "NaN", "-"):
-            return ""
-
-        return (
-            texto
-            .replace("|", "/")
-            .replace("\n", " ")
-            .replace("\r", " ")
-        )
-
-    def estado(valor):
-        return (
-            valor.value
-            if hasattr(valor, "value")
-            else (valor or "")
-        )
-
-    lineas = ["|".join(columnas)]
-
+    lineas = ["|".join(COLUMNAS_REPORTE)]
     for registro in registros:
-
-        consistente = registro.consistente
-
-        if consistente is True:
-            consistencia = "CONSISTENTE"
-        elif consistente is False:
-            consistencia = "INCONSISTENTE"
-        else:
-            consistencia = "PENDIENTE"
-
-        fila = [
-            registro.juzgado,
-            registro.expediente,
-            registro.acta,
-            registro.causa,
-            registro.patente,
-            registro.direccion,
-            _fmt_fecha(registro.fecha_hora),
-            estado(registro.estado_sigemi),
-            estado(registro.motivo_archivo_sigemi),
-            estado(registro.estado_semyt),
-            estado(registro.estado_sigi),
-            estado(registro.motivo_archivo_sigi),
-            consistencia,
-            _fmt_fecha(registro.fecha_cobro_sigi),
-            _fmt_fecha(registro.fecha_cobro_sigemi),
-        ]
-
-        lineas.append(
-            "|".join(limpiar(valor) for valor in fila)
-        )
-
+        lineas.append(_fila_reporte(registro))
     return "\n".join(lineas) + "\n"
+
+
+def generar_reporte_txt_streaming(
+    db,
+    filtros: List[dict],
+    fecha_desde: Optional[date] = None,
+    fecha_hasta: Optional[date] = None,
+    tamano_lote: int = 1000,
+):
+    """
+    Generador línea por línea del reporte, para usar con una respuesta
+    streaming de FastAPI (StreamingResponse) en vez de armar el string
+    completo en memoria. Pensado para exportaciones grandes.
+
+    Uso en el router (cuando haga falta):
+        from fastapi.responses import StreamingResponse
+        return StreamingResponse(
+            generar_reporte_txt_streaming(db, filtros, fecha_desde, fecha_hasta),
+            media_type="text/plain; charset=utf-8",
+            headers={"Content-Disposition": f'attachment; filename="{nombre}"'},
+        )
+    """
+    yield "|".join(COLUMNAS_REPORTE) + "\n"
+    for registro in iterar_para_exportar(db, filtros, fecha_desde, fecha_hasta, tamano_lote):
+        yield _fila_reporte(registro) + "\n"

@@ -8,7 +8,8 @@ from ..schemas import schemas
 
 from ..models import models
 
-from .. import crud
+from ..services import registros as registros_service
+from ..services import exportacion
 from ..database import get_db
 
 router = APIRouter(prefix="/api/registros", tags=["registros"])
@@ -33,7 +34,7 @@ def listar_registros(
     solo_reescritas: Optional[bool] = None,
     db: Session = Depends(get_db),
 ):
-    resultados, total, total_pages = crud.buscar_registros(
+    resultados, total, total_pages = registros_service.buscar_registros(
         db,
         page=page,
         page_size=page_size,
@@ -71,7 +72,7 @@ def opciones_de_filtro():
 
 @router.patch("/{registro_id}", response_model=schemas.RegistroOut)
 def actualizar_registro(registro_id: int, cambios: schemas.RegistroUpdate, db: Session = Depends(get_db)):
-    registro = crud.actualizar_estados(db, registro_id, cambios.model_dump(exclude_unset=True))
+    registro = registros_service.actualizar_estados(db, registro_id, cambios.model_dump(exclude_unset=True))
     if not registro:
         raise HTTPException(status_code=404, detail="Registro no encontrado")
     return registro
@@ -85,7 +86,7 @@ def refrescar_registro(registro_id: int, db: Session = Depends(get_db)):
     SIGEMI / SEMyT / SIGI (o contra tu proyectoJuzgado) para traer el
     estado más reciente de ese expediente puntual.
     """
-    registro = crud.obtener_registro(db, registro_id)
+    registro = registros_service.obtener_registro(db, registro_id)
     if not registro:
         raise HTTPException(status_code=404, detail="Registro no encontrado")
     # TODO: reemplazar por la consulta real a los 3 sistemas de origen.
@@ -109,7 +110,7 @@ def campos_exportables():
         "motivo_archivo_sigi": models.MotivoArchivoSigi,
     }
     campos = []
-    for clave, info in crud.CAMPOS_EXPORTABLES.items():
+    for clave, info in exportacion.CAMPOS_EXPORTABLES.items():
         opciones = None
         if info["tipo"] == "estado":
             opciones = [e.value for e in enum_por_campo[clave]]
@@ -124,7 +125,7 @@ def campos_exportables():
 @router.post("/exportar/contar", response_model=schemas.ExportarConteo)
 def exportar_contar(body: schemas.ExportarRequest, db: Session = Depends(get_db)):
     """Cuenta cuántas actas coinciden con los filtros, para mostrar antes de descargar."""
-    total = crud.contar_para_exportar(
+    total = exportacion.contar_para_exportar(
         db,
         [f.model_dump() for f in body.filtros],
         fecha_desde=body.fecha_desde,
@@ -137,10 +138,10 @@ def exportar_contar(body: schemas.ExportarRequest, db: Session = Depends(get_db)
 def exportar_txt(body: schemas.ExportarRequest, db: Session = Depends(get_db)):
     """Genera y descarga el reporte .txt con todos los datos de cada acta (sin la foto)."""
     filtros = [f.model_dump() for f in body.filtros]
-    registros = crud.buscar_para_exportar(
+    registros = exportacion.buscar_para_exportar(
         db, filtros, fecha_desde=body.fecha_desde, fecha_hasta=body.fecha_hasta
     )
-    contenido = crud.generar_reporte_txt(
+    contenido = exportacion.generar_reporte_txt(
         registros, filtros, fecha_desde=body.fecha_desde, fecha_hasta=body.fecha_hasta
     )
     nombre = f"actas_estacionamiento_medido_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"

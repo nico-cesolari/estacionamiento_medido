@@ -5,7 +5,7 @@ from backend.configs import config
 from backend.configs import sesiones
 from backend.models.claves_contexto import ClavesContexto
 from backend.models.credenciales import Credenciales
-from sistemas.sigi.pages.login_page import LoginSigiPage
+from app.services.sistemas.sigi.pages.login_page import LoginSigiPage
 from backend.pasos.paso_base import PasoBase
 from backend.services.autenticacion_service import AutenticacionService
 from backend.utils.utils import Utilidades

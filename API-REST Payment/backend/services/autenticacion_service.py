@@ -8,8 +8,8 @@
 from typing import Union
 
 from backend.models.credenciales import Credenciales
-from sistemas.semyt.pages.login_page import LoginSemytPage
-from sistemas.sigi.pages.login_page import LoginSigiPage
+from app.services.sistemas.semyt.pages.login_page import LoginSemytPage
+from app.services.sistemas.sigi.pages.login_page import LoginSigiPage
 
 class AutenticacionService:
     # Antes recibía un único "LoginPage" con los métodos de SEMyT y de SIGI

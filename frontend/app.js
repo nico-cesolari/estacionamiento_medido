@@ -458,12 +458,12 @@ function renderCeldaEstadoSigi(r) {
 /** Celda de consistencia: visto/cruz según si SIGEMI y SEMyT coinciden en el resultado del acta. */
 function renderCeldaConsistencia(r) {
   if (r.consistente === true) {
-    return `<span class="consistencia consistencia-ok"}">✓</span>`;
+    return `<span class="consistencia consistencia-ok">✓</span>`;
   }
   if (r.consistente === false) {
-    return `<span class="consistencia consistencia-mal"}">✗</span>`;
+    return `<span class="consistencia consistencia-mal">✗</span>`;
   }
-  return `<span class="consistencia consistencia-nd"}">–</span>`;
+  return `<span class="consistencia consistencia-nd">–</span>`;
 }
 
 async function onCambiarMotivoArchivo(ev) {

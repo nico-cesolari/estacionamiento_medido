@@ -22,7 +22,6 @@
 from sistemas.comun.playwright_utils import asentar_sesion
 from sistemas.sigi.rutas import SIGI_LOGIN, sigi_login_obligatorio
 
-
 class LoginSigiPage:
     def __init__(self, page):
         self.page = page

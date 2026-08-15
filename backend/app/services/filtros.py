@@ -1,6 +1,7 @@
 from typing import Optional
 
 from sqlalchemy import or_
+from sqlalchemy.orm import Session
 
 from app.models import models
 from app.services.duplicados import (
@@ -20,6 +21,7 @@ VALORES_MOTIVO_SIGI = {
 
 def aplicar_filtros_registros(
     query,
+    db: Session,
     *,
     estado_sigemi: Optional[str] = None,
     estado_semyt: Optional[str] = None,
@@ -91,7 +93,7 @@ def aplicar_filtros_registros(
         query = aplicar_filtro_patente(query, patente)
 
     if solo_duplicadas:
-        query = aplicar_filtro_duplicadas(query)
+        query = aplicar_filtro_duplicadas(query, db)
 
     if solo_reescritas:
         query = query.filter(
