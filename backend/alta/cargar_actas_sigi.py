@@ -40,8 +40,8 @@ from sqlalchemy.orm import Session
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from app.database import SessionLocal
 from app.pasos.navegador import PaginaConSesion
-from sistemas.sigi.reglas import reglas_sigi
-from sistemas.sigi.web import web_sigi
+from app.services.sistemas.sigi.reglas import reglas_sigi
+from app.services.sistemas.sigi.web import web_sigi
 
 URL_SIGI = "https://juzgado.villamaria.gob.ar/juzgado"
 ARCHIVO_SESION = "sesion_sigi.json"

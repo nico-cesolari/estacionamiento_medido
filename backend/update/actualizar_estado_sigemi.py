@@ -26,11 +26,13 @@ USO:
 import argparse
 import sys
 from pathlib import Path
+
+from app.models import models
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from app.database import SessionLocal
-from app import crud, models
+from app.services.estados import aplicar_cambios_estado
 
-from sistemas.sigemi.reglas.reglas_sigemi import (
+from app.services.sistemas.sigemi.reglas.reglas_sigemi import (
     leer_registros_crudos,
     extraer_acta_numero,
     calcular_estado,
@@ -114,7 +116,7 @@ def actualizar_estados(db, path_entrada, commit: bool):
             cambios_estado = {"estado_sigemi": nuevo_estado}
             if nuevo_estado in estados_con_motivo and nuevo_motivo is not None:
                 cambios_estado["motivo_archivo_sigemi"] = nuevo_motivo
-            crud.aplicar_cambios_estado(db, registro, cambios_estado)
+            aplicar_cambios_estado(db, registro, cambios_estado)
 
         if estado_final == "ARCHIVADA - REVISAR MOTIVO":
             a_revisar += 1

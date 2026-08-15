@@ -6,7 +6,7 @@
 # cambiar cada `from common.normalizacion.fechas import ...` que ya existe
 # en el proyecto (comparador.py, excel_service.py, utils/fechas.py).
 # -----------------------------------------------------------------------------
-from sistemas.comun.fechas import (
+from app.services.sistemas.comun.fechas import (
     FORMATO_VISUAL,
     FORMATO_ALMACENAMIENTO,
     FORMATO_EXCEL_FECHA_HORA,

@@ -59,9 +59,11 @@ from sqlalchemy.orm import Session
 from playwright.async_api import Error as PlaywrightError
 from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 
+from app.models import models
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from app import crud, models  # noqa: F401
-from sistemas.sigi.reglas import reglas_sigi
+from app import crud  # noqa: F401
+from app.services.sistemas.sigi.reglas import reglas_sigi
 from app.pasos.navegador import PaginaConSesion
 from app.database import SessionLocal
 

@@ -13,14 +13,14 @@ from backend.configs import causas, config
 from backend.configs import sesiones
 from backend.models.claves_contexto import ClavesContexto
 from backend.orquestador.excepciones import NoHayActasParaActualizar
-from sistemas.semyt.pages.exportar_actas_page import ExportarActasPage
+from app.services.sistemas.semyt.pages.exportar_actas_page import ExportarActasPage
 from backend.pasos.paso_base import PasoBase
 from backend.services.actas_service import ActasService
 from backend.services.estado_service import EstadoService
 from backend.services.excel_service import ExcelService
 from backend.services.pagos_service import PagosService
 from backend.utils import fechas as utilidades_fecha
-from sistemas.semyt.pages.login_page import LoginSemytPage
+from app.services.sistemas.semyt.pages.login_page import LoginSemytPage
 from backend.pasos.descargar_pagos_completo_em_paso import DescargarPagosCompletoEmPaso
 
 NOMBRE_SIGEMI = "MULTAS_SIGEMI_CRUCE.xlsx"

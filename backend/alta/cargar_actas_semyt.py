@@ -39,7 +39,7 @@ CARPETA_BACKEND = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(CARPETA_BACKEND))
 
 from app.database import SessionLocal
-from app import models
+from app.models import models
 from app.pasos.navegador import PaginaConSesion, ruta_sesion
 from cargar_actas_semyt import (
     LABEL_FILTRO_NUMERO,
@@ -47,7 +47,7 @@ from cargar_actas_semyt import (
     INDICE_COLUMNA_NRO,
     _parsear_fila,
 )
-from sistemas.semyt.rutas import (
+from app.services.sistemas.semyt.rutas import (
     URL_SEMYT,
 )
 

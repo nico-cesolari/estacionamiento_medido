@@ -27,6 +27,8 @@ import sys
 from pathlib import Path
 from typing import Optional
 
+from app.models import models
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from sqlalchemy.orm import Session
@@ -34,7 +36,7 @@ from sqlalchemy import cast, Integer, or_
 
 from app.database import SessionLocal
 from app.pasos.navegador import PaginaConSesion
-from app import crud, models
+from app.services.estados import aplicar_cambios_estado
 from app.pasos.procesar_actas_semyt import (
     ARCHIVO_SESION,
     URL_SEMYT,
@@ -135,7 +137,7 @@ async def cambio_de_url(db: Session, commit: bool, limite: Optional[int]):
 
             print(f"[SEMyT] Acta {registro.acta}: {registro.foto_url!r} -> {nueva_url!r}")
             if commit:
-                crud.aplicar_cambios_estado(db, registro, {"foto_url": nueva_url})
+                aplicar_cambios_estado(db, registro, {"foto_url": nueva_url})
                 db.commit()
             actualizados += 1
 

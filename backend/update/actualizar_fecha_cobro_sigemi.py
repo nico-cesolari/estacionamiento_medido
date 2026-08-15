@@ -13,7 +13,7 @@ que usan llenar_actas_sigemi.py / actualizar_estado_sigemi.py -- que trae,
 por cada pago real, el número de acta y su fecha de cobro real. Con eso
 corrige `fecha_cobro_sigemi` en la base, que hasta ahora se completaba
 sola con la fecha en que se CORRIÓ el script de carga (ver
-crud.aplicar_cambios_estado), no con la fecha real del pago -- por eso
+aplicar_cambios_estado), no con la fecha real del pago -- por eso
 estaba mal para todo lo que se cargó de una sola vez bastante después del
 pago real.
 
@@ -47,7 +47,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from app.database import SessionLocal  # AJUSTAR si el factory de sesión tiene otro nombre/ubicación
-from app import models
+from app.models import models
 from app.reglas.fecha_cobro_sigemi import PATH_PAGOS_SIGEMI, corregir_fechas
 
 

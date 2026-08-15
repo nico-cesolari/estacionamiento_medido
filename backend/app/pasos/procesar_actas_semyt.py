@@ -32,7 +32,9 @@ from typing import Dict, List, Optional
 
 from sqlalchemy.orm import Session
 
-from .. import crud, models
+from ..models import models
+
+from app.services.estados import aplicar_cambios_estado
 from .navegador import PaginaConSesion
 from ..reglas.reglas_semyt import (
     ESTADOS_IGNORADOS_SEMYT, MAPA_ESTADO_SEMYT, ESTADO_PAGADA_EN_JUZGADO,
@@ -363,7 +365,7 @@ async def procesar_actas_semyt(
                 sin_cambios += 1
                 continue
 
-            crud.aplicar_cambios_estado(db, registro, {"estado_semyt": nuevo_estado})
+            aplicar_cambios_estado(db, registro, {"estado_semyt": nuevo_estado})
             actualizados += 1
 
     db.commit()

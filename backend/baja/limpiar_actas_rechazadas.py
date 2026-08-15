@@ -19,7 +19,7 @@ import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from app.database import SessionLocal
-from app import models
+from app.models import models
 
 def _vacio(valor) -> bool:
     return valor is None or (isinstance(valor, str) and valor.strip() == "")

@@ -2,7 +2,7 @@ from datetime import datetime, date
 from typing import Optional, List
 from pydantic import BaseModel, ConfigDict
 
-from .models import EstadoSigemi, EstadoSemyt, EstadoSigi, MotivoArchivoSigemi, MotivoArchivoSigi
+from ..models.models import EstadoSigemi, EstadoSemyt, EstadoSigi, MotivoArchivoSigemi, MotivoArchivoSigi
 
 
 class RegistroOut(BaseModel):
@@ -29,7 +29,7 @@ class RegistroOut(BaseModel):
     # Ver crud.calcular_consistencia() para la lógica y las categorías.
     consistente: Optional[bool] = None
     # True si existe otra fila con la misma `acta` (dos expedientes/estados para la misma
-    # acta). Ver crud.anotar_duplicadas().
+    # acta). Ver anotar_duplicadas().
     es_duplicada: Optional[bool] = None
 
 class RegistroUpdate(BaseModel):

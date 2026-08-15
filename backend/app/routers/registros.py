@@ -4,7 +4,11 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import PlainTextResponse
 from sqlalchemy.orm import Session
 
-from .. import crud, schemas, models
+from ..schemas import schemas
+
+from ..models import models
+
+from .. import crud
 from ..database import get_db
 
 router = APIRouter(prefix="/api/registros", tags=["registros"])

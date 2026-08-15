@@ -23,7 +23,7 @@ from urllib.parse import urljoin
 
 from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 
-from .. import models
+from ..models import models
 
 COLUMNAS_TABLA = ["nro", "fecha", "dominio", "cuadra", "estado", "vencimiento", "importe", "acciones"]
 INDICE_COLUMNA_ESTADO = COLUMNAS_TABLA.index("estado")

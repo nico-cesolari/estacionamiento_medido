@@ -28,7 +28,8 @@ from sqlalchemy.orm import Session
 # están anidados uno dentro del otro. Un relativo tipo "...app" desde acá
 # (sistemas.sigi.reglas.reglas_sigi) apunta a "sistemas.app", que no
 # existe -- de ahí el ModuleNotFoundError que tenía esto antes.
-from app import crud, models
+from app.services.estados import aplicar_cambios_estado
+from app.models import models
 
 
 # ---------------------------------------------------------------------------
@@ -182,7 +183,7 @@ def estado_no_cargada() -> Optional[models.EstadoSigi]:
 def armar_cambios_estado(estado_texto: Optional[str], motivo_texto: Optional[str] = None) -> Optional[dict]:
     """
     A partir de lo leído en pantalla, arma el dict de cambios que espera
-    crud.aplicar_cambios_estado. El motivo sólo se incluye cuando el
+    aplicar_cambios_estado. El motivo sólo se incluye cuando el
     estado es 'Archivada' Y se pudo mapear (si SIGI no muestra motivo para
     un acta archivada, igual se actualiza el estado, sin motivo).
 
@@ -362,7 +363,7 @@ def registros_sin_expediente(db: Session):
 # procesar_actas_sigi.py), para poder comitear una sola vez al final.
 # ---------------------------------------------------------------------------
 def aplicar_actualizacion(db: Session, registro: "models.Registro", cambios: dict) -> None:
-    crud.aplicar_cambios_estado(db, registro, cambios)
+    aplicar_cambios_estado(db, registro, cambios)
 
 
 def marcar_sin_coincidencia(db: Session, registro: "models.Registro") -> bool:
@@ -389,7 +390,7 @@ def desvincular_expediente_no_encontrado(db: Session, registro: "models.Registro
     en vez de seguir intentando actualizar algo que ya no existe.
 
     OJO CON DUPLICADOS: si esta acta tiene más de un registro (dos
-    expedientes distintos para la misma acta -- ver crud.anotar_duplicadas
+    expedientes distintos para la misma acta -- ver anotar_duplicadas
     / _clonar_registro en llenar_actas_sigi.py), esta función sólo toca
     EL registro puntual que se le pasó. Nunca hay que iterar "todos los
     registros con esta acta" acá: cada expediente se valida por separado,

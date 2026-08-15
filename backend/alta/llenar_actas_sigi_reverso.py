@@ -28,8 +28,8 @@ from sqlalchemy.orm import Session
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from app.database import SessionLocal
 from app.pasos.navegador import PaginaConSesion
-from sistemas.sigi.reglas import reglas_sigi
-from sistemas.sigi.web import web_sigi
+from app.services.sistemas.sigi.reglas import reglas_sigi
+from app.services.sistemas.sigi.web import web_sigi
 
 # Reutiliza el 100% de la lógica de fila de llenar_actas_sigi.py -- lo
 # único distinto entre "adelante" y "reversa" es el orden de páginas, que

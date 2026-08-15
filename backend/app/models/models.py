@@ -10,7 +10,7 @@ from sqlalchemy import Column, Integer, String, DateTime, Boolean, Enum as SAEnu
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 
-from .database import Base
+from ..database import Base
 
 class EstadoSigemi(str, enum.Enum):
     sin_resolucion = "Sin Resolución"

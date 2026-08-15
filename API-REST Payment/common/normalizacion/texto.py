@@ -6,7 +6,7 @@
 # cambiar cada `from common.normalizacion.texto import ...` que ya existe
 # en el proyecto (comparador.py, etc.).
 # -----------------------------------------------------------------------------
-from sistemas.comun.texto import (
+from app.services.sistemas.comun.texto import (
     limpiar_numero_acta,
     limpiar_patente,
 )

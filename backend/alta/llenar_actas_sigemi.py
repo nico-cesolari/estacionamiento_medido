@@ -47,11 +47,13 @@ USO:
 import argparse
 import sys
 from pathlib import Path
+
+from app.models import models
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from app.database import SessionLocal
-from app import crud, models
+from app import crud
 
-from sistemas.sigemi.reglas.reglas_sigemi import (
+from app.services.sistemas.sigemi.reglas.reglas_sigemi import (
     leer_registros_crudos,
     extraer_numero_causa,
     extraer_acta_numero,
@@ -59,7 +61,7 @@ from sistemas.sigemi.reglas.reglas_sigemi import (
     resolver_estado,
 )
 from app.reglas.fecha_cobro_sigemi import PATH_PAGOS_SIGEMI, corregir_fechas
-
+from app.services.estados import aplicar_cambios_estado
 
 def _ya_tiene_causa_y_estado(registro) -> bool:
     causa_cargada = bool(registro.causa and str(registro.causa).strip())
@@ -126,7 +128,7 @@ def cargar_actas(db, path_entrada, commit: bool):
         cambios_estado = {"estado_sigemi": nuevo_estado}
         if nuevo_estado in (models.EstadoSigemi.archivada, models.EstadoSigemi.resuelta_sin_archivo) and nuevo_motivo is not None:
             cambios_estado["motivo_archivo_sigemi"] = nuevo_motivo
-        crud.aplicar_cambios_estado(db, registro, cambios_estado)
+        aplicar_cambios_estado(db, registro, cambios_estado)
 
         if estado_final == "ARCHIVADA - REVISAR MOTIVO":
             a_revisar += 1

@@ -27,11 +27,13 @@ import argparse
 import asyncio
 import sys
 from pathlib import Path
+
+from app.models import models
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from typing import Optional
 from sqlalchemy.orm import Session
 from app.database import SessionLocal
-from app import crud, models
+from app.services.estados import aplicar_cambios_estado
 from app.pasos.navegador import PaginaConSesion
 from app.reglas.reglas_semyt import (
     ESTADOS_IGNORADOS_SEMYT, MAPA_ESTADO_SEMYT, ESTADO_PAGADA_EN_JUZGADO,
@@ -118,7 +120,7 @@ async def actualizar_actas_semyt(
                   f"{registro.estado_semyt} -> {nuevo_estado.value}")
 
             if commit:
-                crud.aplicar_cambios_estado(db, registro, {"estado_semyt": nuevo_estado})
+                aplicar_cambios_estado(db, registro, {"estado_semyt": nuevo_estado})
                 db.commit()
 
             actualizados += 1
