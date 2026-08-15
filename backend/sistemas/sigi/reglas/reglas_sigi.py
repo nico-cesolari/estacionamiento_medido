@@ -22,7 +22,13 @@ from typing import Optional
 
 from sqlalchemy.orm import Session
 
-from ...app import crud, models
+# Import ABSOLUTO a propósito, no relativo: "app" y "sistemas" son dos
+# paquetes de nivel superior distintos (ambos cuelgan de backend/, que es
+# lo que se agrega a sys.path en cada script que usa este módulo), no
+# están anidados uno dentro del otro. Un relativo tipo "...app" desde acá
+# (sistemas.sigi.reglas.reglas_sigi) apunta a "sistemas.app", que no
+# existe -- de ahí el ModuleNotFoundError que tenía esto antes.
+from app import crud, models
 
 
 # ---------------------------------------------------------------------------

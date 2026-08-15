@@ -13,14 +13,14 @@ from backend.configs import causas, config
 from backend.configs import sesiones
 from backend.models.claves_contexto import ClavesContexto
 from backend.orquestador.excepciones import NoHayActasParaActualizar
-from backend.pages.exportar_actas_page import ExportarActasPage
+from sistemas.semyt.pages.exportar_actas_page import ExportarActasPage
 from backend.pasos.paso_base import PasoBase
 from backend.services.actas_service import ActasService
 from backend.services.estado_service import EstadoService
 from backend.services.excel_service import ExcelService
 from backend.services.pagos_service import PagosService
 from backend.utils import fechas as utilidades_fecha
-from backend.pages.login_page import LoginPage
+from sistemas.semyt.pages.login_page import LoginSemytPage
 from backend.pasos.descargar_pagos_completo_em_paso import DescargarPagosCompletoEmPaso
 
 NOMBRE_SIGEMI = "MULTAS_SIGEMI_CRUCE.xlsx"
@@ -41,7 +41,7 @@ class DescargasParalelasPaso(PasoBase):
         pagina_sigi = contexto.pagina_sigi
         pagina_semyt_viejas = await contexto_navegador.new_page()
         pagina_semyt_nuevas = await contexto_navegador.new_page()
-        url_inicio_semyt = LoginPage(pagina_semyt_viejas).url_inicio_semyt()
+        url_inicio_semyt = LoginSemytPage(pagina_semyt_viejas).url_inicio_semyt()
         await pagina_semyt_viejas.goto(url_inicio_semyt, wait_until="domcontentloaded", timeout=60000)
         await pagina_semyt_nuevas.goto(url_inicio_semyt, wait_until="domcontentloaded", timeout=60000)
         print("\n📤 Arrancando las 3 descargas en paralelo (mismo browser, páginas separadas)...")

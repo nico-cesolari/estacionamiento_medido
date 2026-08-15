@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sistemas-estacionamiento"
+version = "0.1.0"
+description = "Código compartido de acceso a SEMyT / SIGI / SIGEMI (login, sesiones, reglas de negocio) usado tanto por el backend web (estacionamiento_medido) como por API-REST Payment."
+requires-python = ">=3.11"
+dependencies = [
+    "playwright",
+    "sqlalchemy",
+]
+
+# Sólo se empaqueta "sistemas" -- "app" (el backend FastAPI) NO se instala
+# como librería: cada proyecto que lo necesite instala esto en modo
+# editable y sigue siendo dueño de su propio requirements.txt / venv /
+# entrypoint. Ver README para el "pip install -e" de cada lado.
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["sistemas*"]

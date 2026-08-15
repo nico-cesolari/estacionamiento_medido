@@ -1,0 +1,7 @@
+Metadata-Version: 2.4
+Name: sistemas-estacionamiento
+Version: 0.1.0
+Summary: Código compartido de acceso a SEMyT / SIGI / SIGEMI (login, sesiones, reglas de negocio) usado tanto por el backend web (estacionamiento_medido) como por API-REST Payment.
+Requires-Python: >=3.11
+Requires-Dist: playwright
+Requires-Dist: sqlalchemy

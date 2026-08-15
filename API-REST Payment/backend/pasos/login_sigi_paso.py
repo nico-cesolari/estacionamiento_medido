@@ -5,7 +5,7 @@ from backend.configs import config
 from backend.configs import sesiones
 from backend.models.claves_contexto import ClavesContexto
 from backend.models.credenciales import Credenciales
-from backend.pages.login_page import LoginPage
+from sistemas.sigi.pages.login_page import LoginSigiPage
 from backend.pasos.paso_base import PasoBase
 from backend.services.autenticacion_service import AutenticacionService
 from backend.utils.utils import Utilidades
@@ -19,7 +19,7 @@ class LoginSIGIPaso(PasoBase):
             contexto.guardar(ClavesContexto.CONTEXTO_SIGI, contexto.contexto_navegador)
 
         page = await contexto.contexto_navegador.new_page()
-        login_page = LoginPage(page)
+        login_page = LoginSigiPage(page)
         autenticacion = AutenticacionService(login_page, log=print)
 
         print("Abriendo sitio municipalidad (CiDi)...")

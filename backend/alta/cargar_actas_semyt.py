@@ -47,7 +47,7 @@ from cargar_actas_semyt import (
     INDICE_COLUMNA_NRO,
     _parsear_fila,
 )
-from backend.sistemas.semyt.rutas.rutas_semyt import (
+from backend.sistemas.semyt.rutas import (
     ARCHIVO_SESION,
     URL_SEMYT,
 )

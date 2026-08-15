@@ -1,11 +1,11 @@
-# sistemas/semyt/paginas/login_page.py
+# sistemas/semyt/pages/login_page.py
 # -----------------------------------------------------------------------------
 # Page Object async: login y detección de sesión activa en SEMyT.
 #
 # Movido desde "API-REST Payment/backend/pages/login_page.py". Ese
 # archivo tenía UNA sola clase `LoginPage` mezclando SEMyT y SIGI -- se
 # separa acá la mitad de SEMyT. La mitad de SIGI se moverá a
-# sistemas/sigi/paginas/login_page.py en la próxima etapa; hasta entonces
+# sistemas/sigi/pages/login_page.py en la próxima etapa; hasta entonces
 # sigue viviendo en el proyecto original (ver shim en
 # API-REST Payment/backend/pages/login_page.py).
 # -----------------------------------------------------------------------------
@@ -13,6 +13,9 @@ from urllib.parse import urlsplit
 
 from sistemas.semyt.rutas import URL_SEMYT, semyt_login_obligatorio
 from sistemas.comun.playwright_utils import asentar_sesion  # noqa: F401  (re-exportado por compat)
+# ^ arreglado: antes apuntaba a "sistemas.comun.playwright_utils" cuando el
+# archivo todavía vivía en sistemas/semyt/comun/ (no existía sistemas/comun/
+# como carpeta real). Ahora sí existe -- ver sistemas/comun/playwright_utils.py.
 
 class LoginSemytPage:
     def __init__(self, page):
