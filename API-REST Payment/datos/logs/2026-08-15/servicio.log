@@ -5665,3 +5665,93 @@
 ℹ El log detallado de esta corrida no se conservó en disco (no se llegó a subir ningún archivo).
 ❌ [Automático] 'pagos' falló (intento 2 de 4). Se reintenta a las 10:37.
 🤖 [Automático] Es hora de actualizar pagos (reintento 2 de 3). Arrancando...
+[ACTUALIZAR PAGOS · AUTO] === Inicio de ejecución: pagos ===
+[ACTUALIZAR PAGOS · AUTO] ==================================================
+[ACTUALIZAR PAGOS · AUTO] 🚀 PASO: LoginSEMyTPaso
+[ACTUALIZAR PAGOS · AUTO] ==================================================
+[ACTUALIZAR PAGOS · AUTO] Abriendo SEMyT...
+[ACTUALIZAR PAGOS · AUTO] ❌ [SEMyT] No hay sesión activa. Iniciando login...
+[ACTUALIZAR PAGOS · AUTO] ✅ [SEMyT] Login completado.
+[ACTUALIZAR PAGOS · AUTO] ✅ LoginSEMyTPaso finalizado. (⏱ 2.9s)
+[ACTUALIZAR PAGOS · AUTO] ==================================================
+[ACTUALIZAR PAGOS · AUTO] 🚀 PASO: LoginSIGIPaso
+[ACTUALIZAR PAGOS · AUTO] ==================================================
+[ACTUALIZAR PAGOS · AUTO] Abriendo sitio municipalidad (CiDi)...
+[ACTUALIZAR PAGOS · AUTO] ❌ [SIGI] No hay sesión activa. Iniciando login CiDi...
+[ACTUALIZAR PAGOS · AUTO] ❌ === ERROR: TimeoutError: Locator.click: Timeout 30000ms exceeded.
+[ACTUALIZAR PAGOS · AUTO] Call log:
+[ACTUALIZAR PAGOS · AUTO]   - waiting for get_by_role("button", name="Ingresar con CiDi").first
+[ACTUALIZAR PAGOS · AUTO]     - locator resolved to <button type="button" class="rounded-full bg-white/10 px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-white/20">Ingresar con CiDi</button>
+[ACTUALIZAR PAGOS · AUTO]   - attempting click action
+[ACTUALIZAR PAGOS · AUTO]     - waiting for element to be visible, enabled and stable
+[ACTUALIZAR PAGOS · AUTO]     - element is visible, enabled and stable
+[ACTUALIZAR PAGOS · AUTO]     - scrolling into view if needed
+[ACTUALIZAR PAGOS · AUTO]     - done scrolling
+[ACTUALIZAR PAGOS · AUTO]     - performing click action
+[ACTUALIZAR PAGOS · AUTO]     - click action done
+[ACTUALIZAR PAGOS · AUTO]     - waiting for scheduled navigations to finish
+[ACTUALIZAR PAGOS · AUTO]  ===
+[ACTUALIZAR PAGOS · AUTO] Traceback (most recent call last):
+[ACTUALIZAR PAGOS · AUTO]   File "/Users/nicolascesolari/Proyectos/estacionamiento_medido/API-REST Payment/backend/orquestador/trabajador.py", line 119, in ejecutar_worker
+[ACTUALIZAR PAGOS · AUTO]     contexto_resultado = asyncio.run(
+[ACTUALIZAR PAGOS · AUTO]         asyncio.wait_for(
+[ACTUALIZAR PAGOS · AUTO]     ...<2 lines>...
+[ACTUALIZAR PAGOS · AUTO]         )
+[ACTUALIZAR PAGOS · AUTO]     )
+[ACTUALIZAR PAGOS · AUTO]   File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/runners.py", line 205, in run
+[ACTUALIZAR PAGOS · AUTO]     return runner.run(main)
+[ACTUALIZAR PAGOS · AUTO]            ~~~~~~~~~~^^^^^^
+[ACTUALIZAR PAGOS · AUTO]   File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/runners.py", line 128, in run
+[ACTUALIZAR PAGOS · AUTO]     return self._loop.run_until_complete(task)
+[ACTUALIZAR PAGOS · AUTO]            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+[ACTUALIZAR PAGOS · AUTO]   File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/base_events.py", line 719, in run_until_complete
+[ACTUALIZAR PAGOS · AUTO]     return future.result()
+[ACTUALIZAR PAGOS · AUTO]            ~~~~~~~~~~~~~^^
+[ACTUALIZAR PAGOS · AUTO]   File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/tasks.py", line 488, in wait_for
+[ACTUALIZAR PAGOS · AUTO]     return await fut
+[ACTUALIZAR PAGOS · AUTO]            ^^^^^^^^^
+[ACTUALIZAR PAGOS · AUTO]   File "/Users/nicolascesolari/Proyectos/estacionamiento_medido/API-REST Payment/backend/orquestador/trabajador.py", line 189, in _correr_tipo
+[ACTUALIZAR PAGOS · AUTO]     return await PagosWorkflow(navegador).ejecutar(archivo_fn=archivo_creado, cerrar_navegador_al_final=False)
+[ACTUALIZAR PAGOS · AUTO]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[ACTUALIZAR PAGOS · AUTO]   File "/Users/nicolascesolari/Proyectos/estacionamiento_medido/API-REST Payment/backend/workflows/workflow_base.py", line 38, in ejecutar
+[ACTUALIZAR PAGOS · AUTO]     await paso.ejecutar(contexto)
+[ACTUALIZAR PAGOS · AUTO]   File "/Users/nicolascesolari/Proyectos/estacionamiento_medido/API-REST Payment/backend/pasos/login_sigi_paso.py", line 27, in ejecutar
+[ACTUALIZAR PAGOS · AUTO]     await autenticacion.asegurar_sesion_sigi(credenciales, config.ROL_A_SELECCIONAR)
+[ACTUALIZAR PAGOS · AUTO]   File "/Users/nicolascesolari/Proyectos/estacionamiento_medido/API-REST Payment/backend/services/autenticacion_service.py", line 33, in asegurar_sesion_sigi
+[ACTUALIZAR PAGOS · AUTO]     await self.login_page.iniciar_sesion_sigi_cidi(credenciales, rol)
+[ACTUALIZAR PAGOS · AUTO]   File "/Users/nicolascesolari/Proyectos/estacionamiento_medido/API-REST Payment/backend/pages/login_page.py", line 115, in iniciar_sesion_sigi_cidi
+[ACTUALIZAR PAGOS · AUTO]     await boton_cidi.first.click()
+[ACTUALIZAR PAGOS · AUTO]   File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/playwright/async_api/_generated.py", line 17449, in click
+[ACTUALIZAR PAGOS · AUTO]     await self._impl_obj.click(
+[ACTUALIZAR PAGOS · AUTO]     ...<10 lines>...
+[ACTUALIZAR PAGOS · AUTO]     )
+[ACTUALIZAR PAGOS · AUTO]   File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/playwright/_impl/_locator.py", line 163, in click
+[ACTUALIZAR PAGOS · AUTO]     return await self._frame._click(self._selector, strict=True, **params)
+[ACTUALIZAR PAGOS · AUTO]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[ACTUALIZAR PAGOS · AUTO]   File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/playwright/_impl/_frame.py", line 569, in _click
+[ACTUALIZAR PAGOS · AUTO]     await self._channel.send("click", self._timeout, locals_to_params(locals()))
+[ACTUALIZAR PAGOS · AUTO]   File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/playwright/_impl/_connection.py", line 69, in send
+[ACTUALIZAR PAGOS · AUTO]     return await self._connection.wrap_api_call(
+[ACTUALIZAR PAGOS · AUTO]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[ACTUALIZAR PAGOS · AUTO]     ...<3 lines>...
+[ACTUALIZAR PAGOS · AUTO]     )
+[ACTUALIZAR PAGOS · AUTO]     ^
+[ACTUALIZAR PAGOS · AUTO]   File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/playwright/_impl/_connection.py", line 559, in wrap_api_call
+[ACTUALIZAR PAGOS · AUTO]     raise rewrite_error(error, f"{parsed_st['apiName']}: {error}") from None
+[ACTUALIZAR PAGOS · AUTO] playwright._impl._errors.TimeoutError: Locator.click: Timeout 30000ms exceeded.
+[ACTUALIZAR PAGOS · AUTO] Call log:
+[ACTUALIZAR PAGOS · AUTO]   - waiting for get_by_role("button", name="Ingresar con CiDi").first
+[ACTUALIZAR PAGOS · AUTO]     - locator resolved to <button type="button" class="rounded-full bg-white/10 px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-white/20">Ingresar con CiDi</button>
+[ACTUALIZAR PAGOS · AUTO]   - attempting click action
+[ACTUALIZAR PAGOS · AUTO]     - waiting for element to be visible, enabled and stable
+[ACTUALIZAR PAGOS · AUTO]     - element is visible, enabled and stable
+[ACTUALIZAR PAGOS · AUTO]     - scrolling into view if needed
+[ACTUALIZAR PAGOS · AUTO]     - done scrolling
+[ACTUALIZAR PAGOS · AUTO]     - performing click action
+[ACTUALIZAR PAGOS · AUTO]     - click action done
+[ACTUALIZAR PAGOS · AUTO]     - waiting for scheduled navigations to finish
+[ACTUALIZAR PAGOS · AUTO] 🧹 Sesión guardada eliminada (auto-recuperación tras error: TimeoutError): datos/sesiones/sesion_general.json
+[ACTUALIZAR PAGOS · AUTO] 🧹 Sesión guardada eliminada (auto-recuperación tras error: TimeoutError): datos/sesiones/sesion_semyt.json
+ℹ El log detallado de esta corrida no se conservó en disco (no se llegó a subir ningún archivo).
+❌ [Automático] 'pagos' falló (intento 3 de 4). Se reintenta a las 11:09.
+🤖 [Automático] Es hora de actualizar pagos (reintento 3 de 3). Arrancando...
