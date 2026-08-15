@@ -1,22 +1,17 @@
 # common/normalizacion/texto.py
 # -----------------------------------------------------------------------------
-# Normalización de texto compartida entre orquestador/comparador.py y
-# cualquier otro consumidor (antes vivía SOLO en comparador.py).
+# La lógica real vive en sistemas/comun/texto.py (paquete compartido
+# "sistemas-estacionamiento", usado también por backend/ del otro
+# proyecto). Este archivo re-exporta nomás, para no tener que salir a
+# cambiar cada `from common.normalizacion.texto import ...` que ya existe
+# en el proyecto (comparador.py, etc.).
 # -----------------------------------------------------------------------------
-import re
+from sistemas.comun.texto import (
+    limpiar_numero_acta,
+    limpiar_patente,
+)
 
-import pandas as pd
-
-
-def limpiar_numero_acta(valor) -> str:
-    """Normaliza actas: solo dígitos."""
-    if pd.isna(valor):
-        return ""
-    return re.sub(r"\D", "", str(valor))
-
-
-def limpiar_patente(valor) -> str:
-    """Normaliza patentes: mayúsculas, sin espacios ni guiones."""
-    if pd.isna(valor):
-        return ""
-    return re.sub(r"[^A-Z0-9]", "", str(valor).upper())
+__all__ = [
+    "limpiar_numero_acta",
+    "limpiar_patente",
+]

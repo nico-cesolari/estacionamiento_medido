@@ -41,8 +41,8 @@ archivo -- este script siempre usa la ruta constante.
 
 USO:
     cd backend
-    python alta/llenar_actas_sigemi.py app/datos/maestro/total_em_sigemi.txt       # dry-run
-    python alta/llenar_actas_sigemi.py app/datos/maestro/total_em_sigemi.txt --commit   # graba
+    python alta/llenar_actas_sigemi.py sistemas/sigemi/archivos/total_em_sigemi.txt       # dry-run
+    python alta/llenar_actas_sigemi.py sistemas/sigemi/archivos/total_em_sigemi.txt --commit   # graba
 """
 import argparse
 import sys
@@ -51,7 +51,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from app.database import SessionLocal
 from app import crud, models
 
-from backend.sigemi.reglas.reglas_sigemi import (
+from sistemas.sigemi.reglas.reglas_sigemi import (
     leer_registros_crudos,
     extraer_numero_causa,
     extraer_acta_numero,

@@ -30,7 +30,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from app.database import SessionLocal
 from app import crud, models
 
-from backend.sigemi.reglas.reglas_sigemi import (
+from sistemas.sigemi.reglas.reglas_sigemi import (
     leer_registros_crudos,
     extraer_acta_numero,
     calcular_estado,

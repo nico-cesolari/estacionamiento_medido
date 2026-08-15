@@ -1,0 +1,311 @@
+diff --git a/backend/sistemas_estacionamiento.egg-info/PKG-INFO b/backend/sistemas_estacionamiento.egg-info/PKG-INFO
+deleted file mode 100644
+index ad700b0..0000000
+--- a/backend/sistemas_estacionamiento.egg-info/PKG-INFO
++++ /dev/null
+@@ -1,7 +0,0 @@
+-Metadata-Version: 2.4
+-Name: sistemas-estacionamiento
+-Version: 0.1.0
+-Summary: Código compartido de acceso a SEMyT / SIGI / SIGEMI (login, sesiones, reglas de negocio) usado tanto por el backend web (estacionamiento_medido) como por API-REST Payment.
+-Requires-Python: >=3.11
+-Requires-Dist: playwright
+-Requires-Dist: sqlalchemy
+diff --git a/backend/sistemas_estacionamiento.egg-info/SOURCES.txt b/backend/sistemas_estacionamiento.egg-info/SOURCES.txt
+deleted file mode 100644
+index eeb08da..0000000
+--- a/backend/sistemas_estacionamiento.egg-info/SOURCES.txt
++++ /dev/null
+@@ -1,22 +0,0 @@
+-pyproject.toml
+-sistemas/comun/fechas.py
+-sistemas/comun/playwright_utils.py
+-sistemas/comun/sesion.py
+-sistemas/comun/texto.py
+-sistemas/semyt/rutas.py
+-sistemas/semyt/pages/exportar_actas_page.py
+-sistemas/semyt/pages/importar_pagos_page.py
+-sistemas/semyt/pages/login_page.py
+-sistemas/semyt/reglas/estados.py
+-sistemas/semyt/reglas/foto.py
+-sistemas/sigemi/archivos/rutas_archivos_sigemi.py
+-sistemas/sigemi/reglas/reglas_sigemi.py
+-sistemas/sigi/rutas.py
+-sistemas/sigi/pages/login_page.py
+-sistemas/sigi/reglas/reglas_sigi.py
+-sistemas/sigi/web/web_sigi.py
+-sistemas_estacionamiento.egg-info/PKG-INFO
+-sistemas_estacionamiento.egg-info/SOURCES.txt
+-sistemas_estacionamiento.egg-info/dependency_links.txt
+-sistemas_estacionamiento.egg-info/requires.txt
+-sistemas_estacionamiento.egg-info/top_level.txt
+\ No newline at end of file
+diff --git a/backend/sistemas_estacionamiento.egg-info/dependency_links.txt b/backend/sistemas_estacionamiento.egg-info/dependency_links.txt
+deleted file mode 100644
+index 8b13789..0000000
+--- a/backend/sistemas_estacionamiento.egg-info/dependency_links.txt
++++ /dev/null
+@@ -1 +0,0 @@
+-
+diff --git a/backend/sistemas_estacionamiento.egg-info/requires.txt b/backend/sistemas_estacionamiento.egg-info/requires.txt
+deleted file mode 100644
+index eb3cb37..0000000
+--- a/backend/sistemas_estacionamiento.egg-info/requires.txt
++++ /dev/null
+@@ -1,2 +0,0 @@
+-playwright
+-sqlalchemy
+diff --git a/backend/sistemas_estacionamiento.egg-info/top_level.txt b/backend/sistemas_estacionamiento.egg-info/top_level.txt
+deleted file mode 100644
+index a100719..0000000
+--- a/backend/sistemas_estacionamiento.egg-info/top_level.txt
++++ /dev/null
+@@ -1 +0,0 @@
+-sistemas
+diff --git a/.gitignore b/.gitignore
+index 2b91c72..aa4d8b5 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -2,3 +2,4 @@ venv/
+ __pycache__/
+ *.pyc
+ .env
++*.egg-info/
+diff --git a/API-REST Payment/backend/requirements.txt b/API-REST Payment/backend/requirements.txt
+index 8f924a8..39eb40b 100644
+--- a/API-REST Payment/backend/requirements.txt	
++++ b/API-REST Payment/backend/requirements.txt	
+@@ -1,4 +1,12 @@
+ pandas
+ openpyxl
+ playwright
+-python-dotenv
+\ No newline at end of file
++python-dotenv
++
++# Paquete compartido con estacionamiento_medido/backend (login, sesiones,
++# reglas de negocio de SEMyT/SIGI/SIGEMI). Definido en
++# ../../backend/pyproject.toml. Editable para que los cambios en
++# sistemas/ se vean sin reinstalar. Sin esto, "from sistemas.sigi..." /
++# "from sistemas.semyt..." (pasos/login_sigi_paso.py, login_semyt_paso.py)
++# fallan con ModuleNotFoundError.
++-e ../../backend
+\ No newline at end of file
+diff --git a/API-REST Payment/common/normalizacion/fechas.py b/API-REST Payment/common/normalizacion/fechas.py
+index 365f20e..495d95e 100644
+--- a/API-REST Payment/common/normalizacion/fechas.py	
++++ b/API-REST Payment/common/normalizacion/fechas.py	
+@@ -1,82 +1,35 @@
+ # common/normalizacion/fechas.py
+ # -----------------------------------------------------------------------------
+-# Punto único de fechas: antes esto estaba repartido entre utils/fechas.py
+-# (funciones "puras" tipo texto_a_fecha/fecha_a_texto) y orquestador/
+-# comparador.py (parsear_fecha_hora_completa, más robusto porque soporta
+-# varios formatos de origen). excel_service.py además tenía su PROPIA
+-# constante de formato (FORMATO_FECHA_EXCEL) con el mismo valor que
+-# FORMATO_EXCEL_FECHA_HORA de acá abajo, solo que con otro nombre.
+-#
+-# Todo eso vive ahora en un solo lugar. Los módulos viejos pasan a ser
+-# shims que re-exportan desde acá (ver utils/fechas.py), así no hace
+-# falta tocar cada import existente de una sola vez.
++# La lógica real vive en sistemas/comun/fechas.py (paquete compartido
++# "sistemas-estacionamiento", usado también por backend/ del otro
++# proyecto). Este archivo re-exporta nomás, para no tener que salir a
++# cambiar cada `from common.normalizacion.fechas import ...` que ya existe
++# en el proyecto (comparador.py, excel_service.py, utils/fechas.py).
+ # -----------------------------------------------------------------------------
+-import re
+-from datetime import datetime, timedelta
+-
+-import pandas as pd
+-
+-FORMATO_VISUAL = "%d/%m/%Y"
+-FORMATO_ALMACENAMIENTO = "%Y-%m-%d"
+-FORMATO_EXCEL_FECHA_HORA = "%d/%m/%Y, %H:%M"
+-
+-
+-def texto_a_fecha(texto: str, formato: str = FORMATO_VISUAL) -> datetime:
+-    """Convierte un texto a un objeto datetime según el formato indicado."""
+-    return datetime.strptime(texto.strip(), formato)
+-
+-
+-def fecha_a_texto(fecha: datetime, formato: str = FORMATO_VISUAL) -> str:
+-    """Convierte un objeto datetime a texto según el formato indicado."""
+-    return fecha.strftime(formato)
+-
+-
+-def es_formato_valido(texto: str, formato: str = FORMATO_VISUAL) -> bool:
+-    """Indica si un texto respeta el formato de fecha esperado."""
+-    try:
+-        texto_a_fecha(texto, formato)
+-        return True
+-    except ValueError:
+-        return False
+-
+-
+-def sumar_un_dia(fecha: datetime) -> datetime:
+-    """Devuelve la fecha siguiente, sin componente de hora."""
+-    return (fecha + timedelta(days=1)).normalize() if hasattr(fecha, "normalize") else fecha + timedelta(days=1)
+-
+-
+-def fecha_y_hora_actual() -> datetime:
+-    """Punto único de acceso al reloj del sistema."""
+-    return datetime.now()
+-
+-
+-def parsear_fecha_hora_completa(valor):
+-    """
+-    Parsea fecha (con hora si la tiene) a un Timestamp completo.
+-    Robusto ante distintos formatos de origen:
+-      - "27/06/2024, 08:40" (string tal cual viene de Excel exportado)
+-      - "2024-06-27 08:40:00" (si Excel entregó un datetime real y pandas
+-        lo convirtió a string con dtype=str)
+-      - "27/06/2024" (pagos, sin hora)
+-    Devuelve pd.NaT si no se puede parsear.
+-    """
+-    if pd.isna(valor):
+-        return pd.NaT
+-    texto = str(valor).strip().replace(",", " ")
+-    texto = re.sub(r"\s+", " ", texto)
+-    return pd.to_datetime(texto, dayfirst=True, errors="coerce")
+-
+-
+-# Alias por compatibilidad: comparador.py usaba este nombre más corto.
+-parsear_fecha = parsear_fecha_hora_completa
+-
+-
+-def normalizar_fecha_comparacion(valor) -> str:
+-    """
+-    Extrae SOLO la fecha (sin hora) en formato DD/MM/YYYY para comparación,
+-    sin importar el formato de origen (string con hora, datetime real, etc).
+-    """
+-    fecha = parsear_fecha_hora_completa(valor)
+-    if pd.isna(fecha):
+-        return ""
+-    return fecha.strftime("%d/%m/%Y")
+\ No newline at end of file
++from sistemas.comun.fechas import (
++    FORMATO_VISUAL,
++    FORMATO_ALMACENAMIENTO,
++    FORMATO_EXCEL_FECHA_HORA,
++    texto_a_fecha,
++    fecha_a_texto,
++    es_formato_valido,
++    sumar_un_dia,
++    fecha_y_hora_actual,
++    parsear_fecha_hora_completa,
++    parsear_fecha,
++    normalizar_fecha_comparacion,
++)
++
++__all__ = [
++    "FORMATO_VISUAL",
++    "FORMATO_ALMACENAMIENTO",
++    "FORMATO_EXCEL_FECHA_HORA",
++    "texto_a_fecha",
++    "fecha_a_texto",
++    "es_formato_valido",
++    "sumar_un_dia",
++    "fecha_y_hora_actual",
++    "parsear_fecha_hora_completa",
++    "parsear_fecha",
++    "normalizar_fecha_comparacion",
++]
+diff --git a/API-REST Payment/common/normalizacion/texto.py b/API-REST Payment/common/normalizacion/texto.py
+index bd10f01..85a8bfd 100644
+--- a/API-REST Payment/common/normalizacion/texto.py	
++++ b/API-REST Payment/common/normalizacion/texto.py	
+@@ -1,22 +1,17 @@
+ # common/normalizacion/texto.py
+ # -----------------------------------------------------------------------------
+-# Normalización de texto compartida entre orquestador/comparador.py y
+-# cualquier otro consumidor (antes vivía SOLO en comparador.py).
++# La lógica real vive en sistemas/comun/texto.py (paquete compartido
++# "sistemas-estacionamiento", usado también por backend/ del otro
++# proyecto). Este archivo re-exporta nomás, para no tener que salir a
++# cambiar cada `from common.normalizacion.texto import ...` que ya existe
++# en el proyecto (comparador.py, etc.).
+ # -----------------------------------------------------------------------------
+-import re
++from sistemas.comun.texto import (
++    limpiar_numero_acta,
++    limpiar_patente,
++)
+ 
+-import pandas as pd
+-
+-
+-def limpiar_numero_acta(valor) -> str:
+-    """Normaliza actas: solo dígitos."""
+-    if pd.isna(valor):
+-        return ""
+-    return re.sub(r"\D", "", str(valor))
+-
+-
+-def limpiar_patente(valor) -> str:
+-    """Normaliza patentes: mayúsculas, sin espacios ni guiones."""
+-    if pd.isna(valor):
+-        return ""
+-    return re.sub(r"[^A-Z0-9]", "", str(valor).upper())
+\ No newline at end of file
++__all__ = [
++    "limpiar_numero_acta",
++    "limpiar_patente",
++]
+diff --git a/README.md b/README.md
+index 206e79b..ab4e7ee 100644
+--- a/README.md
++++ b/README.md
+@@ -164,6 +164,9 @@ source venv/bin/activate
+ python -m pip install --upgrade pip
+ cd backend
+ python -m pip install -r requirements.txt
++# ↑ esto ya incluye "-e ." (instala sistemas-estacionamiento editable,
++#   ver backend/pyproject.toml). Necesario para que anden los scripts de
++#   alta/ y update/ que importan sistemas.sigemi / sistemas.sigi.
+ uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+ 
+ http://localhost:8000
+diff --git a/backend/alta/llenar_actas_sigemi.py b/backend/alta/llenar_actas_sigemi.py
+index 1411f36..8c46d76 100644
+--- a/backend/alta/llenar_actas_sigemi.py
++++ b/backend/alta/llenar_actas_sigemi.py
+@@ -51,7 +51,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+ from app.database import SessionLocal
+ from app import crud, models
+ 
+-from backend.sigemi.reglas.reglas_sigemi import (
++from sistemas.sigemi.reglas.reglas_sigemi import (
+     leer_registros_crudos,
+     extraer_numero_causa,
+     extraer_acta_numero,
+diff --git a/backend/requirements.txt b/backend/requirements.txt
+index 1d7ea06..5ef9202 100644
+--- a/backend/requirements.txt
++++ b/backend/requirements.txt
+@@ -5,4 +5,9 @@ python-dotenv
+ pandas
+ openpyxl
+ playwright
+-psycopg2-binary
+\ No newline at end of file
++psycopg2-binary
++
++# Paquete compartido con API-REST Payment (login, sesiones, reglas de
++# negocio de SEMyT/SIGI/SIGEMI). Definido en ./pyproject.toml. Editable
++# para que los cambios en sistemas/ se vean sin reinstalar.
++-e .
+\ No newline at end of file
+diff --git a/backend/update/actualizar_estado_sigemi.py b/backend/update/actualizar_estado_sigemi.py
+index d1ab7e4..c63e3c8 100644
+--- a/backend/update/actualizar_estado_sigemi.py
++++ b/backend/update/actualizar_estado_sigemi.py
+@@ -30,7 +30,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+ from app.database import SessionLocal
+ from app import crud, models
+ 
+-from backend.sigemi.reglas.reglas_sigemi import (
++from sistemas.sigemi.reglas.reglas_sigemi import (
+     leer_registros_crudos,
+     extraer_acta_numero,
+     calcular_estado,

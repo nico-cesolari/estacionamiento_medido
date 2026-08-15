@@ -40,15 +40,14 @@ sys.path.insert(0, str(CARPETA_BACKEND))
 
 from app.database import SessionLocal
 from app import models
-from app.pasos.navegador import PaginaConSesion
+from app.pasos.navegador import PaginaConSesion, ruta_sesion
 from cargar_actas_semyt import (
     LABEL_FILTRO_NUMERO,
     TEXTO_BOTON_BUSCAR,
     INDICE_COLUMNA_NRO,
     _parsear_fila,
 )
-from backend.sistemas.semyt.rutas import (
-    ARCHIVO_SESION,
+from sistemas.semyt.rutas import (
     URL_SEMYT,
 )
 
@@ -402,18 +401,19 @@ async def main(
         # SEMyT
         # -------------------------------------------------
 
-        if not Path(ARCHIVO_SESION).exists():
+        archivo_sesion_semyt = ruta_sesion("sesion_semyt.json")
+        if not archivo_sesion_semyt.exists():
             log(
                 "SESION",
                 f"❌ No existe el archivo de sesión: "
-                f"{ARCHIVO_SESION}",
+                f"{archivo_sesion_semyt}",
             )
             return
 
         log("SESION", "✅ Archivo de sesión encontrado.")
 
         async with PaginaConSesion(
-            ARCHIVO_SESION,
+            "sesion_semyt.json",
             URL_SEMYT,False
         ) as page:
             # PaginaConSesion ya expone una Page, pero la función de fotos

@@ -61,7 +61,7 @@ from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from app import crud, models  # noqa: F401
-from backend.sigi.reglas_sigi import reglas_sigi
+from sistemas.sigi.reglas import reglas_sigi
 from app.pasos.navegador import PaginaConSesion
 from app.database import SessionLocal
 
