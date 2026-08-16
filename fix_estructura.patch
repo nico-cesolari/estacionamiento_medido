@@ -272,7 +272,7 @@ index 1411f36..8c46d76 100644
 +++ b/backend/alta/llenar_actas_sigemi.py
 @@ -51,7 +51,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
  from app.database import SessionLocal
- from app import crud, models
+ from app import models
  
 -from backend.sigemi.reglas.reglas_sigemi import (
 +from sistemas.sigemi.reglas.reglas_sigemi import (
@@ -302,7 +302,7 @@ index d1ab7e4..c63e3c8 100644
 +++ b/backend/update/actualizar_estado_sigemi.py
 @@ -30,7 +30,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
  from app.database import SessionLocal
- from app import crud, models
+ from app import models
  
 -from backend.sigemi.reglas.reglas_sigemi import (
 +from sistemas.sigemi.reglas.reglas_sigemi import (

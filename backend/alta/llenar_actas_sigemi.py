@@ -51,7 +51,6 @@ from pathlib import Path
 from app.models import models
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from app.database import SessionLocal
-from app import crud
 
 from app.services.sistemas.sigemi.reglas.reglas_sigemi import (
     leer_registros_crudos,

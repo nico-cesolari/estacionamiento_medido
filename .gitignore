@@ -1,11 +1,50 @@
+# --- Bases de datos locales ---
 *.db
 *.sqlite
 *.sqlite3
 *.dump
-.DS_Store
-.env
-__pycache__/
+
+# --- Entornos virtuales ---
+venv/
 .venv/
+env/
+
+# --- Python ---
+__pycache__/
+*.pyc
 *.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# --- Configuración sensible ---
+.env
+*.env
+!.env.ejemplo
+!.env.example
+
+# --- Sistema ---
+.DS_Store
+Thumbs.db
+
+# --- Datos generados en runtime (API-REST Payment) ---
+API-REST Payment/datos/
+
+# --- Archivos de estado de scripts standalone (backend/) ---
+backend/alta/actas_ignoradas_semyt.txt
 backend/service/sistemas/sigemi/archivos/*.txt
+
+# --- Node (por si el frontend suma tooling) ---
+node_modules/
+
+# --- Playwright ---
+test-results/
+playwright-report/
+
+# ---- Archivos de los sistemas -----
+backend/app/services/sistemas/semyt/archivos/*.json
+backend/app/services/sistemas/semyt/archivos/*.txt
+backend/app/services/sistemas/sigemi/archivos/*.txt
+
+# ---- Archivos de API-REST -----
 API-REST Payment/datos/

@@ -63,7 +63,6 @@ from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 from app.models import models
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from app import crud  # noqa: F401
 from app.services.sistemas.sigi.reglas import reglas_sigi
 from app.services.sistemas.comun.sesion import PaginaConSesion
 from app.paths import CARPETA_SESIONES_API_REST_PAYMENT

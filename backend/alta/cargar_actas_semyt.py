@@ -17,9 +17,16 @@ IMPORTANTE:
     - Por defecto es DRY-RUN: no modifica la DB.
     python alta/cargar_actas_semyt.py
     - Usar --commit para guardar realmente.
-    - A diferencia de los scripts históricos, NO ignora IMPAGA/PAGADA/EN REVISION:
-      si el acta existe en SEMyT se intenta cargar igual. Si el estado no tiene
-      equivalencia en MAPA_ESTADO_SEMYT, se guarda estado_semyt=NULL.
+    - Ignora actas en estado IMPAGA, PAGADA o EN REVISION (mismo criterio
+      que el resto del proyecto, ver ESTADOS_IGNORADOS_SEMYT). Sólo carga
+      RECHAZADA, PAGADA EN JUZGADO, RESUELTA EN JUZGADO y VENCIDA.
+      python alta/cargar_actas_semyt.py --commit
+    - Las actas ignoradas se recuerdan entre corridas en
+      actas_ignoradas_semyt.json (al lado de este script), para no volver
+      a golpear SEMyT por algo que ya sabemos que no se va a cargar. Ese
+      archivo se escribe UNA sola vez al final (o al cortar con Ctrl+C),
+      nunca dentro del loop -- así un problema de disco no puede tumbar
+      la corrida completa.
 """
 
 import argparse
@@ -29,19 +36,25 @@ import sys
 import traceback
 from pathlib import Path
 from typing import Optional
-
-from playwright.async_api import async_playwright
+from app.services.consistencia import calcular_consistencia
 
 # Permite ejecutar:
-#   python update/completar_actas_faltantes_semyt.py
+#   python update/cargar_actas_faltantes_semyt.py
 CARPETA_BACKEND = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(CARPETA_BACKEND))
-
+CARPETA_ARCHIVOS_SEMYT = CARPETA_BACKEND / "app" / "services" / "sistemas" / "semyt" / "archivos"
+# Estado persistente de actas ya vistas y descartadas por estado. JSON en
+# vez de texto plano línea por línea: escritura atómica de una sola vez
+# al final, en vez de un append por cada acta ignorada dentro del loop
+# (ese append en caliente era el punto de falla que podía tumbar toda la
+# corrida si algo raro pasaba con el disco a mitad de camino).
+ARCHIVO_IGNORADAS = CARPETA_ARCHIVOS_SEMYT / "actas_ignoradas_semyt.json"
+ARCHIVO_ELIMINADAS = CARPETA_ARCHIVOS_SEMYT / "actas_eliminadas_semyt.json"
 from app.database import SessionLocal
 from app.models import models
 from app.services.sistemas.comun.sesion import PaginaConSesion, ruta_sesion
 from app.paths import CARPETA_SESIONES_API_REST_PAYMENT
-from cargar_actas_semyt import (
+from app.pasos.procesar_actas_semyt import (
     LABEL_FILTRO_NUMERO,
     TEXTO_BOTON_BUSCAR,
     INDICE_COLUMNA_NRO,
@@ -52,8 +65,8 @@ from app.services.sistemas.semyt.rutas import (
 )
 
 from app.reglas.reglas_semyt import (
-    COLUMNAS_TABLA,
     MAPA_ESTADO_SEMYT,
+    ESTADOS_IGNORADOS_SEMYT,
     normalizar_estado,
     parsear_fecha_hora,
     obtener_url_foto_de_fila,
@@ -64,7 +77,7 @@ from app.reglas.reglas_semyt import (
 # ---------------------------------------------------------
 
 NUMERO_DESDE_DEFAULT = 1
-NUMERO_HASTA_DEFAULT = 328792
+NUMERO_HASTA_DEFAULT = 329583
 
 # Reintentos cuando SEMyT tarda en repintar la grilla.
 INTENTOS_BUSQUEDA = 3
@@ -101,6 +114,53 @@ def cargar_actas_existentes(db) -> set[str]:
 
 
 # ---------------------------------------------------------
+# Actas ignoradas (persistencia JSON, lectura/escritura únicas)
+# ---------------------------------------------------------
+
+def _cargar_set_json(ruta: Path, etiqueta: str) -> set[str]:
+    """Lectura genérica para los dos archivos de estado persistente
+    (ignoradas y eliminadas): mismo comportamiento defensivo en ambos."""
+    if not ruta.exists():
+        return set()
+    try:
+        with open(ruta, "r", encoding="utf-8") as f:
+            return {str(v) for v in json.load(f)}
+    except (json.JSONDecodeError, OSError) as exc:
+        log(etiqueta, f"⚠️ No se pudo leer {ruta} ({exc}); se arranca vacío.")
+        return set()
+
+
+def _guardar_set_json(ruta: Path, valores: set[str], etiqueta: str):
+    """Escritura completa, UNA sola vez, ordenada numéricamente."""
+    try:
+        ordenados = sorted(valores, key=lambda numero: int(numero))
+        with open(ruta, "w", encoding="utf-8") as f:
+            json.dump(ordenados, f, indent=2)
+        log(etiqueta, f"💾 {len(valores)} acta(s) guardadas en {ruta.name}")
+    except OSError as exc:
+        log(etiqueta, f"⚠️ No se pudo guardar {ruta}: {exc}")
+
+
+def cargar_actas_ignoradas() -> set[str]:
+    """Actas descartadas por estado (IMPAGA/PAGADA/EN REVISION)."""
+    return _cargar_set_json(ARCHIVO_IGNORADAS, "IGNORADAS")
+
+
+def guardar_actas_ignoradas(actas_ignoradas: set[str]):
+    _guardar_set_json(ARCHIVO_IGNORADAS, actas_ignoradas, "IGNORADAS")
+
+
+def cargar_actas_eliminadas() -> set[str]:
+    """Actas que SEMyT no encontró (posible baja/eliminación del lado
+    del sitio), tras agotar los reintentos."""
+    return _cargar_set_json(ARCHIVO_ELIMINADAS, "ELIMINADAS")
+
+
+def guardar_actas_eliminadas(actas_eliminadas: set[str]):
+    _guardar_set_json(ARCHIVO_ELIMINADAS, actas_eliminadas, "ELIMINADAS")
+
+
+# ---------------------------------------------------------
 # SEMyT
 # ---------------------------------------------------------
 
@@ -110,6 +170,12 @@ async def buscar_fila_por_numero(page, numero_acta: str):
 
     No confía solamente en networkidle: después de la búsqueda verifica
     que el número de la primera fila realmente sea el solicitado.
+
+    Si la grilla aparece vacía (0 filas), NO se asume "no existe" al
+    primer intento: puede ser un estado transitorio (la SPA todavía no
+    terminó de re-pintar tras el filtro/click). Se reintenta con la
+    misma política de espera que el caso "fila con número equivocado",
+    para no perderse actas reales por una lectura demasiado apurada.
     """
     numero_acta = str(numero_acta).strip()
 
@@ -122,6 +188,9 @@ async def buscar_fila_por_numero(page, numero_acta: str):
         cantidad = await filas.count()
 
         if cantidad == 0:
+            if intento < INTENTOS_BUSQUEDA:
+                await page.wait_for_timeout(ESPERA_REINTENTO_MS)
+                continue
             return None
 
         for i in range(cantidad):
@@ -232,7 +301,7 @@ def construir_registro(datos: dict, foto_url: Optional[str]):
             "importe",
             datos.get("importe") or None,
         )
-
+    nuevo.consistente = calcular_consistencia(nuevo)
     return nuevo, estado_texto, estado_enum
 
 
@@ -243,23 +312,30 @@ async def procesar_acta(
     numero_acta: str,
     commit: bool,
     actas_existentes: set[str],
+    actas_ignoradas: set[str],
+    actas_eliminadas: set[str],
 ):
     """
     Procesa un único número.
 
     Retorna:
         ya_existe
+        ya_ignorada
         no_encontrada
         cargada
+        ignorada
         error
     """
 
     numero_acta = str(numero_acta).strip()
 
-    # Primera protección: no tocar nada si ya existe.
     if numero_acta in actas_existentes:
         return "ya_existe"
 
+    if numero_acta in actas_ignoradas:
+        return "ya_ignorada"
+    if numero_acta in actas_eliminadas:
+        return "ya_eliminada"
     try:
         fila, datos = await leer_acta_completa(page, numero_acta)
     except Exception as exc:
@@ -278,11 +354,23 @@ async def procesar_acta(
 
     estado_texto = normalizar_estado(datos.get("estado", ""))
 
+    if estado_texto in ESTADOS_IGNORADOS_SEMYT:
+        # Sólo se actualiza el set en memoria acá -- la escritura a disco
+        # pasa UNA sola vez al final (ver guardar_actas_ignoradas en
+        # main()), nunca dentro del loop.
+        actas_ignoradas.add(numero_acta)
+        log(
+            "SEMyT",
+            f"⏭ Acta {numero_acta}: estado '{estado_texto}' ignorado "
+            "(PAGADA/IMPAGA/EN REVISION). No se carga.",
+        )
+        return "ignorada"
+
     log(
         "SEMyT",
         f"✅ Acta {numero_acta} encontrada | "
         f"patente={datos.get('dominio', '')} | "
-        f"fecha={datos.get('fecha', '')} | "
+         f"fecha={datos.get('fecha', '')} | "
         f"estado={estado_texto or '(vacío)'}",
     )
 
@@ -376,8 +464,11 @@ async def main(
 
     contadores = {
         "ya_existe": 0,
+        "ya_ignorada": 0,
+        "ya_eliminada": 0,
         "faltantes": 0,
         "cargadas": 0,
+        "ignoradas": 0,
         "no_encontradas": 0,
         "errores": 0,
     }
@@ -387,9 +478,17 @@ async def main(
     # -----------------------------------------------------
 
     db = SessionLocal()
-
+    actas_ignoradas: set[str] = set()
+    actas_eliminadas: set[str] = set()
     try:
         actas_existentes = cargar_actas_existentes(db)
+
+        if reiniciar:
+            log("IGNORADAS", "⚠️ --reiniciar: se ignora el registro previo de actas descartadas.")
+        else:
+            actas_ignoradas = cargar_actas_ignoradas()
+            actas_eliminadas = cargar_actas_eliminadas()
+            log("DB", f"✅ {len(actas_ignoradas)} acta(s) ignorada(s) y {len(actas_eliminadas)} eliminada(s) recordadas de corridas anteriores.")
 
         total_rango = hasta - desde + 1
         log(
@@ -441,32 +540,54 @@ async def main(
                     break
 
                 # -------------------------------------------------
-                # Comparación DB -> memoria.
+                # Comparación DB -> memoria. Envuelto en try/except: un
+                # error puntual en una acta (ej. una colisión de datos
+                # insertados a mano en paralelo) no debe tumbar el resto
+                # del rango.
                 # -------------------------------------------------
+                try:
+                    if numero_acta in actas_existentes:
+                        contadores["ya_existe"] += 1
 
-                if numero_acta in actas_existentes:
-                    contadores["ya_existe"] += 1
+                    elif numero_acta in actas_ignoradas:
+                        contadores["ya_ignorada"] += 1
+                        
+                    elif numero_acta in actas_eliminadas:
+                        contadores["ya_eliminada"] += 1
+                    else:
+                        contadores["faltantes"] += 1
 
-                else:
-                    contadores["faltantes"] += 1
+                        resultado = await procesar_acta(
+                            page,
+                            contexto,
+                            db,
+                            numero_acta,
+                            commit,
+                            actas_existentes,
+                            actas_ignoradas,
+                            actas_eliminadas,
+                        )
 
-                    resultado = await procesar_acta(
-                        page,
-                        contexto,
-                        db,
-                        numero_acta,
-                        commit,
-                        actas_existentes,
-                    )
+                        if resultado == "cargada":
+                            contadores["cargadas"] += 1
 
-                    if resultado == "cargada":
-                        contadores["cargadas"] += 1
+                        elif resultado == "ignorada":
+                            contadores["ignoradas"] += 1
 
-                    elif resultado == "no_encontrada":
-                        contadores["no_encontradas"] += 1
+                        elif resultado == "no_encontrada":
+                            contadores["no_encontradas"] += 1
 
-                    elif resultado == "error":
-                        contadores["errores"] += 1
+                        elif resultado == "error":
+                            contadores["errores"] += 1
+
+                except Exception as exc:
+                    log("ACTA", f"❌ Error inesperado procesando acta {numero_acta}: {exc}")
+                    traceback.print_exc()
+                    try:
+                        db.rollback()
+                    except Exception:
+                        pass
+                    contadores["errores"] += 1
 
                 procesados_desde_esta_corrida += 1
 
@@ -490,8 +611,11 @@ async def main(
                         f"{numero:,}/{hasta:,} "
                         f"({porcentaje:.2f}%) | "
                         f"existentes={contadores['ya_existe']:,} | "
+                        f"ya_ignoradas={contadores['ya_ignorada']:,} | "
+                        f"ya_eliminadas={contadores['ya_eliminada']:,} | "
                         f"faltantes={contadores['faltantes']:,} | "
                         f"cargadas={contadores['cargadas']:,} | "
+                        f"ignoradas={contadores['ignoradas']:,} | "
                         f"no_encontradas={contadores['no_encontradas']:,} | "
                         f"errores={contadores['errores']:,}",
                     )
@@ -524,6 +648,11 @@ async def main(
         )
         traceback.print_exc()
     finally:
+        # Se guarda SIEMPRE, incluso si el script se corta por una
+        # excepción no prevista o por Ctrl+C: lo que se llegó a acumular
+        # en memoria durante esta corrida no se pierde.
+        guardar_actas_ignoradas(actas_ignoradas)
+        guardar_actas_eliminadas(actas_eliminadas)
         db.close()
 
     # ---------------------------------------------------------
@@ -535,9 +664,12 @@ async def main(
     log("FIN", "RESUMEN")
     log("FIN", "========================================")
     log("FIN", f"Existentes en DB: {contadores['ya_existe']:,}")
+    log("FIN", f"Ya ignoradas (de corridas previas): {contadores['ya_ignorada']:,}")
+    log("FIN", f"Ya eliminadas (de corridas previas): {contadores['ya_eliminada']:,}")
     log("FIN", f"Faltantes consultadas: {contadores['faltantes']:,}")
     log("FIN", f"Cargadas: {contadores['cargadas']:,}")
-    log("FIN", f"No encontradas en SEMyT: {contadores['no_encontradas']:,}")
+    log("FIN", f"Ignoradas ahora (PAGADA/IMPAGA/EN REVISION): {contadores['ignoradas']:,}")
+    log("FIN", f"No encontradas ahora (posibles eliminadas): {contadores['no_encontradas']:,}")
     log("FIN", f"Errores: {contadores['errores']:,}")
     log("FIN", "========================================")
 
@@ -573,7 +705,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--reiniciar",
         action="store_true",
-        help="Ignora y elimina el checkpoint existente.",
+        help="Ignora el registro previo de actas descartadas (actas_ignoradas_semyt.json) y las vuelve a evaluar todas.",
     )
 
     parser.add_argument(

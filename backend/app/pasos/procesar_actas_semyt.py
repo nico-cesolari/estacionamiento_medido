@@ -29,7 +29,7 @@ Basado en la grilla real ("Consulta de Actas Registradas"):
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 from typing import Dict, List, Optional
-
+from app.services.consistencia import calcular_consistencia
 from sqlalchemy.orm import Session
 
 from ..models import models
@@ -67,7 +67,7 @@ SELECTOR_BOTON_SIGUIENTE = (
 # nombre de columna tal cual viene de la grilla (no tocar); el valor es
 # el atributo real del modelo (poner None para no cargar ese campo).
 MAPEO_CAMPOS_EXTRA = {
-    "fecha": "fecha",
+    "fecha": "fecha_hora",
     "cuadra": "direccion",
 }
 
@@ -288,7 +288,7 @@ async def _crear_actas_nuevas(db: Session, page, fecha_desde: str, fecha_hasta: 
             estado_semyt=nuevo_estado,
         )
         _aplicar_campos_extra(nuevo_registro, datos)
-
+        nuevo_registro.consistente = calcular_consistencia(nuevo_registro)
         try:
             db.add(nuevo_registro)
             db.flush()

@@ -62,56 +62,12 @@ from pathlib import Path
 
 
 def _obtener_session_local():
-    """
-    Busca SessionLocal (la factory de sesiones de SQLAlchemy) probando los
-    lugares más comunes según cómo esté armado el proyecto. Ajustá esta
-    función si tu `database.py` expone la sesión con otro nombre o desde
-    otro módulo -- es el único lugar que debería hacer falta tocar.
-    """
-    intentos = (
-        "app.database",
-        "database",
-        "backend.database",
-        "src.database",
-    )
-    errores = []
-    for modulo in intentos:
-        try:
-            mod = __import__(modulo, fromlist=["SessionLocal"])
-            return mod.SessionLocal
-        except (ImportError, AttributeError) as e:
-            errores.append(f"  - {modulo}: {e}")
+    from app.database import SessionLocal
+    return SessionLocal
 
-    sys.stderr.write(
-        "No encontré SessionLocal en ninguno de estos módulos:\n"
-        + "\n".join(errores)
-        + "\n\nEditá _obtener_session_local() en este script con el import "
-        "correcto para tu proyecto (normalmente algo como "
-        "`from app.database import SessionLocal`).\n"
-    )
-    sys.exit(1)
-
-
-def _obtener_crud_y_models():
-    intentos = ("app", "backend", "src", "")
-    errores = []
-    for paquete in intentos:
-        try:
-            prefijo = f"{paquete}." if paquete else ""
-            crud = __import__(f"{prefijo}crud", fromlist=["crud"]) if paquete else __import__("crud")
-            models = __import__(f"{prefijo}models", fromlist=["models"]) if paquete else __import__("models")
-            return crud, models
-        except ImportError as e:
-            errores.append(f"  - paquete '{paquete or '(raíz)'}': {e}")
-
-    sys.stderr.write(
-        "No pude importar crud.py / models.py con los prefijos probados:\n"
-        + "\n".join(errores)
-        + "\n\nCorré este script desde la carpeta que los contiene, o "
-        "ajustá _obtener_crud_y_models() con el import correcto.\n"
-    )
-    sys.exit(1)
-
+def _obtener_calcular_actas_reescritas():
+    from app.services.duplicados import calcular_actas_reescritas
+    return calcular_actas_reescritas
 
 def generar_reporte_txt(resultado: dict, ruta: Path):
     lineas = [
@@ -152,12 +108,12 @@ def main():
     args = parser.parse_args()
 
     SessionLocal = _obtener_session_local()
-    crud, models = _obtener_crud_y_models()
+    calcular_actas_reescritas = _obtener_calcular_actas_reescritas()
 
     db = SessionLocal()
     try:
         print("Calculando actas reescritas...")
-        resultado = crud.calcular_actas_reescritas(db)
+        resultado = calcular_actas_reescritas(db)
 
         if args.dry_run:
             db.rollback()
