@@ -86,15 +86,17 @@ function conectarToggleFiltros() {
 }
 
 /* ---------------- Filtros ---------------- */
-
-const CACHE_FILTROS_KEY = "cache_opciones_filtro_v1";
-const CACHE_FILTROS_TTL_MS = 5 * 60 * 1000; // 5 min: son listas de estados, casi no cambian
+const CACHE_FILTROS_KEY = "cache_opciones_filtro_v2"; // <-- bump: invalida caché vieja de usuarios con el sitio ya abierto
 
 async function cargarOpcionesFiltro() {
   const cacheada = leerCacheFiltros();
-  const data = cacheada || (await (await fetch(`${API_BASE}/filtros`)).json());
-  if (!cacheada) guardarCacheFiltros(data);
-
+  let data = cacheada;
+  if (!data) {
+    const res = await fetch(`${API_BASE}/filtros`);
+    if (!res.ok) throw new Error(`No se pudieron cargar los filtros (HTTP ${res.status})`);
+    data = await res.json();
+    guardarCacheFiltros(data);
+  }
   opcionesEstados.sigemi = data.estados_sigemi;
   opcionesEstados.motivosArchivoSigemi = data.motivos_archivo_sigemi;
   opcionesEstados.semyt = data.estados_semyt;
@@ -214,16 +216,19 @@ async function cargarRegistros() {
   controladorRegistros = new AbortController();
 
   try {
-    const res = await fetch(`${API_BASE}?${params.toString()}`, {
-      signal: controladorRegistros.signal,
-    });
+    const res = await fetch(`${API_BASE}?${params.toString()}`, { signal: controladorRegistros.signal });
+    if (!res.ok) {
+      console.error("Error al buscar registros:", res.status, await res.text());
+      renderTabla([]);
+      renderContador(0);
+      return;
+    }
     const data = await res.json();
-
     renderTabla(data.resultados);
     renderContador(data.total);
     renderPaginacion(data.page, data.total_pages);
   } catch (err) {
-    if (err.name === "AbortError") return; // consulta cancelada a propósito, no es un error real
+    if (err.name === "AbortError") return;
     throw err;
   } finally {
     el("buscando").hidden = true;
@@ -343,7 +348,7 @@ function categoriaEstadoVisual(campo, valor, motivo = null) {
   if (campo === "estado_sigemi") {
     if (valor === "Pago Voluntario" ||(valor === "Archivado" && (motivo === "Pago voluntario" || motivo === "Pago en Procuración"))
     ) return "pagada";
-    if (valor === "Archivado" || valor === "Resuelta sin Archivar") return "resuelta";
+    if (valor === "Archivado" || valor === "Resuelta sin Archivar" || valor === "Archivado Sin Resolución") return "resuelta";
     return "vencida";
   }
 

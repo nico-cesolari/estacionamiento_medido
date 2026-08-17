@@ -26,20 +26,53 @@ class LoginSemytPage:
     async def sesion_semyt_activa(self) -> bool:
         try:
             await self.page.wait_for_load_state("domcontentloaded", timeout=10000)
+
+            storage = await self.page.evaluate(
+                """() => {
+                    const datos = {};
+                    for (let i = 0; i < localStorage.length; i++) {
+                        const key = localStorage.key(i);
+                        datos[key] = localStorage.getItem(key);
+                    }
+                    return datos;
+                }"""
+            )
+
+            cookies = await self.page.context.cookies()
             await self._esperar_indicador_sesion_o_login_semyt()
 
-            campos_login = await self.page.locator("input[type='text'], input[type='password']").count()
-            boton_ingresar = await self.page.get_by_role("button", name="Ingresar").count()
-            if campos_login > 0 or boton_ingresar > 0 or "#/login" in self.page.url:
+            campos_login = await self.page.locator(
+                "input[type='text'], input[type='password']"
+            ).count()
+
+            boton_ingresar = await self.page.get_by_role(
+                "button", name="Ingresar"
+            ).count()
+
+            if (
+                campos_login > 0
+                or boton_ingresar > 0
+                or "#/login" in self.page.url
+            ):
                 return False
 
-            token = await self.page.evaluate("() => localStorage.getItem('token')")
+            token = await self.page.evaluate(
+                "() => localStorage.getItem('token')"
+            )
+
             if token:
                 return True
 
-            return "ciudad.villamaria.gob.ar" in self.page.url and "#/login" not in self.page.url
+            return (
+                "ciudad.villamaria.gob.ar" in self.page.url
+                and "#/login" not in self.page.url
+            )
+
         except Exception as e:
-            print(f"❌ No se pudo verificar la sesión guardada de SEMyT: {type(e).__name__}: {e}")
+            print(
+                f"❌ No se pudo verificar la sesión guardada de SEMyT: "
+                f"{type(e).__name__}: {e}"
+            )
             return False
 
     async def _esperar_indicador_sesion_o_login_semyt(self):

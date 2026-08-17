@@ -330,15 +330,17 @@ def todas_las_actas_conocidas(db: Session) -> dict:
 
 
 def registros_con_expediente_pendientes(db: Session):
-    """Para actualizar_actas_sigi.py (camino viejo, por expediente
-    individual): ya tienen expediente, sólo falta revisar si el estado
-    cambió. Se excluyen las ya archivados (estado terminal: no hace falta
-    seguir consultándolas en cada corrida)."""
+    """Expedientes ya cargados cuyo estado_sigi todavía puede cambiar --
+    se excluyen los que llegaron a un estado terminal o sin información
+    real: Archivado (terminal), No Cargada (sin dato real todavía) y,
+    como caso extremo de datos corruptos, sin estado_sigi en absoluto."""
     return (
         db.query(models.Registro)
         .filter(
             models.Registro.expediente.isnot(None),
             models.Registro.expediente != "",
+            models.Registro.estado_sigi.isnot(None),
+            models.Registro.estado_sigi != models.EstadoSigi.no_cargada,
             models.Registro.estado_sigi != models.EstadoSigi.archivado,
         )
         .all()

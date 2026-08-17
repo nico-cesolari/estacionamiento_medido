@@ -18,6 +18,18 @@ VALORES_MOTIVO_SIGI = {
     e.value for e in models.MotivoArchivoSigi
 }
 
+def _normalizar_numero_con_puntos(texto: str) -> str:
+    """
+    Interpreta '.' como separador de miles: '1.324' -> '1324',
+    '1.234.567' -> '1234567'. La ',' NO se soporta a propósito: si el
+    texto la trae se devuelve tal cual (nunca va a matchear un acta real,
+    que sólo tiene dígitos), en vez de adivinar qué quiso decir el usuario.
+    """
+    texto = texto.strip()
+    if "," in texto:
+        return texto
+    return texto.replace(".", "")
+
 
 def aplicar_filtros_registros(
     query,
@@ -37,74 +49,54 @@ def aplicar_filtros_registros(
     solo_reescritas: Optional[bool] = None,
 ):
     if estado_sigemi:
-        query = query.filter(
-            models.Registro.estado_sigemi == estado_sigemi
-        )
+        query = query.filter(models.Registro.estado_sigemi == estado_sigemi)
 
     if estado_semyt:
-        query = query.filter(
-            models.Registro.estado_semyt == estado_semyt
-        )
+        query = query.filter(models.Registro.estado_semyt == estado_semyt)
 
     if estado_sigi:
-        query = query.filter(
-            models.Registro.estado_sigi == estado_sigi
-        )
+        query = query.filter(models.Registro.estado_sigi == estado_sigi)
 
     if motivo_archivo:
         condiciones = []
-
         if motivo_archivo in VALORES_MOTIVO_SIGEMI:
             condiciones.append(
-                models.Registro.motivo_archivo_sigemi
-                == models.MotivoArchivoSigemi(motivo_archivo)
+                models.Registro.motivo_archivo_sigemi == models.MotivoArchivoSigemi(motivo_archivo)
             )
-
         if motivo_archivo in VALORES_MOTIVO_SIGI:
             condiciones.append(
-                models.Registro.motivo_archivo_sigi
-                == models.MotivoArchivoSigi(motivo_archivo)
+                models.Registro.motivo_archivo_sigi == models.MotivoArchivoSigi(motivo_archivo)
             )
-
         if condiciones:
             query = query.filter(or_(*condiciones))
 
     if juzgado:
-        query = query.filter(
-            models.Registro.juzgado == juzgado
-        )
+        query = query.filter(models.Registro.juzgado == juzgado)
 
+    # --- Coincidencia EXACTA (no "contiene") ---
     if expediente:
-        query = query.filter(models.Registro.expediente.ilike(f"%{expediente}%"))
+        query = query.filter(models.Registro.expediente.ilike(expediente.strip()))
 
     if acta:
-        query = query.filter(models.Registro.acta.ilike(f"%{acta}%"))
+        query = query.filter(models.Registro.acta == _normalizar_numero_con_puntos(acta))
 
     if causa:
-        query = query.filter(models.Registro.causa.ilike(f"%{causa}%"))
+        query = query.filter(models.Registro.causa.ilike(causa.strip()))
 
     if patente:
-        query = aplicar_filtro_patente(query, patente)
+        query = aplicar_filtro_patente(query, patente, exacto=True)
 
     if solo_duplicadas:
         query = aplicar_filtro_duplicadas(query, db)
 
     if solo_reescritas:
-        query = query.filter(
-            models.Registro.reescrita.is_(True)
-        )
+        query = query.filter(models.Registro.reescrita.is_(True))
 
     if consistencia == "SI":
-        query = query.filter(
-            models.Registro.consistente.is_(True)
-        )
+        query = query.filter(models.Registro.consistente.is_(True))
     elif consistencia == "NO":
-        query = query.filter(
-            models.Registro.consistente.is_(False)
-        )
+        query = query.filter(models.Registro.consistente.is_(False))
     elif consistencia == "PENDIENTE":
-        query = query.filter(
-            models.Registro.consistente.is_(None)
-        )
+        query = query.filter(models.Registro.consistente.is_(None))
 
     return query

@@ -275,12 +275,11 @@ def calcular_actas_reescritas(
         "detalle_grupos": detalle_grupos,
     }
     
-def aplicar_filtro_patente(query, patente: str, negar: bool = False):
+def aplicar_filtro_patente(query, patente: str, negar: bool = False, exacto: bool = False):
     patente_norm = _normalizar_patente_texto(patente)
+    columna_norm = _columna_patente_normalizada()
 
-    positiva = _columna_patente_normalizada().ilike(
-        f"%{patente_norm}%"
-    )
+    positiva = (columna_norm == patente_norm) if exacto else columna_norm.ilike(f"%{patente_norm}%")
 
     if negar:
         return query.filter(

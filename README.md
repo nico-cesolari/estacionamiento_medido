@@ -182,7 +182,6 @@ Borrar todo (¡incluye los datos!):
 docker compose down -v
 ## PASOS PARA LEVANTAR PROYECTO
 docker compose down
-docker compose down -v NUNCA USAR
 Levantar proyecto
 docker compose up -d
 
