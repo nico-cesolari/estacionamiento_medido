@@ -12,7 +12,7 @@ tienen causa y/o estado_sigemi cargados, completa:
                                 Pago Voluntario / Sin Resolución / Juzgado
                                 de Faltas), ver sigemi_comun.py
   - motivo_archivo_sigemi  <- sólo si se puede determinar con certeza
-                                (pago). Las archivadas sin poder determinar
+                                (pago). Los archivados sin poder determinar
                                 el motivo (ARCHIVO o JUZGADO DE FALTAS sin
                                 Pago Voluntario) quedan sin motivo A
                                 PROPÓSITO, para elegirlas a mano.
@@ -30,7 +30,7 @@ Al terminar de cargar las actas, esta misma corrida corre además (en la
 MISMA transacción) la corrección de fecha_cobro_sigemi contra el archivo
 de pagos real -- ver app/reglas/fecha_cobro_sigemi.py y su constante
 PATH_PAGOS_SIGEMI (siempre el mismo archivo, no hace falta pasarlo a
-mano). Así, cualquier acta que se acaba de cargar como pagada/archivada
+mano). Así, cualquier acta que se acaba de cargar como pagada/archivado
 por pago ya sale con la fecha de cobro REAL en la misma pasada, en vez de
 quedar con la fecha en que se corrió este script hasta que alguien corra
 la corrección aparte.
@@ -41,8 +41,8 @@ archivo -- este script siempre usa la ruta constante.
 
 USO:
     cd backend
-    python alta/llenar_actas_sigemi.py sistemas/sigemi/archivos/total_em_sigemi.txt       # dry-run
-    python alta/llenar_actas_sigemi.py sistemas/sigemi/archivos/total_em_sigemi.txt --commit   # graba
+    python alta/llenar_actas_sigemi.py app/services/sistemas/sigemi/archivos/total_em_sigemi.txt       # dry-run
+    python alta/llenar_actas_sigemi.py app/services/sistemas/sigemi/archivos/total_em_sigemi.txt --commit   # graba
 """
 import argparse
 import sys
@@ -66,12 +66,11 @@ def _ya_tiene_causa_y_estado(registro) -> bool:
     causa_cargada = bool(registro.causa and str(registro.causa).strip())
     return causa_cargada and registro.estado_sigemi is not None
 
-
 def cargar_actas(db, path_entrada, commit: bool):
     registros_crudos = leer_registros_crudos(path_entrada)
 
     cargadas = ya_cargadas = no_encontradas = sin_acta_numero = a_revisar = sin_determinar = 0
-    resueltas_a_revisar_motivo = archivadas_sin_resolucion = 0
+    resueltas_a_revisar_motivo = archivados_sin_resolucion = 0
 
     for raw in registros_crudos:
         acta_numero = extraer_acta_numero(raw)
@@ -121,18 +120,18 @@ def cargar_actas(db, path_entrada, commit: bool):
         if causa_numero:
             registro.causa = causa_numero
 
-        # motivo_archivo_sigemi aplica tanto a "Archivada" como a
+        # motivo_archivo_sigemi aplica tanto a "Archivado" como a
         # "Resuelta sin Archivar" (ver reglas_sigemi.py, nota RESUELTA
         # SIN ARCHIVAR) -- para cualquier otro estado no se graba.
         cambios_estado = {"estado_sigemi": nuevo_estado}
-        if nuevo_estado in (models.EstadoSigemi.archivada, models.EstadoSigemi.resuelta_sin_archivo) and nuevo_motivo is not None:
+        if nuevo_estado in (models.EstadoSigemi.archivado, models.EstadoSigemi.resuelta_sin_archivo) and nuevo_motivo is not None:
             cambios_estado["motivo_archivo_sigemi"] = nuevo_motivo
         aplicar_cambios_estado(db, registro, cambios_estado)
 
-        if estado_final == "ARCHIVADA - REVISAR MOTIVO":
+        if estado_final == "ARCHIVADO - REVISAR MOTIVO":
             a_revisar += 1
-        elif estado_final == "ARCHIVADA SIN RESOLUCION":
-            archivadas_sin_resolucion += 1
+        elif estado_final == "ARCHIVADO SIN RESOLUCION":
+            archivados_sin_resolucion += 1
         elif nuevo_estado == models.EstadoSigemi.resuelta_sin_archivo and nuevo_motivo is None:
             resueltas_a_revisar_motivo += 1
 
@@ -143,8 +142,8 @@ def cargar_actas(db, path_entrada, commit: bool):
         "ya_tenian_causa_y_estado": ya_cargadas,
         "no_encontradas_en_db": no_encontradas,
         "sin_acta_numero_en_archivo": sin_acta_numero,
-        "archivadas_a_revisar_motivo": a_revisar,
-        "archivadas_sin_resolucion": archivadas_sin_resolucion,
+        "archivados_a_revisar_motivo": a_revisar,
+        "archivados_sin_resolucion": archivados_sin_resolucion,
         "resueltas_sin_archivar_a_revisar_motivo": resueltas_a_revisar_motivo,
         "estado_no_determinado": sin_determinar,
     }
@@ -181,9 +180,9 @@ def main():
         print(f"\nModo: {modo}")
         for clave, valor in resumen.items():
             print(f"  {clave}: {valor}")
-        if resumen["archivadas_a_revisar_motivo"] > 0:
+        if resumen["archivados_a_revisar_motivo"] > 0:
             print(
-                "\n⚠️  Hay actas archivadas (ARCHIVO o JUZGADO DE FALTAS) sin poder determinar "
+                "\n⚠️  Hay actas archivados (ARCHIVO o JUZGADO DE FALTAS) sin poder determinar "
                 "el motivo con certeza (Desestimación/Amonestación/Sobreseimiento/Suspensión). "
                 "Quedaron con motivo_archivo_sigemi vacío para elegirlas a mano."
             )
@@ -207,7 +206,7 @@ def main():
             )
         if resumen["fecha_cobro_sin_impacto_pagada_sin_archivar_revisar"] > 0:
             print(
-                "\n⚠️  Hay actas en estado 'Pago Voluntario' (no archivadas) sin fecha real de cobro "
+                "\n⚠️  Hay actas en estado 'Pago Voluntario' (no archivados) sin fecha real de cobro "
                 "(pagadas en Procuración/Municipalidad, no impactaron). Revisar el detalle arriba."
             )
     finally:

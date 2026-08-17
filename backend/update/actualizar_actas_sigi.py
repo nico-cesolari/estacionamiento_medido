@@ -11,7 +11,7 @@ hacía llenar_actas_sigi.py para el alta), y decide para cada fila:
   1) Trae de la base de datos todos los expedientes que no
   1) Lee expediente + estado DIRECTO de la grilla (sin abrir detalle).
   2) Si ese expediente YA está en la DB (`todos_los_expedientes_cargados`):
-       - si el registro está archivada -> estado terminal, se saltea sin
+       - si el registro está archivado -> estado terminal, se saltea sin
          más (no hace falta ni comparar estado).
        - si no, se compara el estado leído contra el guardado y se
          actualiza si cambió -- SIN abrir el detalle (barato).
@@ -136,7 +136,7 @@ async def _procesar_fila_sincronizacion(
             registro_conocido = expedientes_conocidos.get(expediente_norm) if expediente_norm else None
             if registro_conocido is not None:
                 vistos.add(expediente_norm)
-                if registro_conocido.estado_sigi == models.EstadoSigi.archivada:
+                if registro_conocido.estado_sigi == models.EstadoSigi.archivado:
                     contadores["sin_cambios"] += 1
                     return
 

@@ -26,7 +26,7 @@ from datetime import datetime
 # que se usa siempre a mano para correr actualizar_fecha_cobro_sigemi.py
 # (ver docstring/USO de ese script). Relativa al directorio desde el que
 # se corren los scripts (backend/).
-PATH_PAGOS_SIGEMI = "app/datos/maestro/total_pagos_em_sigemi.txt"
+PATH_PAGOS_SIGEMI = "app/services/sistemas/sigemi/archivos/total_pagos_em_sigemi.txt"
 
 # AJUSTAR estos índices si el orden real de columnas del archivo es
 # distinto al documentado en actualizar_fecha_cobro_sigemi.py.
@@ -116,7 +116,7 @@ def agrupar_por_acta(pagos):
 
 def marcar_pagos_sin_impacto(db, models, actas_con_pago_real: set, commit: bool):
     """
-    Recorre la base buscando actas SIGEMI pagadas/archivadas-por-pago que
+    Recorre la base buscando actas SIGEMI pagadas/archivados-por-pago que
     no están en `actas_con_pago_real` (el set de actas que sí aparecen en
     el archivo de pagos). Esas son pagos que no impactaron -- normalmente
     Procuración o Municipalidad -- y no tienen fecha real de cobro para
@@ -124,18 +124,18 @@ def marcar_pagos_sin_impacto(db, models, actas_con_pago_real: set, commit: bool)
     detalle de qué se toca en cada caso.
     """
     query = db.query(models.Registro).filter(
-        models.Registro.estado_sigemi.in_([models.EstadoSigemi.pagada, models.EstadoSigemi.archivada])
+        models.Registro.estado_sigemi.in_([models.EstadoSigemi.pagada, models.EstadoSigemi.archivado])
     )
 
-    marcadas_archivadas = marcadas_pagada_sin_archivar = ya_marcadas = 0
+    marcadas_archivados = marcadas_pagada_sin_archivar = ya_marcadas = 0
 
     for registro in query:
         es_pago = registro.estado_sigemi == models.EstadoSigemi.pagada or (
-            registro.estado_sigemi == models.EstadoSigemi.archivada
+            registro.estado_sigemi == models.EstadoSigemi.archivado
             and registro.motivo_archivo_sigemi == models.MotivoArchivoSigemi.por_pago
         )
         if not es_pago:
-            continue  # archivada por otro motivo (desestimación, etc.) -- no es un pago
+            continue  # archivado por otro motivo (desestimación, etc.) -- no es un pago
 
         if registro.acta in actas_con_pago_real:
             continue  # el pago SÍ impactó -- ya se corrigió/corregirá la fecha en corregir_fechas()
@@ -144,24 +144,24 @@ def marcar_pagos_sin_impacto(db, models, actas_con_pago_real: set, commit: bool)
             ya_marcadas += 1
             continue  # ya estaba marcada de una corrida anterior
 
-        if registro.estado_sigemi == models.EstadoSigemi.archivada:
-            print(f"[SIN-IMPACTO-SIGEMI] ── acta={registro.acta} -- archivada por pago pero no aparece "
+        if registro.estado_sigemi == models.EstadoSigemi.archivado:
+            print(f"[SIN-IMPACTO-SIGEMI] ── acta={registro.acta} -- archivado por pago pero no aparece "
                   f"en el archivo de pagos -> se marca motivo_archivo_sigemi=Pago en Procuración, "
                   f"fecha_cobro_sigemi -> None")
             if commit:
                 registro.motivo_archivo_sigemi = models.MotivoArchivoSigemi.por_pago_procuracion
                 registro.fecha_cobro_sigemi = None
-            marcadas_archivadas += 1
+            marcadas_archivados += 1
         else:
-            print(f"[SIN-IMPACTO-SIGEMI] ⚠️ acta={registro.acta} -- estado 'Pago Voluntario' (no archivada) "
+            print(f"[SIN-IMPACTO-SIGEMI] ⚠️ acta={registro.acta} -- estado 'Pago Voluntario' (no archivado) "
                   f"pero no aparece en el archivo de pagos -> se vacía fecha_cobro_sigemi, pero NO se toca "
-                  f"motivo_archivo_sigemi (sólo aplica a archivadas) -- revisar a mano si corresponde archivar")
+                  f"motivo_archivo_sigemi (sólo aplica a archivados) -- revisar a mano si corresponde archivar")
             if commit:
                 registro.fecha_cobro_sigemi = None
             marcadas_pagada_sin_archivar += 1
 
     return {
-        "sin_impacto_marcadas_archivada_procuracion": marcadas_archivadas,
+        "sin_impacto_marcadas_archivado_procuracion": marcadas_archivados,
         "sin_impacto_pagada_sin_archivar_revisar": marcadas_pagada_sin_archivar,
         "sin_impacto_ya_marcadas_antes": ya_marcadas,
     }
@@ -198,7 +198,7 @@ def corregir_fechas(db, models, path_entrada, commit: bool):
         # Sólo avisa -- no cambia estado/motivo, sólo la fecha (ver
         # docstring de actualizar_fecha_cobro_sigemi.py).
         es_pago = registro.estado_sigemi == models.EstadoSigemi.pagada or (
-            registro.estado_sigemi == models.EstadoSigemi.archivada
+            registro.estado_sigemi == models.EstadoSigemi.archivado
             and registro.motivo_archivo_sigemi == models.MotivoArchivoSigemi.por_pago
         )
         if not es_pago:

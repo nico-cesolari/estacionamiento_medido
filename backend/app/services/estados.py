@@ -124,7 +124,7 @@ def aplicar_cambios_estado(
         el motivo_archivo_sigi, ya que el sistema no tiene un estado de
         pago propio -- se archiva con ese motivo).
       - limpieza de motivo_archivo_* cuando el estado deja de ser
-        "Archivada".
+        "Archivado".
       - historial de estado (fecha_inicio/fecha_fin) por sistema, para
         CUALQUIER cambio real de estado o de motivo.
 
@@ -154,14 +154,14 @@ def aplicar_cambios_estado(
             elif valor != models.EstadoSigemi.pagada:
                 registro.fecha_cobro_sigemi = None
                 
-            if valor not in (models.EstadoSigemi.archivada, models.EstadoSigemi.resuelta_sin_archivo):
+            if valor not in (models.EstadoSigemi.archivado, models.EstadoSigemi.resuelta_sin_archivo):
                 registro.motivo_archivo_sigemi = None
         if campo == "motivo_archivo_sigemi":
             if valor == models.MotivoArchivoSigemi.por_pago and registro.fecha_cobro_sigemi is None:
                 registro.fecha_cobro_sigemi = momento
             elif valor != models.MotivoArchivoSigemi.por_pago:
                 registro.fecha_cobro_sigemi = None
-        if campo == "estado_sigi" and valor != models.EstadoSigi.archivada:
+        if campo == "estado_sigi" and valor != models.EstadoSigi.archivado:
             registro.motivo_archivo_sigi = None
             registro.fecha_cobro_sigi = None
 

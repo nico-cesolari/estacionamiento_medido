@@ -138,7 +138,7 @@ MAPA_ESTADO_SIGI = {
     "Pago Pendiente con Resolución": models.EstadoSigi.pago_pendiente_con_resolucion,
     "Descargo presentado": models.EstadoSigi.descargo_presentado,
     "Prejudicial": models.EstadoSigi.pre_judicial,
-    "Archivada": models.EstadoSigi.archivada,
+    "Archivado": models.EstadoSigi.archivado,
 }
 
 MAPA_MOTIVO_SIGI = {
@@ -184,8 +184,8 @@ def armar_cambios_estado(estado_texto: Optional[str], motivo_texto: Optional[str
     """
     A partir de lo leído en pantalla, arma el dict de cambios que espera
     aplicar_cambios_estado. El motivo sólo se incluye cuando el
-    estado es 'Archivada' Y se pudo mapear (si SIGI no muestra motivo para
-    un acta archivada, igual se actualiza el estado, sin motivo).
+    estado es 'Archivado' Y se pudo mapear (si SIGI no muestra motivo para
+    un acta archivado, igual se actualiza el estado, sin motivo).
 
     Devuelve None si el estado no se pudo mapear (texto desconocido o vacío).
     """
@@ -194,7 +194,7 @@ def armar_cambios_estado(estado_texto: Optional[str], motivo_texto: Optional[str
         return None
 
     cambios = {"estado_sigi": nuevo_estado}
-    if nuevo_estado == models.EstadoSigi.archivada:
+    if nuevo_estado == models.EstadoSigi.archivado:
         motivo = mapear_motivo(motivo_texto)
         if motivo is not None:
             cambios["motivo_archivo_sigi"] = motivo
@@ -294,7 +294,7 @@ def clonar_registro(registro: "models.Registro") -> "models.Registro":
 # ---------------------------------------------------------------------------
 def todos_los_expedientes_cargados(db: Session) -> dict:
     """Para sincronizar_actas_sigi.py: TODOS los registros que ya tienen
-    expediente (incluidas las archivadas -- acá SÍ importan, porque son
+    expediente (incluidas los archivados -- acá SÍ importan, porque son
     justamente las que hay que reconocer como "ya cargada" y saltear sin
     abrir detalle; excluirlas llevaría a tratarlas como desconocidas y
     buscarlas de nuevo por acta en cada corrida).
@@ -332,14 +332,14 @@ def todas_las_actas_conocidas(db: Session) -> dict:
 def registros_con_expediente_pendientes(db: Session):
     """Para actualizar_actas_sigi.py (camino viejo, por expediente
     individual): ya tienen expediente, sólo falta revisar si el estado
-    cambió. Se excluyen las ya archivadas (estado terminal: no hace falta
+    cambió. Se excluyen las ya archivados (estado terminal: no hace falta
     seguir consultándolas en cada corrida)."""
     return (
         db.query(models.Registro)
         .filter(
             models.Registro.expediente.isnot(None),
             models.Registro.expediente != "",
-            models.Registro.estado_sigi != models.EstadoSigi.archivada,
+            models.Registro.estado_sigi != models.EstadoSigi.archivado,
         )
         .all()
     )

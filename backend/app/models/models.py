@@ -17,15 +17,15 @@ class EstadoSigemi(str, enum.Enum):
     pendiente_procuracion = "Pasar a Procuración"  
     en_procuracion = "En Procuración"
     pagada = "Pago Voluntario"
-    archivada = "Archivada"
-    archivada_sin_resolucion = "Archivada Sin Resolución"
+    archivado = "Archivado"
+    archivado_sin_resolucion = "Archivado Sin Resolución"
     resuelta_sin_archivo = "Resuelta sin Archivar"
     no_cargada = "No Cargada"
 
 class MotivoArchivoSigemi(str, enum.Enum):
     """
     Aclara el motivo de resolución de la causa. Aplica cuando
-    estado_sigemi == 'Archivada' (motivo del archivo) y también cuando
+    estado_sigemi == 'Archivado' (motivo del archivo) y también cuando
     estado_sigemi == 'Resuelta sin Archivar' (motivo de la resolución
     que no pasó por archivo). Para cualquier otro estado va en None.
     """
@@ -52,7 +52,7 @@ class EstadoSigi(str, enum.Enum):
     pago_pendiente_con_resolucion = "Pago Pendiente con Resolución"
     descargo_presentado = "Descargo presentado"
     pre_judicial = "Prejudicial"
-    archivada = "Archivada"
+    archivado = "Archivado"
 
 class MotivoArchivoSigi(str, enum.Enum):
     por_pago = "Pagada"

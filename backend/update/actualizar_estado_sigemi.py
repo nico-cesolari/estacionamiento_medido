@@ -90,10 +90,10 @@ def actualizar_estados(db, path_entrada, commit: bool):
 
         nuevo_estado, nuevo_motivo = resuelto
 
-        # motivo_archivo_sigemi aplica tanto a "Archivada" como a
+        # motivo_archivo_sigemi aplica tanto a "Archivado" como a
         # "Resuelta sin Archivar" (ver reglas_sigemi.py, nota RESUELTA
         # SIN ARCHIVAR).
-        estados_con_motivo = (models.EstadoSigemi.archivada, models.EstadoSigemi.resuelta_sin_archivo)
+        estados_con_motivo = (models.EstadoSigemi.archivado, models.EstadoSigemi.resuelta_sin_archivo)
         motivo_actual = registro.motivo_archivo_sigemi if nuevo_estado in estados_con_motivo else None
         sin_cambio_real = (
             registro.estado_sigemi == nuevo_estado
@@ -118,7 +118,7 @@ def actualizar_estados(db, path_entrada, commit: bool):
                 cambios_estado["motivo_archivo_sigemi"] = nuevo_motivo
             aplicar_cambios_estado(db, registro, cambios_estado)
 
-        if estado_final == "ARCHIVADA - REVISAR MOTIVO":
+        if estado_final == "ARCHIVADO - REVISAR MOTIVO":
             a_revisar += 1
         elif nuevo_estado == models.EstadoSigemi.resuelta_sin_archivo and nuevo_motivo is None:
             resueltas_a_revisar_motivo += 1
@@ -136,7 +136,7 @@ def actualizar_estados(db, path_entrada, commit: bool):
         "no_encontradas_en_db": no_encontradas,
         "sin_acta_numero_en_archivo": sin_acta_numero,
         "todavia_sin_carga_inicial": todavia_sin_carga_inicial,
-        "archivadas_a_revisar_motivo": a_revisar,
+        "archivados_a_revisar_motivo": a_revisar,
         "resueltas_sin_archivar_a_revisar_motivo": resueltas_a_revisar_motivo,
         "estado_no_determinado": sin_determinar,
     }
@@ -157,7 +157,7 @@ def main():
         print(f"\nModo: {modo}")
         for clave, valor in resumen.items():
             print(f"  {clave}: {valor}")
-        if resumen["archivadas_a_revisar_motivo"] > 0:
+        if resumen["archivados_a_revisar_motivo"] > 0:
             print(
                 "\n⚠️  Hay actas archivadas (ARCHIVO o JUZGADO DE FALTAS) sin poder determinar "
                 "el motivo con certeza. Quedaron con motivo_archivo_sigemi vacío para elegirlas a mano."

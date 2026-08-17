@@ -76,8 +76,8 @@ from app.reglas.reglas_semyt import (
 # Configuración
 # ---------------------------------------------------------
 
-NUMERO_DESDE_DEFAULT = 1
-NUMERO_HASTA_DEFAULT = 329583
+NUMERO_DESDE_DEFAULT = 129859
+NUMERO_HASTA_DEFAULT = 223058
 
 # Reintentos cuando SEMyT tarda en repintar la grilla.
 INTENTOS_BUSQUEDA = 3

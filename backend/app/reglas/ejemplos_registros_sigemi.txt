@@ -19,14 +19,14 @@ Pago Voluntario
 1|2025|930288|21/04/2025|Tr�nsito|||LEVE|Sin Resoluci�n
 Pago Voluntario||||A|ARCHIVO|03/07/2025|||534203||, |2025|FM|110867|12/02/2025|TR||LEVE|0|534203|562638
 
-Archivada sin motivo (que tenga el estado_descripcion = archivado y que no tenga pago voluntario) que no tenga un motivo predefinido para que el usuario eliga el verdadero motivo 
+Archivado sin motivo (que tenga el estado_descripcion = archivado y que no tenga pago voluntario) que no tenga un motivo predefinido para que el usuario eliga el verdadero motivo 
 1|2025|933053|12/05/2025|Tr�nsito|||LEVE|||||A|ARCHIVO|02/03/2026|||546805||, |2025|FM|112059|15/02/2025|TR||LEVE|0|546805|660767
 
-Archivada por error: podriamos crear un nuevo estado(tambien en la base de datos) que se llame Archivada Sin Resolucion mismo color que una vencida, o se podria poner en rojo marcando error
+Archivado por error: podriamos crear un nuevo estado(tambien en la base de datos) que se llame Archivado Sin Resolucion mismo color que una vencida, o se podria poner en rojo marcando error
 ej del registro:
 2|2025|975905|29/10/2025|Tr�nsito|||LEVE|Sin Resoluci�n||||A|ARCHIVO|02/03/2026|||614666||, |2025|FM|194078|25/08/2025|TR||LEVE|0|614666|755300
 
-Archivada por Pago Voluntario:
+Archivado por Pago Voluntario:
 2|2024|864599|10/07/2024|Tr�nsito|||LEVE|Sin Resoluci�n
 Pago Voluntario||||A|ARCHIVO|27/08/2024|||383814||, |2024|FM|1490|28/06/2024|TR||LEVE|0|383814|402247
 

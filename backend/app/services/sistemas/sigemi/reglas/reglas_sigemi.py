@@ -34,9 +34,9 @@ igual que "ARCHIVO":
 
   - A veces viene en una sola fila, sin Pago Voluntario:
       1|2024|867184|28/10/24|Tránsito|||LEVE|Saldo Actualizado: $14.216,40|||||JUZGADO DE FALTAS||||416013|||2024||3354|02/07/2024|TR||LEVE|0|416013|434607
-    -> en ese caso, archivada pero sin poder determinar el motivo con
-       certeza (igual que "ARCHIVADA - REVISAR MOTIVO"): se carga
-       archivada, sin motivo, para elegirlo a mano.
+    -> en ese caso, archivado pero sin poder determinar el motivo con
+       certeza (igual que "ARCHIVADo - REVISAR MOTIVO"): se carga
+       archivado, sin motivo, para elegirlo a mano.
 
 Por eso "JUZGADO DE FALTAS" se trata en el mismo branch que "ARCHIVO"
 en calcular_estado() de acá abajo, no como un estado aparte.
@@ -69,7 +69,7 @@ tiene "Sin Resolución" en el texto, sigue cayendo en VENCIDA como antes).
 Se mapea a EstadoSigemi.resuelta_sin_archivo ("Resuelta sin Archivar"),
 CON motivo (reutilizando MotivoArchivoSigemi, ver mapa
 CODIGOS_MOTIVO_RESOLUCION_SIN_ARCHIVO más abajo) -- a diferencia de
-"ARCHIVADA - REVISAR MOTIVO", acá el código SÍ nos da el motivo con
+"ARCHIVADo - REVISAR MOTIVO", acá el código SÍ nos da el motivo con
 certeza, no hace falta elegirlo a mano.
 
 OJO: sólo está confirmado el código "SE" -> Sobreseimiento. Si aparecen
@@ -79,7 +79,7 @@ que sumarlos al diccionario a medida que se identifiquen en datos reales.
 Un código NO vacío pero todavía no confirmado en el diccionario (ej.
 "DS", "AM", "SU" antes de agregarlos) YA NO cae en VENCIDA: se carga
 igual como "Resuelta sin Archivar", pero SIN motivo (motivo=None), para
-elegirlo a mano -- mismo criterio que "ARCHIVADA - REVISAR MOTIVO" (no
+elegirlo a mano -- mismo criterio que "ARCHIVADo - REVISAR MOTIVO" (no
 adivinamos el motivo, pero tampoco lo dejamos afuera como Vencida, que
 sería incorrecto: el registro ya está resuelto, sólo no sabemos con
 certeza CUÁL es el motivo).
@@ -89,28 +89,28 @@ hay ninguna pista de que esté resuelto, así que se mantiene el
 comportamiento viejo.
 
 ------------------------------------------------------------------------
-NOVEDAD: estado "ARCHIVADA SIN RESOLUCION" (dentro de ESTADOS_TIPO_ARCHIVO)
+NOVEDAD: estado "ARCHIVADo SIN RESOLUCION" (dentro de ESTADOS_TIPO_ARCHIVO)
 ------------------------------------------------------------------------
 Hasta ahora, dentro de la rama ARCHIVO/JUZGADO DE FALTAS sin Pago
-Voluntario, todo caía en "ARCHIVADA - REVISAR MOTIVO" sin mirar si el
+Voluntario, todo caía en "ARCHIVADo - REVISAR MOTIVO" sin mirar si el
 registro además traía el texto "Sin Resolución". Pero hay una diferencia
 real entre:
 
-  - Archivada sin motivo (ej. acta 933053): ARCHIVO, sin Pago
+  - Archivado sin motivo (ej. acta 933053): ARCHIVO, sin Pago
     Voluntario, SIN el texto "Sin Resolución" -- no hay ninguna pista
     de por qué se archivó, pero tampoco nada que lo contradiga. Sigue
-    cayendo en "ARCHIVADA - REVISAR MOTIVO" -> EstadoSigemi.archivada,
+    cayendo en "ARCHIVADo - REVISAR MOTIVO" -> EstadoSigemi.archivado,
     motivo=None (se elige a mano).
 
-  - Archivada por error (ej. acta 975905): ARCHIVO, sin Pago
+  - Archivado por error (ej. acta 975905): ARCHIVO, sin Pago
     Voluntario, pero CON el texto "Sin Resolución" -- acá SIGEMI la
-    marca como archivada Y como no resuelta al mismo tiempo, lo cual es
+    marca como archivado Y como no resuelta al mismo tiempo, lo cual es
     contradictorio. No es "no sabemos el motivo", es "el propio sistema
     de origen se contradice". Se carga aparte, como
-    EstadoSigemi.archivada_sin_resolucion (ver models.py), para poder
+    EstadoSigemi.archivado_sin_resolucion (ver models.py), para poder
     distinguirla visualmente (mismo color que Vencida/naranja) en vez de
-    mezclarla con las archivadas normales a revisar. No lleva motivo:
-    no es "Archivada" ni "Resuelta sin Archivar", así que
+    mezclarla con las archivados normales a revisar. No lleva motivo:
+    no es "Archivado" ni "Resuelta sin Archivar", así que
     motivo_archivo_sigemi no aplica acá.
 
   El caso con Pago Voluntario (con o sin "Sin Resolución") sigue
@@ -264,18 +264,18 @@ def calcular_estado(raw: str) -> str:
         if tiene_pago_voluntario:
             return "PAGADA (Archivo - Pago Voluntario)"
         # ARCHIVO/JUZGADO DE FALTAS con el texto "Sin Resolución" pero SIN
-        # Pago Voluntario: a diferencia de "ARCHIVADA - REVISAR MOTIVO"
+        # Pago Voluntario: a diferencia de "ARCHIVADo - REVISAR MOTIVO"
         # (donde no hay ninguna pista de por qué se archivó, pero tampoco
-        # nada que contradiga que esté archivada), acá SIGEMI la marca
-        # como archivada Y como no resuelta al mismo tiempo -- es una
+        # nada que contradiga que esté archivado), acá SIGEMI la marca
+        # como archivado Y como no resuelta al mismo tiempo -- es una
         # inconsistencia del propio sistema de origen, no simplemente "no
-        # sabemos el motivo". Se carga aparte (ver EstadoSigemi.archivada_
+        # sabemos el motivo". Se carga aparte (ver EstadoSigemi.archivado_
         # sin_resolucion en models.py) para poder distinguirla visualmente
-        # (mismo color que Vencida) en vez de mezclarla con las archivadas
+        # (mismo color que Vencida) en vez de mezclarla con las archivados
         # normales a revisar.
         if tiene_sin_resolucion:
-            return "ARCHIVADA SIN RESOLUCION"
-        return "ARCHIVADA - REVISAR MOTIVO"
+            return "ARCHIVADo SIN RESOLUCION"
+        return "ARCHIVADo - REVISAR MOTIVO"
 
     # "_SIN ESTADO_" con CUALQUIER código corto no vacío (y sin el texto
     # "Sin Resolución" en el registro) -> ya está resuelta, no vencida.
@@ -315,7 +315,7 @@ def calcular_estado(raw: str) -> str:
 
 
 # estado_final -> (EstadoSigemi, MotivoArchivoSigemi | None)
-# "ARCHIVADA - REVISAR MOTIVO" queda con motivo=None A PROPÓSITO (cubre
+# "ARCHIVADo - REVISAR MOTIVO" queda con motivo=None A PROPÓSITO (cubre
 # tanto ARCHIVO como JUZGADO DE FALTAS sin Pago Voluntario). El otro caso
 # con motivo=None a propósito es "RESUELTA SIN ARCHIVAR (código no
 # confirmado)", que se resuelve aparte en resolver_estado() porque el
@@ -329,31 +329,31 @@ def mapa_estado_final(models):
     return {
         "PAGADA": (models.EstadoSigemi.pagada, None),
         # El estado ARCHIVO/JUZGADO DE FALTAS en SIGEMI significa que el
-        # acta YA ESTÁ ARCHIVADA en el trámite -- eso tiene prioridad
+        # acta YA ESTÁ ARCHIVADo en el trámite -- eso tiene prioridad
         # sobre cómo se resolvió. Si además vino con "Pago Voluntario",
         # eso es el MOTIVO del archivo (se pagó), no un estado aparte:
-        # por eso va a EstadoSigemi.archivada con
+        # por eso va a EstadoSigemi.archivado con
         # MotivoArchivoSigemi.por_pago, igual que cualquier otra
-        # archivada con motivo conocido, y NO a EstadoSigemi.pagada (que
+        # archivado con motivo conocido, y NO a EstadoSigemi.pagada (que
         # queda reservado para la rama de Juicio con saldo 0, donde
         # SIGEMI nunca marcó el trámite como archivado).
-        "PAGADA (Archivo - Pago Voluntario)": (models.EstadoSigemi.archivada, models.MotivoArchivoSigemi.por_pago),
+        "PAGADA (Archivo - Pago Voluntario)": (models.EstadoSigemi.archivado, models.MotivoArchivoSigemi.por_pago),
         # A diferencia del caso anterior, acá el trámite nunca pasó por
         # archivo (sigue en "Sin Resolución" en SIGEMI) -- lo único que
         # sabemos con certeza es que se pagó voluntariamente. Va a
         # EstadoSigemi.pagada igual que la rama de Juicio con saldo 0,
-        # sin motivo (motivo_archivo_sigemi no aplica: no es archivada).
+        # sin motivo (motivo_archivo_sigemi no aplica: no es archivado).
         "PAGADA (Sin Resolución - Pago Voluntario)": (models.EstadoSigemi.pagada, None),
         "PASAR A PROCURACION": (models.EstadoSigemi.pendiente_procuracion, None),
         "PROCURACION": (models.EstadoSigemi.en_procuracion, None),
         "VENCIDA (Plan de Pago pendiente)": (models.EstadoSigemi.en_procuracion, None),
-        "ARCHIVADA - REVISAR MOTIVO": (models.EstadoSigemi.archivada, None),
-        # Ver nota en calcular_estado(): archivada pero con "Sin Resolución"
+        "ARCHIVADo - REVISAR MOTIVO": (models.EstadoSigemi.archivado, None),
+        # Ver nota en calcular_estado(): archivado pero con "Sin Resolución"
         # y sin Pago Voluntario -- inconsistencia de SIGEMI, no una
-        # archivada normal. motivo=None: no aplica (no es "Archivada" ni
+        # archivado normal. motivo=None: no aplica (no es "Archivado" ni
         # "Resuelta sin Archivar", así que motivo_archivo_sigemi no se usa
         # para este estado -- ver aplicar_cambios_estado en crud.py).
-        "ARCHIVADA SIN RESOLUCION": (models.EstadoSigemi.archivada_sin_resolucion, None),
+        "ARCHIVADo SIN RESOLUCION": (models.EstadoSigemi.archivado_sin_resolucion, None),
         "VENCIDA": (models.EstadoSigemi.sin_resolucion, None),
     }
 

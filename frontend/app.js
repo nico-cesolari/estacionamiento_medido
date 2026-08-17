@@ -341,9 +341,9 @@ function categoriaEstadoVisual(campo, valor, motivo = null) {
   /** Definir celda de colores */
   if (!valor) return "vacio";
   if (campo === "estado_sigemi") {
-    if (valor === "Pago Voluntario" ||(valor === "Archivada" && (motivo === "Pago voluntario" || motivo === "Pago en Procuración"))
+    if (valor === "Pago Voluntario" ||(valor === "Archivado" && (motivo === "Pago voluntario" || motivo === "Pago en Procuración"))
     ) return "pagada";
-    if (valor === "Archivada" || valor === "Resuelta sin Archivar") return "resuelta";
+    if (valor === "Archivado" || valor === "Resuelta sin Archivar") return "resuelta";
     return "vencida";
   }
 
@@ -356,8 +356,8 @@ function categoriaEstadoVisual(campo, valor, motivo = null) {
   }
 
   if (campo === "estado_sigi") {
-    if (valor === "Archivada" && motivo === "Pagada") return "pagada";
-    if (valor === "Archivada") return "resuelta";
+    if (valor === "Archivado" && motivo === "Pagada") return "pagada";
+    if (valor === "Archivado") return "resuelta";
     return "vencida";
   }
 
@@ -374,14 +374,14 @@ function renderCeldaEstado(id, campo, valorActual, opciones, campoFecha, fechaCo
   if (campoFecha) {
     // Se muestra la fecha de cobro para cualquier variante que cuente como
     // "pagada" en categoriaEstadoVisual (estado directo de pago, o
-    // Archivada con motivo de pago) -- ya no se compara un string suelto
+    // Archivado con motivo de pago) -- ya no se compara un string suelto
     // aparte, se reutiliza la misma categoría que decide el color, así no
     // se pueden desincronizar de nuevo.
     const fechaTexto = categoria === "pagada" ? formatearFechaCorta(fechaCobroISO) : null;
     if (fechaTexto) {
       fechaHtml = `<span class="fecha-cobro">Cobrado: ${fechaTexto}</span>`;
-    } else if (categoria === "pagada" && campo === "estado_sigemi" && valorMostrado !== "Archivada") {
-      // Si está Archivada, el motivo (renderMotivoArchivo, más abajo en
+    } else if (categoria === "pagada" && campo === "estado_sigemi" && valorMostrado !== "Archivado") {
+      // Si está Archivado, el motivo (renderMotivoArchivo, más abajo en
       // renderCeldaEstadoSigemi) ya muestra "Pago en Procuración"
       // como texto fijo -- no hace falta repetirlo acá.
       // SIGEMI es el único sistema con este caso: pagada pero sin fecha real
@@ -418,12 +418,12 @@ function renderMotivoArchivo(id, valorActual, opciones, sistema, esPagada) {
     </select>`;
 }
 
-/** Celda de estado SIGEMI: agrega el motivo de archivo cuando el estado es Archivada o Resuelta sin Archivar. */
+/** Celda de estado SIGEMI: agrega el motivo de archivo cuando el estado es Archivado o Resuelta sin Archivar. */
 function renderCeldaEstadoSigemi(r) {
   // "Resuelta sin Archivar" se carga siempre con motivo=None (ver
   // resolver_estado en reglas_sigemi.py), así que también necesita el
-  // select para elegirlo a mano, igual que "Archivada".
-  const tieneMotivo = r.estado_sigemi === "Archivada" || r.estado_sigemi === "Resuelta sin Archivar";
+  // select para elegirlo a mano, igual que "Archivado".
+  const tieneMotivo = r.estado_sigemi === "Archivado" || r.estado_sigemi === "Resuelta sin Archivar";
 
   let motivoHtml = "";
   if (tieneMotivo) {
@@ -442,7 +442,7 @@ function renderCeldaEstadoSigemi(r) {
 
 function renderCeldaEstadoSigi(r) {
   let motivoHtml = "";
-  if (r.estado_sigi === "Archivada") {
+  if (r.estado_sigi === "Archivado") {
     const esPagada = categoriaEstadoVisual("estado_sigi", r.estado_sigi, r.motivo_archivo_sigi) === "pagada";
     motivoHtml = renderMotivoArchivo(
       r.id, r.motivo_archivo_sigi, opcionesEstados.motivosArchivoSigi, "sigi", esPagada

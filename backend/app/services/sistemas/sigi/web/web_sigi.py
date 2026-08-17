@@ -129,14 +129,26 @@ async def preparar_grilla(page):
 # ---------------------------------------------------------------------------
 # Índices de columna / lectura de celdas
 # ---------------------------------------------------------------------------
-async def indice_columna(page, texto_header: str) -> Optional[int]:
+async def indice_columna(page, texto_header: str, intentos: int = 5, espera_ms: int = 500) -> Optional[int]:
     """Busca dinámicamente el índice de una columna por su header (más
-    robusto a cambios de maquetado que asumir una posición fija)."""
-    headers = page.locator(SELECTOR_HEADERS_TABLA)
-    textos = await headers.all_inner_texts()
-    for i, texto in enumerate(textos):
-        if texto_header in texto.strip().lower():
-            return i
+    robusto a cambios de maquetado que asumir una posición fija).
+
+    REINTENTA: justo después de aplicar filtros (preparar_grilla), la SPA
+    puede cumplir 'networkidle' antes de que la tabla termine de
+    re-renderizar sus <th> reales -- leer los headers en ese instante
+    devuelve una lista vacía y el índice queda en None para siempre (bug
+    real: ver "Índice de columna resuelto -> expediente=None, estado=None"
+    en logs, que hacía fallar leer_celdas_con_reintento en TODAS las filas
+    con 'fila sin datos aún'). Reintentar unas pocas veces con una espera
+    corta resuelve la carrera sin necesidad de otro selector."""
+    for intento in range(1, intentos + 1):
+        headers = page.locator(SELECTOR_HEADERS_TABLA)
+        textos = await headers.all_inner_texts()
+        for i, texto in enumerate(textos):
+            if texto_header in texto.strip().lower():
+                return i
+        if intento < intentos:
+            await page.wait_for_timeout(espera_ms)
     return None
 
 
@@ -162,6 +174,18 @@ async def leer_celdas_con_reintento(fila, indices: dict, intentos: int = 4, espe
     """
     resultado = {clave: None for clave in indices}
     por_resolver = {clave: idx for clave, idx in indices.items() if idx is not None}
+
+    # Si algún índice vino None desde el arranque, esa columna NUNCA se va
+    # a leer (por diseño: no tiene sentido reintentar un índice que no
+    # existe). Antes esto era silencioso y se manifestaba río abajo como
+    # "fila sin datos aún" en cada fila, sin pista de la causa real -- ver
+    # indice_columna() para el fix de fondo (reintento al resolver el
+    # índice). Este aviso queda como red de seguridad si el índice sigue
+    # sin resolverse pese al reintento.
+    faltantes = [clave for clave, idx in indices.items() if idx is None]
+    if faltantes:
+        log("DEBUG-TABLA", f"⚠️ índice(s) de columna sin resolver: {faltantes} -- "
+                            f"esa(s) columna(s) no se va(n) a leer en esta fila")
 
     for intento in range(1, intentos + 1):
         if not por_resolver:

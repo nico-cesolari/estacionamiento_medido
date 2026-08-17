@@ -8,7 +8,7 @@ DE ACTAS -- para eso, ver la integración en llenar_actas_sigemi.py y
 actualizar_estado_sigemi.py, que corren esto mismo como paso final de
 cada pasada usando siempre app.reglas.fecha_cobro_sigemi.PATH_PAGOS_SIGEMI):
 
-lee app/datos/maestro/total_pagos_em_sigemi.txt -- un archivo DISTINTO al
+lee total_pagos_em_sigemi.txt -- un archivo DISTINTO al
 que usan llenar_actas_sigemi.py / actualizar_estado_sigemi.py -- que trae,
 por cada pago real, el número de acta y su fecha de cobro real. Con eso
 corrige `fecha_cobro_sigemi` en la base, que hasta ahora se completaba
@@ -84,9 +84,9 @@ def main():
             )
         if resumen["fecha_cobro_sin_impacto_pagada_sin_archivar_revisar"] > 0:
             print(
-                "\n⚠️  Hay actas en estado 'Pago Voluntario' (no archivadas) sin fecha real de cobro "
+                "\n⚠️  Hay actas en estado 'Pago Voluntario' (no archivados) sin fecha real de cobro "
                 "(pagadas en Procuración/Municipalidad, no impactaron). Se les vació fecha_cobro_sigemi "
-                "pero no se les puso motivo_archivo_sigemi porque no están archivadas. Revisar el "
+                "pero no se les puso motivo_archivo_sigemi porque no están archivados. Revisar el "
                 "detalle arriba y decidir si corresponde archivarlas."
             )
     finally:

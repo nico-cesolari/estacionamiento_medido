@@ -4,7 +4,7 @@ Alta de actas nuevas desde SIGI:
 recorre TODA la tabla de SIGI (filtrada por Tipo de acta = Estacionamiento
 Medido, 50 filas por página), fila por fila, y compara el Nº de acta de
 cada fila contra TODAS las actas que ya existen en la base local (tengan
-o no expediente cargado, estén archivadas o no -- da igual, alcanza con
+o no expediente cargado, estén archivados o no -- da igual, alcanza con
 que la acta ya esté para saltear la fila).
 
 Si el acta YA está en la base -> se saltea. Si NO está -> se da de alta
@@ -135,6 +135,13 @@ async def ejecutar_alta(db: Session, page, commit: bool = True) -> dict:
 
     await web_sigi.preparar_grilla(page)
     idx_expediente, idx_estado = await web_sigi.indices_expediente_estado(page)
+    if idx_expediente is None or idx_estado is None:
+        raise RuntimeError(
+            "No se pudieron resolver los índices de columna 'expediente'/'estado' "
+            "en la grilla de SIGI — probablemente cambió el maquetado o el filtro "
+            "todavía no terminó de repintar. Revisar SELECTOR_HEADERS_TABLA / "
+            "TEXTO_HEADER_EXPEDIENTE en web_sigi.py."
+        )
 
     async def procesar_fila(pagina_actual: int, fila_idx: int) -> int:
         async def intento_unico():

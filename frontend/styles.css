@@ -708,7 +708,7 @@ select.estado-select {
   border-color: var(--borde) !important;
 }
 
-/* Motivo de archivo (SIGEMI): sólo aparece cuando el estado es "Archivada". */
+/* Motivo de archivo (SIGEMI): sólo aparece cuando el estado es "Archivado". */
 select.motivo-archivo-select {
   font-size: 12px;
   padding: 6px 26px 6px 10px;

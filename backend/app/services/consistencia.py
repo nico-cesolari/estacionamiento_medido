@@ -13,7 +13,7 @@ def categoria_sigemi(estado_sigemi, motivo_archivo_sigemi):
     if estado_sigemi == models.EstadoSigemi.pagada:
         return "PAGADA"
 
-    if estado_sigemi == models.EstadoSigemi.archivada:
+    if estado_sigemi == models.EstadoSigemi.archivado:
         if motivo_archivo_sigemi in (
             models.MotivoArchivoSigemi.por_pago,
             models.MotivoArchivoSigemi.por_pago_procuracion,
@@ -32,7 +32,7 @@ def categoria_sigemi(estado_sigemi, motivo_archivo_sigemi):
         models.EstadoSigemi.sin_resolucion,
         models.EstadoSigemi.en_procuracion,
         models.EstadoSigemi.pendiente_procuracion,
-        models.EstadoSigemi.archivada_sin_resolucion,
+        models.EstadoSigemi.archivado_sin_resolucion,
     ):
         return "VENCIDA"
 
@@ -58,7 +58,7 @@ def categoria_semyt(estado_semyt):
 
 
 def categoria_sigi(estado_sigi, motivo_archivo_sigi):
-    if estado_sigi == models.EstadoSigi.archivada:
+    if estado_sigi == models.EstadoSigi.archivado:
         if motivo_archivo_sigi == models.MotivoArchivoSigi.por_pago:
             return "PAGADA"
 
@@ -85,7 +85,7 @@ def _sigemi_ignorable(registro):
     SIGEMI se ignora cuando todavía no tiene información suficiente:
     - estado inexistente
     - no cargada
-    - archivada sin motivo
+    - archivado sin motivo
     """
     if registro.estado_sigemi in (
         None,
@@ -94,7 +94,7 @@ def _sigemi_ignorable(registro):
         return True
 
     if (
-        registro.estado_sigemi == models.EstadoSigemi.archivada
+        registro.estado_sigemi == models.EstadoSigemi.archivado
         and registro.motivo_archivo_sigemi is None
     ):
         return True
@@ -107,7 +107,7 @@ def _sigi_ignorable(registro):
     SIGI se ignora cuando todavía no tiene información suficiente:
     - estado inexistente
     - no cargada
-    - archivada sin motivo
+    - archivado sin motivo
     """
     if registro.estado_sigi in (
         None,
@@ -116,7 +116,7 @@ def _sigi_ignorable(registro):
         return True
 
     if (
-        registro.estado_sigi == models.EstadoSigi.archivada
+        registro.estado_sigi == models.EstadoSigi.archivado
         and registro.motivo_archivo_sigi is None
     ):
         return True
@@ -128,7 +128,7 @@ def calcular_consistencia(registro):
     """
     SEMyT siempre se exige cargado.
 
-    SIGEMI y SIGI pueden estar "ignorables" (sin cargar o archivadas
+    SIGEMI y SIGI pueden estar "ignorables" (sin cargar o archivados
     sin motivo). En ese caso no bloquean la consistencia.
 
     Si los sistemas que sí tienen información coinciden, el registro
