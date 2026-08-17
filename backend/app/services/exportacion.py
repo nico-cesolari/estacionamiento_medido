@@ -403,3 +403,57 @@ def generar_reporte_txt_streaming(
     yield "|".join(COLUMNAS_REPORTE) + "\n"
     for registro in iterar_para_exportar(db, filtros, fecha_desde, fecha_hasta, tamano_lote):
         yield _fila_reporte(registro) + "\n"
+        
+from app.services.consistencia import debe_archivar_sigi
+
+COLUMNAS_CONSISTENCIA_SIGI = [
+    "EXPEDIENTE",
+    "NUMERO_ACTA",
+    "ESTADO_SEMYT",
+    "ESTADO_SIGEMI",
+    "ESTADO_SIGI",
+    "CONSISTENCIA",
+    "DETERMINACION_FINAL",
+]
+
+
+def buscar_para_consistencia_sigi(db):
+    """Sólo actas que SIGI ya está siguiendo activamente (estado_sigi
+    distinto de 'No Cargada') -- son las únicas donde tiene sentido
+    evaluar si corresponde archivar en SIGI."""
+    return (
+        db.query(models.Registro)
+        .filter(models.Registro.estado_sigi != models.EstadoSigi.no_cargada)
+        .order_by(models.Registro.fecha_hora.desc().nullslast(), models.Registro.id.desc())
+        .all()
+    )
+
+
+def _fila_consistencia_sigi(registro) -> str:
+    consistente = registro.consistente
+    if consistente is True:
+        consistencia = "CONSISTENTE"
+    elif consistente is False:
+        consistencia = "INCONSISTENTE"
+    else:
+        consistencia = "PENDIENTE"
+
+    determinacion = "Archivar" if debe_archivar_sigi(registro) else ""
+
+    fila = [
+        registro.expediente,
+        registro.acta,
+        _estado(registro.estado_semyt),
+        _estado(registro.estado_sigemi),
+        _estado(registro.estado_sigi),
+        consistencia,
+        determinacion,
+    ]
+    return "|".join(_limpiar(valor) for valor in fila)
+
+
+def generar_reporte_consistencia_sigi(registros) -> str:
+    lineas = ["|".join(COLUMNAS_CONSISTENCIA_SIGI)]
+    for registro in registros:
+        lineas.append(_fila_consistencia_sigi(registro))
+    return "\n".join(lineas) + "\n"

@@ -574,8 +574,35 @@ async function initExportar() {
   ["fe-fecha-desde", "fe-fecha-hasta"].forEach((id) => {
     el(id).addEventListener("change", actualizarContadorExportConDebounce);
   });
-
+  el("btn-descargar-consistencia-sigi").addEventListener("click", descargarConsistenciaSigi);
   await actualizarContadorExport();
+}
+
+/* ---------------- Exportar Insonsistencia SIGI ---------------- */
+const CONSISTENCIA_SIGI_API = `${API_BASE}/exportar/consistencia-sigi`;
+
+async function descargarConsistenciaSigi() {
+  const btn = el("btn-descargar-consistencia-sigi");
+  btn.disabled = true;
+  try {
+    const res = await fetch(CONSISTENCIA_SIGI_API);
+    if (!res.ok) throw new Error("No se pudo generar el reporte de Consistencia SIGI");
+
+    const blob = await res.blob();
+    const cd = res.headers.get("Content-Disposition") || "";
+    const match = cd.match(/filename="?([^"]+)"?/);
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = match ? match[1] : "consistencia_sigi.txt";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  } finally {
+    btn.disabled = false;
+  }
 }
 
 /** Arma el body compartido por /exportar/contar y /exportar/txt. */

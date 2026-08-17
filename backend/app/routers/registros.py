@@ -150,3 +150,18 @@ def exportar_txt(body: schemas.ExportarRequest, db: Session = Depends(get_db)):
         media_type="text/plain; charset=utf-8",
         headers={"Content-Disposition": f'attachment; filename="{nombre}"'},
     )
+    
+@router.get("/exportar/consistencia-sigi")
+def exportar_consistencia_sigi(db: Session = Depends(get_db)):
+    """Reporte .txt: EXPEDIENTE|NUMERO_ACTA|ESTADO_SEMYT|ESTADO_SIGEMI|
+    ESTADO_SIGI|CONSISTENCIA|DETERMINACION_FINAL, sólo para actas con
+    estado_sigi cargado. DETERMINACION_FINAL = 'Archivar' cuando
+    corresponde (ver services/consistencia.py::REGLAS_ARCHIVAR_SIGI)."""
+    registros = exportacion.buscar_para_consistencia_sigi(db)
+    contenido = exportacion.generar_reporte_consistencia_sigi(registros)
+    nombre = f"Inconsistencia_SIGI_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+    return PlainTextResponse(
+        content=contenido,
+        media_type="text/plain; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="{nombre}"'},
+    )
