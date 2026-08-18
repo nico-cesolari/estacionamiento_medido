@@ -349,3 +349,39 @@ def calcular_actas_duplicadas(db: Session, tamano_lote: int = TAMANO_LOTE_DUPLIC
         "filas_marcadas": total_marcadas,
         "filas_desmarcadas": total_limpiadas,
     }
+
+def anotar_info_relaciones(db: Session, registros: List["models.Registro"]):
+    """Agrega, en memoria (no son columnas), otros_expedientes_duplicada y
+    otros_expedientes_reescritura: lista de expedientes de las filas
+    hermanas del mismo grupo, para mostrar en la misma fila del frontend."""
+    grupos_dup = {r.grupo_duplicada for r in registros if r.grupo_duplicada}
+    grupos_re = {r.grupo_reescritura for r in registros if r.grupo_reescritura}
+
+    hermanos_dup = {}
+    if grupos_dup:
+        for grupo, expediente, id_ in (
+            db.query(models.Registro.grupo_duplicada, models.Registro.expediente, models.Registro.id)
+            .filter(models.Registro.grupo_duplicada.in_(grupos_dup))
+            .all()
+        ):
+            hermanos_dup.setdefault(grupo, []).append((id_, expediente))
+
+    hermanos_re = {}
+    if grupos_re:
+        for grupo, expediente, acta, id_ in (
+            db.query(models.Registro.grupo_reescritura, models.Registro.expediente,
+                      models.Registro.acta, models.Registro.id)
+            .filter(models.Registro.grupo_reescritura.in_(grupos_re))
+            .all()
+        ):
+            hermanos_re.setdefault(grupo, []).append((id_, expediente, acta))
+
+    for r in registros:
+        r.otros_expedientes_duplicada = [
+            (exp or "Sin expediente") for (id_, exp) in hermanos_dup.get(r.grupo_duplicada, []) if id_ != r.id
+        ] if r.grupo_duplicada else None
+
+        r.otros_expedientes_reescritura = [
+            f"{exp or 'Sin expediente'} (ACT-{acta})"
+            for (id_, exp, acta) in hermanos_re.get(r.grupo_reescritura, []) if id_ != r.id
+        ] if r.grupo_reescritura else None

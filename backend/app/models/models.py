@@ -75,9 +75,8 @@ class Registro(Base):
     juzgado = Column(Integer, nullable=True, index=True)
     # Identificadores (vienen de los 3 sistemas de origen)
     expediente = Column(String, index=True, nullable=True)
-    acta = Column(String, index=True, nullable=False)
+    acta = Column(String, index=True, unique=True, nullable=False)
     causa = Column(String, index=True, nullable=True)
-
     patente = Column(String, index=True, nullable=False)
     direccion = Column(String, nullable=True)
     # index=True: es la columna de ORDER BY en TODAS las consultas paginadas

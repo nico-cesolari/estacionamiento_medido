@@ -308,7 +308,11 @@ function renderTabla(registros) {
     tr.innerHTML = `
       <td class="expediente-cell">
         <div class="sub">JUZ-${r.juzgado ?? "-"}</div>
-        <div class="exp">${formatearExpediente(r.expediente)}${r.es_duplicada ? ' <span class="badge-duplicada" title="Esta acta tiene más de un expediente asociado">⚠ Duplicada</span>' : ''}${r.reescrita ? ' <span class="badge-reescrita" title="Mismo vehículo, mismo día y misma dirección que otra acta, con distinto número">↻ Reescrita</span>' : ''}</div>
+        <div class="exp">${formatearExpediente(r.expediente)}
+        ${r.es_duplicada ? ' <span class="badge-duplicada" title="Esta acta tiene más de un expediente asociado">⚠ Duplicada</span>' : ''}
+        ${r.reescrita ? ' <span class="badge-reescrita" title="Mismo vehículo, mismo día y misma dirección que otra acta, con distinto número">↻ Reescrita</span>' : ''}
+        ${r.otros_expedientes_duplicada?.length ? `<div class="sub">Duplicada con: ${r.otros_expedientes_duplicada.join(", ")}</div>` : ''}
+        ${r.otros_expedientes_reescritura?.length ? `<div class="sub">Reescrita con: ${r.otros_expedientes_reescritura.join(", ")}</div>` : ''}</div>
         <div class="sub">ACT-${r.acta}</div>
         <div class="sub">${formatearCausa(r.causa)}</div>
       </td>

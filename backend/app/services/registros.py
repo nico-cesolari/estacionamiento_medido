@@ -15,7 +15,7 @@ from app.services.duplicados import anotar_duplicadas
 from app.services.estados import aplicar_cambios_estado
 from app.services.filtros import aplicar_filtros_registros
 from app.services.query_helpers import aplicar_rango_fechas
-
+from app.services.duplicados import anotar_duplicadas, anotar_info_relaciones
 
 def buscar_registros(
     db: Session,
@@ -53,6 +53,7 @@ def buscar_registros(
     resultados = query.offset((page - 1) * page_size).limit(page_size).all()
 
     anotar_duplicadas(db, resultados)
+    anotar_info_relaciones(db, resultados)
     return resultados, total, total_pages
 
 

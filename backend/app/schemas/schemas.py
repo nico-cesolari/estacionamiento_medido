@@ -32,7 +32,9 @@ class RegistroOut(BaseModel):
     # acta). Ver anotar_duplicadas().
     es_duplicada: Optional[bool] = None
     reescrita: Optional[bool] = None  
-    
+    otros_expedientes_duplicada: Optional[List[str]] = None
+    otros_expedientes_reescritura: Optional[List[str]] = None
+
 class RegistroUpdate(BaseModel):
     """Para el PATCH cuando alguien cambia un estado desde el combo del frontend."""
     estado_sigemi: Optional[EstadoSigemi] = None
