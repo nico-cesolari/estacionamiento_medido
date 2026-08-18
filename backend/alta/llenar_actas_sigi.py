@@ -21,8 +21,9 @@ Flujo:
   2. Lee el expediente de esa primera fila (la más reciente, arriba de
      todo) -- ej. "EXP-2026-176985" -- y extrae año (2026) y número más
      alto (176985).
-  3. Recorre los números desde --hasta (el más bajo, punto de arranque)
-     hacia ARRIBA, hasta llegar a ese máximo leído de la grilla.
+  3. Recorre los números desde --desde (el más bajo, punto de arranque;
+     si no se pasa, usa 865 por default histórico) hacia ARRIBA, hasta
+     --hasta (si se pasa) o hasta el máximo leído de la grilla (si no).
   4. Para cada número arma el expediente completo (ej. "EXP-2026-176984"):
        - si YA está en la base (según reglas_sigi.todos_los_expedientes_
          cargados) -> se IGNORA, ni se busca. Esto es lo que ahorra
@@ -47,7 +48,7 @@ Uso:
     cd backend
     python alta/llenar_actas_sigi.py                    # dry-run
     python alta/llenar_actas_sigi.py --commit
-    python alta/llenar_actas_sigi.py --commit --hasta 173000
+    python alta/llenar_actas_sigi.py --commit --desde 23389 --hasta 144123
     python alta/llenar_actas_sigi.py --commit --limit 5   # probar con pocos
 
 ------------------------------------------------------------------------
@@ -446,7 +447,8 @@ async def _procesar_expediente_encontrado(
 
 
 async def ejecutar(
-    db: Session, page, commit: bool, hasta: int, limite: Optional[int], delay: float = 1.5
+    db: Session, page, commit: bool, desde: Optional[int], hasta: Optional[int],
+    limite: Optional[int], delay: float = 1.5
 ) -> dict:
     modo = "COMMIT (graba de verdad)" if commit else "DRY-RUN (no toca la base)"
     web_sigi.log("INICIO", f"Modo: {modo}")
@@ -467,9 +469,20 @@ async def ejecutar(
             "revisar el formato esperado (EXP-AAAA-NNNNNN) o el índice de columna."
         )
     anio, numero_maximo = descompuesto
-    NUMERO_INICIO = 865  # AJUSTAR: fijo a propósito en el código, no viene de --hasta.
+
+    # --desde / --hasta son opcionales: si no se pasan, se mantiene el
+    # comportamiento histórico (865 -> el expediente más reciente leído
+    # de la grilla). Si se pasan, pisan esos defaults.
+    NUMERO_INICIO = desde if desde is not None else 865
+    NUMERO_FIN = hasta if hasta is not None else numero_maximo
+
+    if NUMERO_FIN > numero_maximo:
+        web_sigi.log("INICIO", f"⚠️ --hasta {NUMERO_FIN} es mayor al expediente más reciente de la "
+                                f"grilla (EXP-{anio}-{numero_maximo}) -- lo recorto a {numero_maximo}.")
+        NUMERO_FIN = numero_maximo
+
     web_sigi.log("INICIO", f"Expediente más reciente: EXP-{anio}-{numero_maximo} -> "
-                            f"recorriendo desde {NUMERO_INICIO} hacia arriba")
+                            f"recorriendo desde {NUMERO_INICIO} hasta {NUMERO_FIN}")
 
     expedientes_conocidos = set(reglas_sigi.todos_los_expedientes_cargados(db).keys())
     actas_conocidas_todas = reglas_sigi.todas_las_actas_conocidas(db)
@@ -482,7 +495,7 @@ async def ejecutar(
     contadores = {"ya_en_db": 0, "altas": 0, "clones": 0, "no_encontrados": 0, "sin_acta": 0, "errores": 0}
     procesados = 0
     primera_busqueda = True
-    for numero in range(NUMERO_INICIO, numero_maximo + 1):
+    for numero in range(NUMERO_INICIO, NUMERO_FIN + 1):
         if limite is not None and procesados >= limite:
             web_sigi.log("LIMITE", f"Se alcanzó --limit {limite}.")
             break
@@ -544,13 +557,13 @@ async def ejecutar(
     return contadores
 
 
-async def _main(commit: bool, hasta: int, limite: Optional[int], delay: float):
+async def _main(commit: bool, desde: Optional[int], hasta: Optional[int], limite: Optional[int], delay: float):
     db = SessionLocal()
     try:
         async with PaginaConSesion(
             ARCHIVO_SESION, URL_SIGI, carpeta_sesiones=CARPETA_SESIONES_API_REST_PAYMENT
         ) as page:
-            resumen = await ejecutar(db, page, commit=commit, hasta=hasta, limite=limite, delay=delay)
+            resumen = await ejecutar(db, page, commit=commit, desde=desde, hasta=hasta, limite=limite, delay=delay)
         web_sigi.log("FIN", str(resumen))
     finally:
         db.close()
@@ -562,7 +575,16 @@ if __name__ == "__main__":
                     "salteando sin buscar los que ya están en la base."
     )
     parser.add_argument("--commit", action="store_true", help="Graba en la DB de verdad. Sin este flag, dry-run.")
-    parser.add_argument("--hasta", type=int, default=1, help="Número de expediente donde arrancar el ascenso (default: 1).")
+    parser.add_argument(
+        "--desde", type=int, default=None,
+        help="Número de expediente donde arrancar el ascenso. Si no se pasa, arranca en 865 "
+             "(default histórico)."
+    )
+    parser.add_argument(
+        "--hasta", type=int, default=None,
+        help="Número de expediente donde cortar (inclusive). Si no se pasa, sigue hasta el "
+             "expediente más reciente leído de la grilla (comportamiento actual)."
+    )
     parser.add_argument("--limit", type=int, default=None, help="Procesa como máximo N expedientes en esta corrida.")
     parser.add_argument(
         "--delay", type=float, default=1.5,
@@ -571,4 +593,4 @@ if __name__ == "__main__":
              "seguidos (señal de que la grilla no llega a refrescar a tiempo); --delay 0 la desactiva."
     )
     args = parser.parse_args()
-    asyncio.run(_main(commit=args.commit, hasta=args.hasta, limite=args.limit, delay=args.delay))
+    asyncio.run(_main(commit=args.commit, desde=args.desde, hasta=args.hasta, limite=args.limit, delay=args.delay))

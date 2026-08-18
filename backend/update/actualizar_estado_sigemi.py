@@ -20,8 +20,8 @@ Reutiliza TODO el parseo/reglas de negocio desde app/reglas/reglas_sigemi.py
 
 USO:
     cd backend
-    python update/actualizar_estado_sigemi.py app/datos/maestro/total_em_sigemi.txt             # dry-run
-    python update/actualizar_estado_sigemi.py app/datos/maestro/total_em_sigemi.txt --commit   # graba
+    python update/actualizar_estado_sigemi.py app/services/sistemas/sigemi/archivos/total_em_sigemi.txt             # dry-run
+    python update/actualizar_estado_sigemi.py app/services/sistemas/sigemi/archivos/total_em_sigemi.txt --commit   # graba
 """
 import argparse
 import sys

@@ -399,7 +399,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 .ayuda-exportar p { margin: 0; }
 .ayuda-exportar p + p { margin-top: 8px; }
-
 .exportar-filtros-seccion {
   margin-top: 24px;
   padding-top: 20px;
@@ -726,15 +725,26 @@ select.motivo-archivo-select {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 24px; height: 24px;
+  width: 24px; 
+  height: 24px;
   border-radius: 50%;
   font-size: 13px;
   font-weight: 700;
   cursor: help;
 }
-.consistencia-ok  { background: var(--verde-bg); color: var(--verde-texto); }
-.consistencia-mal { background: var(--rojo-bg); color: var(--rojo-texto); }
-.consistencia-nd  { background: var(--gris-bg); color: var(--texto-suave); }
+
+/* Estilos específicos para dimensionar el SVG inyectado */
+.consistencia-icon {
+  width: 14px;
+  height: 14px;
+  display: block;
+}
+
+/* Tus clases originales con tus variables de color intactas */
+.consistencia-ok  { background-color: var(--verde-bg); color: var(--verde-texto); }
+.consistencia-mal { background-color: var(--rojo-bg); color: var(--rojo-texto); }
+.consistencia-nd  { background-color: var(--gris-bg);  color: var(--texto-suave); }
+
 
 .btn-refrescar {
   width: 28px; height: 28px;
@@ -814,6 +824,16 @@ select.motivo-archivo-select {
 }
 .pagina-label { color: var(--texto-suave); line-height: 34px; }
 
+.btn-paginacion-icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+}
+.btn-paginacion-icono svg { display: block; }
+
 /* Acercar el botón de "acciones" (refrescar) a la columna de consistencia */
 thead th:nth-child(9), tbody td:nth-child(9) {
   padding-right: 4px;
@@ -841,6 +861,19 @@ thead th:last-child, tbody td:last-child {
   border-radius: 4px;
   padding: 1px 6px;
   font-size: 0.75rem;
+}
+
+/*boton Inconsistencia sigi*/
+#btn-descargar-consistencia-sigi {
+  margin-top: 14px;
+}
+/*boton Reescritas sigi*/
+#btn-descargar-reescritas-sigi {
+  margin-top: 14px;
+}
+/*boton Duplicadas sigi*/
+#btn-descargar-duplicadas-sigi {
+  margin-top: 14px;
 }
 /* ---------- Responsive ---------- */
 

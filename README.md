@@ -157,6 +157,7 @@ estacionamiento_medido/
 | POST   | `/api/registros/{id}/refrescar` | Placeholder para refrescar contra SIGEMI/SEMyT/SIGI en vivo |
 
 ## RECREAR ENTORNO
+kill -9 $(lsof -ti :8000)
 deactivate
 rm -rf venv
 python3 -m venv venv

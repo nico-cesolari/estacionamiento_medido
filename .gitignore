@@ -47,4 +47,4 @@ backend/app/services/sistemas/semyt/archivos/*.txt
 backend/app/services/sistemas/sigemi/archivos/*.txt
 
 # ---- Archivos de API-REST -----
-API-REST Payment/datos/
+API_REST_Payment/datos/

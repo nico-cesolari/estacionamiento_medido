@@ -419,15 +419,16 @@ COLUMNAS_CONSISTENCIA_SIGI = [
 
 def buscar_para_consistencia_sigi(db):
     """Sólo actas que SIGI ya está siguiendo activamente (estado_sigi
-    distinto de 'No Cargada') -- son las únicas donde tiene sentido
-    evaluar si corresponde archivar en SIGI."""
-    return (
+    distinto de 'No Cargada') Y para las que corresponde archivar en SIGI
+    (DETERMINACION_FINAL = 'Archivar', ver debe_archivar_sigi). Las que
+    no tienen una determinación clara (null) quedan afuera del reporte."""
+    registros = (
         db.query(models.Registro)
         .filter(models.Registro.estado_sigi != models.EstadoSigi.no_cargada)
         .order_by(models.Registro.fecha_hora.desc().nullslast(), models.Registro.id.desc())
         .all()
     )
-
+    return [r for r in registros if debe_archivar_sigi(r)]
 
 def _fila_consistencia_sigi(registro) -> str:
     consistente = registro.consistente

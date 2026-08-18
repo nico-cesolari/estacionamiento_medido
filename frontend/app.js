@@ -463,10 +463,21 @@ function renderCeldaEstadoSigi(r) {
 /** Celda de consistencia: visto/cruz según si SIGEMI y SEMyT coinciden en el resultado del acta. */
 function renderCeldaConsistencia(r) {
   if (r.consistente === true) {
-    return `<span class="consistencia consistencia-ok">✓</span>`;
+    return `
+      <span class="consistencia consistencia-ok">
+        <svg xmlns="http://w3.org" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" class="consistencia-icon">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+      </span>`;
   }
   if (r.consistente === false) {
-    return `<span class="consistencia consistencia-mal">✗</span>`;
+    return `
+      <span class="consistencia consistencia-mal">
+        <svg xmlns="http://w3.org" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" class="consistencia-icon">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </span>`;
   }
   return `<span class="consistencia consistencia-nd">–</span>`;
 }
@@ -516,6 +527,15 @@ function renderPaginacion(paginaActual, totalPaginas) {
     }
   };
 
+  const btnPrimera = document.createElement("button");
+  btnPrimera.type = "button";
+  btnPrimera.className = "btn btn-outline btn-paginacion-icono";
+  btnPrimera.setAttribute("aria-label", "Primera página");
+  btnPrimera.title = "Primera página";
+  btnPrimera.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg>`;
+  btnPrimera.disabled = paginaActual <= 1;
+  btnPrimera.addEventListener("click", () => irAPagina(1));
+
   const btnAnterior = document.createElement("button");
   btnAnterior.type = "button";
   btnAnterior.textContent = "Anterior";
@@ -550,7 +570,16 @@ function renderPaginacion(paginaActual, totalPaginas) {
   btnSiguiente.disabled = paginaActual >= totalPaginas;
   btnSiguiente.addEventListener("click", () => irAPagina(paginaActual + 1));
 
-  cont.append(btnAnterior, labelPagina, input, labelTotal, btnSiguiente);
+  const btnUltima = document.createElement("button");
+  btnUltima.type = "button";
+  btnUltima.className = "btn btn-outline btn-paginacion-icono";
+  btnUltima.setAttribute("aria-label", "Última página");
+  btnUltima.title = "Última página";
+  btnUltima.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>`;
+  btnUltima.disabled = paginaActual >= totalPaginas;
+  btnUltima.addEventListener("click", () => irAPagina(totalPaginas));
+
+  cont.append(btnPrimera, btnAnterior, labelPagina, input, labelTotal, btnSiguiente, btnUltima);
 }
 
 /* ---------------- Exportar Actas: filtros libres + reporte .txt ---------------- */

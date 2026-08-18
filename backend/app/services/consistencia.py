@@ -9,6 +9,18 @@ from app.models import models
 # La comparación se hace sobre esas categorías,
 # no sobre el texto literal de cada estado.
 
+# Categorías que se consideran equivalentes a los fines de consistencia:
+# "pagó" y "se resolvió" son, en la práctica, la misma resolución de fondo.
+_EQUIVALENTES = [{"PAGADA", "RESUELTA"}]
+
+def _mismo_grupo(valores: set) -> bool:
+    if len(valores) == 1:
+        return True
+    for grupo in _EQUIVALENTES:
+        if valores <= grupo:
+            return True
+    return False
+
 def categoria_sigemi(estado_sigemi, motivo_archivo_sigemi):
     if estado_sigemi == models.EstadoSigemi.pagada:
         return "PAGADA"
@@ -183,16 +195,23 @@ def calcular_consistencia(registro):
     if faltantes:
         return None
 
-    # Excepción de negocio:
-    # si algo está VENCIDO pero SIGI todavía no está cargado,
-    # consideramos que existe una inconsistencia.
-    if "VENCIDA" in categorias.values() and "SIGI" in ignorados:
-        return False
+    if "SIGI" in ignorados:
+        sigemi_cerrado = (
+            "SIGEMI" in ignorados
+            or categorias.get("SIGEMI") in ("PAGADA", "RESUELTA")
+            or registro.estado_sigemi == models.EstadoSigemi.archivado_sin_resolucion
+        )
+        semyt_cerrado = categorias.get("SEMyT") in ("PAGADA", "RESUELTA")
 
-    # Todos los sistemas cargados deben coincidir en su categoría.
+        if sigemi_cerrado and semyt_cerrado:
+            return True
+
+        if "VENCIDA" in categorias.values():
+            return False
+
     valores = set(categorias.values())
 
-    return len(valores) == 1
+    return _mismo_grupo(valores)
 
 def actualizar_consistencia(registros):
     for registro in registros:

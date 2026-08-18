@@ -176,7 +176,7 @@ async def _main(commit: bool, delay: float, limite: Optional[int]):
     db = SessionLocal()
     try:
         async with PaginaConSesion(
-            ARCHIVO_SESION, URL_SIGI,False,
+            ARCHIVO_SESION, URL_SIGI,
             carpeta_sesiones=CARPETA_SESIONES_API_REST_PAYMENT,
         ) as page:
             resumen = await ejecutar_actualizacion_estado(
