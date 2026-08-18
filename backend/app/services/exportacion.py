@@ -462,14 +462,13 @@ def generar_reporte_consistencia_sigi(registros) -> str:
 # Helper común
 # ---------------------------------------------------------------------------
 def _formatear_expediente(expediente, anio=None) -> str:
-    """Devuelve el expediente con formato EXP-AAAA-NUMERO."""
-    if expediente is None:
-        return ""
+    """Devuelve el expediente con formato EXP-AAAA-NUMERO, o un placeholder si no está cargado."""
+    if expediente is None or not str(expediente).strip():
+        return "Sin Expediente"
     texto = str(expediente).strip()
     if texto.upper().startswith("EXP-"):
         return texto.upper()
     if "-" in texto:
-        # Asumimos que ya viene como AAAA-NUMERO
         return f"EXP-{texto}"
     anio = anio or datetime.now().year
     return f"EXP-{anio}-{texto}"
@@ -493,12 +492,14 @@ COLUMNAS_REESCRITAS_SIGI = [
 
 
 def buscar_para_reescritas_sigi(db):
-    """Todas las actas marcadas como reescrita=True, agrupadas por
-    grupo_reescritura y ordenadas cronológicamente: la más vieja de cada
-    grupo es la 'Original', las que vienen después son 'Reemplazo'."""
+    """Actas reescritas (mismo vehículo/día/dirección, acta distinta) que
+    además están INCONSISTENTES (consistente = False)."""
     return (
         db.query(models.Registro)
-        .filter(models.Registro.reescrita.is_(True))
+        .filter(
+            models.Registro.reescrita.is_(True),
+            models.Registro.consistente.is_(False),
+        )
         .order_by(
             models.Registro.grupo_reescritura.asc(),
             models.Registro.fecha_hora.asc(),
@@ -506,7 +507,6 @@ def buscar_para_reescritas_sigi(db):
         )
         .all()
     )
-
 
 def _fila_reescrita_sigi(registro, procedencia: str, idx_expediente: str) -> str:
     consistente = registro.consistente
@@ -581,12 +581,15 @@ COLUMNAS_DUPLICADAS_SIGI = [
 
 
 def buscar_para_duplicadas_sigi(db):
-    """Todas las actas marcadas como duplicada=True, agrupadas por
-    grupo_duplicada y ordenadas por id: la primera cargada es la
-    'Original', las siguientes son 'Duplicada'."""
+    """Actas duplicadas (mismo acta en >1 registro) que además están
+    INCONSISTENTES (consistente = False) -- las que ya están resueltas
+    no necesitan aparecer en el reporte para Ronald."""
     return (
         db.query(models.Registro)
-        .filter(models.Registro.duplicada.is_(True))
+        .filter(
+            models.Registro.duplicada.is_(True),
+            models.Registro.consistente.is_(False),
+        )
         .order_by(
             models.Registro.grupo_duplicada.asc(),
             models.Registro.id.asc(),

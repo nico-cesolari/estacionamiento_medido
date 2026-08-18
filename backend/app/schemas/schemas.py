@@ -31,7 +31,8 @@ class RegistroOut(BaseModel):
     # True si existe otra fila con la misma `acta` (dos expedientes/estados para la misma
     # acta). Ver anotar_duplicadas().
     es_duplicada: Optional[bool] = None
-
+    reescrita: Optional[bool] = None  
+    
 class RegistroUpdate(BaseModel):
     """Para el PATCH cuando alguien cambia un estado desde el combo del frontend."""
     estado_sigemi: Optional[EstadoSigemi] = None
