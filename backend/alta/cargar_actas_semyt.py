@@ -350,6 +350,8 @@ async def procesar_acta(
             "SEMyT",
             f"❌ Acta {numero_acta}: no encontrada.",
         )
+        if commit:
+            actas_eliminadas.add(numero_acta)
         return "no_encontrada"
 
     estado_texto = normalizar_estado(datos.get("estado", ""))

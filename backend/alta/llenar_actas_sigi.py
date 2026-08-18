@@ -95,7 +95,7 @@ import re
 import sys
 from pathlib import Path
 from typing import Optional
-
+import json
 from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 from sqlalchemy.orm import Session
 
@@ -108,7 +108,8 @@ from app.services.sistemas.sigi.web import web_sigi
 
 URL_SIGI = "https://juzgado.villamaria.gob.ar/juzgado"
 ARCHIVO_SESION = "sesion_sigi.json"
-
+CARPETA_ARCHIVOS = Path(__file__).resolve().parent.parent / "archivos"
+ARCHIVO_ACTAS_IGNORADAS = CARPETA_ARCHIVOS / "actas_sigi_ignoradas.json"
 # Selector confirmado por HTML real (ver docstring del módulo):
 #   <input name="numero_expediente" placeholder="Ej: EXP-2026-0080" ...>
 SELECTOR_INPUT_FILTRO_EXPEDIENTE = "input[name='numero_expediente']"
@@ -146,8 +147,82 @@ def _descomponer_expediente(expediente: str):
 
 def _armar_expediente(anio: str, numero: int) -> str:
     return f"EXP-{anio}-{numero:0{DIGITOS_PADDING_NUMERO}d}"
+def cargar_actas_sigi_ignoradas() -> list[str]:
+    """
+    Carga los expedientes ignorados desde actas_sigi_ignoradas.json.
+
+    Si el archivo no existe, lo crea con una lista vacía.
+    """
+    CARPETA_ARCHIVOS.mkdir(parents=True, exist_ok=True)
+
+    if not ARCHIVO_ACTAS_IGNORADAS.exists():
+        ARCHIVO_ACTAS_IGNORADAS.write_text(
+            "[]\n",
+            encoding="utf-8",
+        )
+        return []
+
+    try:
+        contenido = ARCHIVO_ACTAS_IGNORADAS.read_text(
+            encoding="utf-8"
+        ).strip()
+
+        if not contenido:
+            return []
+
+        datos = json.loads(contenido)
+
+        if not isinstance(datos, list):
+            web_sigi.log(
+                "IGNORADAS",
+                f"⚠️ {ARCHIVO_ACTAS_IGNORADAS} no contiene una lista válida. "
+                "Se utilizará una lista vacía.",
+            )
+            return []
+
+        return datos
+
+    except json.JSONDecodeError as exc:
+        web_sigi.log(
+            "IGNORADAS",
+            f"⚠️ No se pudo leer {ARCHIVO_ACTAS_IGNORADAS}: {exc}. "
+            "Se utilizará una lista vacía.",
+        )
+        return []
 
 
+def guardar_actas_sigi_ignoradas(
+    actas_ignoradas: list[str],
+) -> None:
+    """
+    Guarda los expedientes ignorados en actas_sigi_ignoradas.json.
+    """
+    CARPETA_ARCHIVOS.mkdir(parents=True, exist_ok=True)
+
+    ARCHIVO_ACTAS_IGNORADAS.write_text(
+        json.dumps(
+            actas_ignoradas,
+            indent=4,
+            ensure_ascii=False,
+        ) + "\n",
+        encoding="utf-8",
+    )
+
+def agregar_acta_sigi_ignorada(
+    actas_ignoradas: list[str],
+    expediente: str,
+) -> None:
+    """
+    Agrega un expediente a la lista de ignorados si todavía no existe.
+    """
+    expediente_norm = reglas_sigi.normalizar_expediente(expediente)
+
+    if not expediente_norm:
+        return
+
+    if expediente_norm not in actas_ignoradas:
+        actas_ignoradas.append(expediente_norm)
+    
 async def _localizar_input_filtro_expediente(page):
     """Ubica el input por name (confirmado por HTML real). Si en algún
     momento el sitio cambia el atributo name, cae a buscarlo por label
@@ -489,10 +564,17 @@ async def ejecutar(
     # Para el chequeo "¿ya existe esta acta?" alcanza con un registro
     # representativo de cada acta (el primero de la lista).
     actas_conocidas = {acta: regs[0] for acta, regs in actas_conocidas_todas.items() if regs}
-    web_sigi.log("INICIO", f"{len(expedientes_conocidos)} expediente(s) ya en la base "
-                            f"(se saltean sin buscar), {len(actas_conocidas)} acta(s) distinta(s) conocidas")
+    actas_ignoradas = cargar_actas_sigi_ignoradas()
 
-    contadores = {"ya_en_db": 0, "altas": 0, "clones": 0, "no_encontrados": 0, "sin_acta": 0, "errores": 0}
+    web_sigi.log(
+        "INICIO",
+        f"{len(expedientes_conocidos)} expediente(s) ya en la base "
+        f"(se saltean sin buscar), "
+        f"{len(actas_conocidas)} acta(s) distinta(s) conocidas, "
+        f"{len(actas_ignoradas)} expediente(s) ignorado(s)"
+    )
+
+    contadores = {"ya_en_db": 0,"ignorados": 0, "altas": 0, "clones": 0, "no_encontrados": 0, "sin_acta": 0, "errores": 0}
     procesados = 0
     primera_busqueda = True
     for numero in range(NUMERO_INICIO, NUMERO_FIN + 1):
@@ -507,7 +589,17 @@ async def ejecutar(
             contadores["ya_en_db"] += 1
             procesados += 1
             continue
+        
+        if expediente_norm in actas_ignoradas:
+            contadores["ignorados"] += 1
+            procesados += 1
 
+            web_sigi.log(
+                "EXPEDIENTE",
+                f"⏭️ {expediente_completo}: ignorado "
+            )
+
+            continue
         # Pausa entre búsqueda y búsqueda (no antes de la primera): le da
         # tiempo a la SPA de terminar de repintar la grilla tras la
         # búsqueda/cierre de detalle anterior, evitando leer una fila
@@ -534,6 +626,19 @@ async def ejecutar(
             web_sigi.log("EXPEDIENTE", f"↩ {expediente_completo}: sin resultados (no existe, o no es "
                                         f"de tipo Estacionamiento Medido)")
             contadores["no_encontrados"] += 1
+            if commit:
+                agregar_acta_sigi_ignorada(
+                    actas_ignoradas,
+                    expediente_completo,
+                )
+                guardar_actas_sigi_ignoradas(actas_ignoradas)
+
+                web_sigi.log(
+                    "IGNORADAS",
+                    f"💾 {expediente_completo} agregado a "
+                    f"{ARCHIVO_ACTAS_IGNORADAS}",
+                )
+
             procesados += 1
             continue
 
