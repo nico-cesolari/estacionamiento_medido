@@ -5,10 +5,14 @@ Tabla principal: Registro -> une Expediente / Acta / Causa con los tres
 estados que vienen de sistemas distintos (SIGEMI, SEMyT, SIGI).
 """
 from datetime import datetime
+import re
 import enum
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, Enum as SAEnum, ForeignKey, Index, event
-from sqlalchemy.sql import func
+from sqlalchemy import (
+    Column, Integer, String, DateTime, Boolean, Enum as SAEnum, ForeignKey,
+    Index, event, func, select, update,
+)
 from sqlalchemy.orm import relationship
+from sqlalchemy.orm.attributes import get_history
 
 from ..database import Base
 
@@ -123,6 +127,10 @@ class Registro(Base):
     reescrita = Column(Boolean, nullable=True, default=False, index=True)
     grupo_reescritura = Column(String, nullable=True, index=True)
 
+    # NUEVO: faltaban en el modelo aunque ya existen en la tabla
+    duplicada = Column(Boolean, nullable=True, default=False, index=True)
+    grupo_duplicada = Column(String, nullable=True, index=True)
+
     historial = relationship(
         "HistorialEstado",
         back_populates="registro",
@@ -186,3 +194,206 @@ def calcular_juzgado(fecha_hora):
 @event.listens_for(Registro, "before_update")
 def _autocompletar_juzgado(mapper, connection, target):
     target.juzgado = calcular_juzgado(target.fecha_hora)
+    
+# ---------------------------------------------------------------------------
+# Duplicadas / Reescritas: se recalculan solas en cada insert/update.
+#
+# IMPORTANTE: estos listeners usan `connection` (Core), NO el Session del
+# ORM. Es el patrón recomendado por SQLAlchemy para tocar otras filas desde
+# adentro de un evento before_insert/before_update -- usar el Session acá
+# adentro dispararía un flush recursivo y rompería todo.
+#
+# La normalización de patente/dirección está duplicada a propósito acá
+# (en vez de importar app.services.duplicados) para evitar un import
+# circular: duplicados.py ya importa models.py.
+# ---------------------------------------------------------------------------
+
+def _normalizar_patente_py(valor):
+    if not valor:
+        return ""
+    texto = valor.upper()
+    for ch in ("-", " ", ".", "_"):
+        texto = texto.replace(ch, "")
+    return texto
+
+
+def _normalizar_direccion_py(valor):
+    if not valor:
+        return ""
+    return re.sub(r"\s+", " ", valor.strip()).upper()
+
+
+def _clave_grupo_reescritura(patente_norm, dia, direccion_norm):
+    dia_texto = dia.isoformat() if hasattr(dia, "isoformat") else str(dia)
+    return f"{patente_norm}|{dia_texto}|{direccion_norm}"
+
+
+def _clave_grupo_duplicada(acta):
+    return f"ACTA|{acta}"
+
+
+def _condiciones_grupo_reescritura(tabla, patente_norm, dia, direccion_norm, excluir_id=None):
+    patente_norm_col = func.upper(
+        func.replace(
+            func.replace(
+                func.replace(
+                    func.replace(tabla.c.patente, "-", ""),
+                    " ", ""),
+                ".", ""),
+            "_", "")
+    )
+    dia_col = func.date(tabla.c.fecha_hora)
+    direccion_norm_col = func.upper(func.trim(tabla.c.direccion))
+
+    condiciones = [
+        patente_norm_col == patente_norm,
+        dia_col == dia,
+        direccion_norm_col == direccion_norm,
+    ]
+    if excluir_id is not None:
+        condiciones.append(tabla.c.id != excluir_id)
+    return condiciones
+
+
+# --------------------------- DUPLICADAS ---------------------------
+
+def _recalcular_duplicada(connection, target):
+    tabla = Registro.__table__
+
+    if not target.acta:
+        target.duplicada = False
+        target.grupo_duplicada = None
+        return
+
+    condiciones = [tabla.c.acta == target.acta]
+    if target.id is not None:
+        condiciones.append(tabla.c.id != target.id)
+
+    cantidad_otras = connection.execute(
+        select(func.count()).select_from(tabla).where(*condiciones)
+    ).scalar_one()
+
+    clave = _clave_grupo_duplicada(target.acta)
+
+    if cantidad_otras >= 1:
+        target.duplicada = True
+        target.grupo_duplicada = clave
+        connection.execute(
+            update(tabla).where(*condiciones).values(duplicada=True, grupo_duplicada=clave)
+        )
+    else:
+        target.duplicada = False
+        target.grupo_duplicada = None
+
+
+def _limpiar_grupo_anterior_duplicada(connection, target):
+    """En un update: si el acta cambió, la fila que compartía la acta
+    VIEJA puede haber quedado sola -> hay que desmarcarla."""
+    historial = get_history(target, "acta")
+    if not historial.deleted:
+        return
+
+    acta_anterior = historial.deleted[0]
+    if not acta_anterior:
+        return
+
+    tabla = Registro.__table__
+    condiciones = [tabla.c.acta == acta_anterior]
+    if target.id is not None:
+        condiciones.append(tabla.c.id != target.id)
+
+    cantidad_restante = connection.execute(
+        select(func.count()).select_from(tabla).where(*condiciones)
+    ).scalar_one()
+
+    if cantidad_restante <= 1:
+        connection.execute(
+            update(tabla).where(*condiciones).values(duplicada=False, grupo_duplicada=None)
+        )
+
+
+# --------------------------- REESCRITAS ---------------------------
+
+def _recalcular_reescritura(connection, target):
+    tabla = Registro.__table__
+    patente_norm = _normalizar_patente_py(target.patente)
+    direccion_norm = _normalizar_direccion_py(target.direccion)
+    dia = target.fecha_hora.date() if target.fecha_hora else None
+
+    if not patente_norm or not direccion_norm or not dia:
+        target.reescrita = False
+        target.grupo_reescritura = None
+        return
+
+    condiciones = _condiciones_grupo_reescritura(
+        tabla, patente_norm, dia, direccion_norm, excluir_id=target.id
+    )
+
+    filas_relacionadas = connection.execute(
+        select(tabla.c.id, tabla.c.acta).where(*condiciones)
+    ).all()
+
+    actas_relacionadas = {fila.acta for fila in filas_relacionadas}
+    actas_relacionadas.add(target.acta)
+
+    clave = _clave_grupo_reescritura(patente_norm, dia, direccion_norm)
+
+    if filas_relacionadas and len(actas_relacionadas) > 1:
+        target.reescrita = True
+        target.grupo_reescritura = clave
+        connection.execute(
+            update(tabla).where(*condiciones).values(reescrita=True, grupo_reescritura=clave)
+        )
+    else:
+        target.reescrita = False
+        target.grupo_reescritura = None
+
+
+def _limpiar_grupo_anterior_reescritura(connection, target):
+    """En un update: si patente/dirección/fecha cambiaron, el grupo VIEJO
+    puede haber quedado sin sentido (0 o 1 fila, o todas con la misma
+    acta) -> hay que desmarcarlo."""
+    hist_patente = get_history(target, "patente")
+    hist_direccion = get_history(target, "direccion")
+    hist_fecha = get_history(target, "fecha_hora")
+
+    if not (hist_patente.deleted or hist_direccion.deleted or hist_fecha.deleted):
+        return  # nada de esto cambió, no hay grupo viejo que limpiar
+
+    patente_anterior = hist_patente.deleted[0] if hist_patente.deleted else target.patente
+    direccion_anterior = hist_direccion.deleted[0] if hist_direccion.deleted else target.direccion
+    fecha_anterior = hist_fecha.deleted[0] if hist_fecha.deleted else target.fecha_hora
+
+    tabla = Registro.__table__
+    patente_norm = _normalizar_patente_py(patente_anterior)
+    direccion_norm = _normalizar_direccion_py(direccion_anterior)
+    dia = fecha_anterior.date() if fecha_anterior else None
+
+    if not patente_norm or not direccion_norm or not dia:
+        return
+
+    condiciones = _condiciones_grupo_reescritura(
+        tabla, patente_norm, dia, direccion_norm, excluir_id=target.id
+    )
+
+    filas = connection.execute(select(tabla.c.id, tabla.c.acta).where(*condiciones)).all()
+    actas = {f.acta for f in filas}
+
+    if len(filas) == 0 or len(actas) <= 1:
+        connection.execute(
+            update(tabla).where(*condiciones).values(reescrita=False, grupo_reescritura=None)
+        )
+
+
+@event.listens_for(Registro, "before_insert")
+def _relaciones_al_insertar(mapper, connection, target):
+    _recalcular_duplicada(connection, target)
+    _recalcular_reescritura(connection, target)
+
+
+@event.listens_for(Registro, "before_update")
+def _relaciones_al_actualizar(mapper, connection, target):
+    _limpiar_grupo_anterior_duplicada(connection, target)
+    _limpiar_grupo_anterior_reescritura(connection, target)
+    _recalcular_duplicada(connection, target)
+    _recalcular_reescritura(connection, target)

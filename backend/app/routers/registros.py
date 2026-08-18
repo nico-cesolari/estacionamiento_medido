@@ -165,3 +165,37 @@ def exportar_consistencia_sigi(db: Session = Depends(get_db)):
         media_type="text/plain; charset=utf-8",
         headers={"Content-Disposition": f'attachment; filename="{nombre}"'},
     )
+    
+@router.get("/exportar/reescritas-sigi")
+def exportar_reescritas_sigi(db: Session = Depends(get_db)):
+    """Reporte .txt: actas Reescritas (mismo vehículo, mismo día y misma
+    dirección, con número de acta distinto). Marca REESCRITA=True, aclara
+    si la fila es la acta Original o la Nueva que la reescribió, y
+    DETERMINACION_FINAL=Archivar siempre."""
+    registros = exportacion.buscar_para_reescritas_sigi(db)
+    if not registros:
+        raise HTTPException(status_code=404, detail="No hay actas inconsistentes")
+    contenido = exportacion.generar_reporte_reescritas_sigi(registros)
+    nombre = f"Reescritas_SIGI_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+    return PlainTextResponse(
+        content=contenido,
+        media_type="text/plain; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="{nombre}"'},
+    )
+
+
+@router.get("/exportar/duplicadas-sigi")
+def exportar_duplicadas_sigi(db: Session = Depends(get_db)):
+    """Reporte .txt: actas Duplicadas (mismo número de acta en más de un
+    registro). Marca DUPLICADA=True, aclara si la fila es la Original o
+    la Nueva/duplicada, y DETERMINACION_FINAL=Archivar siempre."""
+    registros = exportacion.buscar_para_duplicadas_sigi(db)
+    if not registros:
+        raise HTTPException(status_code=404, detail="No hay actas inconsistentes")
+    contenido = exportacion.generar_reporte_duplicadas_sigi(registros)
+    nombre = f"Duplicadas_SIGI_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+    return PlainTextResponse(
+        content=contenido,
+        media_type="text/plain; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="{nombre}"'},
+    )

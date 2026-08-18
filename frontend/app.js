@@ -604,6 +604,8 @@ async function initExportar() {
     el(id).addEventListener("change", actualizarContadorExportConDebounce);
   });
   el("btn-descargar-consistencia-sigi").addEventListener("click", descargarConsistenciaSigi);
+  el("btn-descargar-reescritas-sigi").addEventListener("click", descargarReescritasSigi);
+  el("btn-descargar-duplicadas-sigi").addEventListener("click", descargarDuplicadasSigi);
   await actualizarContadorExport();
 }
 
@@ -615,6 +617,10 @@ async function descargarConsistenciaSigi() {
   btn.disabled = true;
   try {
     const res = await fetch(CONSISTENCIA_SIGI_API);
+    if (res.status === 404) {
+      mostrarInfo("No hay actas inconsistentes", "Sin resultados");
+      return;
+    }
     if (!res.ok) throw new Error("No se pudo generar el reporte de Consistencia SIGI");
 
     const blob = await res.blob();
@@ -629,9 +635,57 @@ async function descargarConsistenciaSigi() {
     a.click();
     a.remove();
     URL.revokeObjectURL(url);
+
+    mostrarExito("El reporte de Consistencia SIGI se descargó correctamente", "Descarga completa");
+  } catch (err) {
+    mostrarError("No se pudo generar el reporte", "Error");
   } finally {
     btn.disabled = false;
   }
+}
+
+/* ---------------- Exportar Reescritas / Duplicadas SIGI ---------------- */
+const REESCRITAS_SIGI_API = `${API_BASE}/exportar/reescritas-sigi`;
+const DUPLICADAS_SIGI_API = `${API_BASE}/exportar/duplicadas-sigi`;
+
+async function descargarReporteConAviso(url, btn) {
+  btn.disabled = true;
+  try {
+    const res = await fetch(url);
+
+    if (res.status === 404) {
+      mostrarInfo("No hay actas inconsistentes", "Sin resultados");
+      return;
+    }
+    if (!res.ok) throw new Error("No se pudo generar el reporte");
+
+    const blob = await res.blob();
+    const cd = res.headers.get("Content-Disposition") || "";
+    const match = cd.match(/filename="?([^"]+)"?/);
+
+    const objectUrl = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = objectUrl;
+    a.download = match ? match[1] : "reporte.txt";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(objectUrl);
+
+    mostrarExito("El reporte se descargó correctamente", "Descarga completa");
+  } catch (err) {
+    mostrarError("No se pudo generar el reporte", "Error");
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function descargarReescritasSigi() {
+  await descargarReporteConAviso(REESCRITAS_SIGI_API, el("btn-descargar-reescritas-sigi"));
+}
+
+async function descargarDuplicadasSigi() {
+  await descargarReporteConAviso(DUPLICADAS_SIGI_API, el("btn-descargar-duplicadas-sigi"));
 }
 
 /** Arma el body compartido por /exportar/contar y /exportar/txt. */
@@ -807,11 +861,76 @@ async function descargarReporteTxt() {
     a.click();
     a.remove();
     URL.revokeObjectURL(url);
+
+    mostrarExito("El reporte se descargó correctamente", "Descarga completa");
+  } catch (err) {
+    mostrarError("No se pudo generar el reporte", "Error");
   } finally {
     btn.disabled = false;
   }
 }
 
+/* --------------- Modal de alertas --------------*/
+function _getToastContainer() {
+  let cont = document.getElementById("toast-sigi-container");
+  if (!cont) {
+    cont = document.createElement("div");
+    cont.id = "toast-sigi-container";
+    document.body.appendChild(cont);
+  }
+  return cont;
+}
+
+/**
+ * Muestra un toast animado.
+ * @param {"exito"|"rechazo"|"info"} tipo
+ * @param {string} titulo
+ * @param {string} mensaje
+ * @param {number} duracionMs
+ */
+function mostrarToast(tipo, titulo, mensaje, duracionMs = 4000) {
+  const cont = _getToastContainer();
+
+  const toast = document.createElement("div");
+  toast.className = `toast-sigi ${tipo}`;
+
+  const iconos = { exito: "✓", rechazo: "✕", info: "i" };
+
+  toast.innerHTML = `
+    <div class="toast-icono">${iconos[tipo] || "i"}</div>
+    <div class="toast-texto">
+      <p class="toast-titulo">${titulo}</p>
+      <p class="toast-mensaje">${mensaje}</p>
+    </div>
+    <button class="toast-cerrar" aria-label="Cerrar">&times;</button>
+    <div class="toast-barra" style="animation-duration: ${duracionMs}ms;"></div>
+  `;
+
+  const cerrar = () => {
+    toast.classList.add("toast-out");
+    toast.addEventListener("animationend", () => toast.remove(), { once: true });
+  };
+
+  toast.querySelector(".toast-cerrar").addEventListener("click", cerrar);
+  const timeoutId = setTimeout(cerrar, duracionMs);
+
+  // Si el usuario cierra manualmente, cancelamos el timeout pendiente
+  toast.querySelector(".toast-cerrar").addEventListener("click", () => clearTimeout(timeoutId));
+
+  cont.appendChild(toast);
+}
+
+function mostrarExito(mensaje, titulo = "¡Listo!") {
+  mostrarToast("exito", titulo, mensaje);
+}
+
+function mostrarError(mensaje, titulo = "Ups") {
+  mostrarToast("rechazo", titulo, mensaje);
+}
+
+function mostrarInfo(mensaje, titulo = "Info") {
+  mostrarToast("info", titulo, mensaje);
+}
 /* ---------------- Modal de foto del vehículo ---------------- */
 
 function abrirFotoModal(src) {

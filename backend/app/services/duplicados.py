@@ -296,3 +296,56 @@ def aplicar_filtro_duplicadas(query, db: Session):
     return query.filter(
         models.Registro.acta.in_(actas_duplicadas)
     )
+
+TAMANO_LOTE_DUPLICADAS = 1000
+
+def calcular_actas_duplicadas(db: Session, tamano_lote: int = TAMANO_LOTE_DUPLICADAS) -> dict:
+    """
+    Recalcula `duplicada` y `grupo_duplicada` para TODA la tabla de una vez.
+    Pensado para el backfill inicial (los registros que ya existen en la
+    base) o para un re-sync manual. Para altas/ediciones nuevas, esto ya
+    se hace solo -- ver los event listeners en models.py.
+    """
+    actas_duplicadas = [a for (a,) in _query_actas_duplicadas(db).all()]
+
+    total_marcadas = 0
+    ids_afectados = set()
+    pendientes = 0
+
+    if actas_duplicadas:
+        for fila in (
+            db.query(models.Registro)
+            .filter(models.Registro.acta.in_(actas_duplicadas))
+            .yield_per(tamano_lote)
+        ):
+            fila.duplicada = True
+            fila.grupo_duplicada = f"ACTA|{fila.acta}"
+            ids_afectados.add(fila.id)
+            total_marcadas += 1
+            pendientes += 1
+            if pendientes >= tamano_lote:
+                db.commit()
+                pendientes = 0
+    db.commit()
+
+    query_desactualizadas = db.query(models.Registro).filter(models.Registro.duplicada.is_(True))
+    if ids_afectados:
+        query_desactualizadas = query_desactualizadas.filter(models.Registro.id.notin_(ids_afectados))
+
+    total_limpiadas = 0
+    pendientes = 0
+    for fila in query_desactualizadas.yield_per(tamano_lote):
+        fila.duplicada = False
+        fila.grupo_duplicada = None
+        total_limpiadas += 1
+        pendientes += 1
+        if pendientes >= tamano_lote:
+            db.commit()
+            pendientes = 0
+    db.commit()
+
+    return {
+        "actas_duplicadas_encontradas": len(actas_duplicadas),
+        "filas_marcadas": total_marcadas,
+        "filas_desmarcadas": total_limpiadas,
+    }

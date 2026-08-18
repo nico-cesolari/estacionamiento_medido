@@ -875,6 +875,157 @@ thead th:last-child, tbody td:last-child {
 #btn-descargar-duplicadas-sigi {
   margin-top: 14px;
 }
+/*    ALERTAS   */
+/* ---------------- Toast SIGI ---------------- */
+#toast-sigi-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 12px;
+  pointer-events: none;
+}
+
+.toast-sigi {
+  min-width: 300px;
+  max-width: 380px;
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  padding: 14px 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  pointer-events: auto;
+  border-left: 5px solid #ccc;
+  opacity: 0;
+  transform: translateX(40px) scale(0.95);
+  animation: toast-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.toast-sigi.toast-out {
+  animation: toast-out 0.3s ease-in forwards;
+}
+
+.toast-sigi.exito {
+  border-left-color: #22c55e;
+}
+
+.toast-sigi.rechazo {
+  border-left-color: #ef4444;
+}
+
+.toast-sigi.info {
+  border-left-color: #3b82f6;
+}
+
+.toast-sigi .toast-icono {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: bold;
+  color: #fff;
+  animation: icon-pop 0.4s 0.1s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+}
+
+.toast-sigi.exito .toast-icono {
+  background: #22c55e;
+}
+
+.toast-sigi.rechazo .toast-icono {
+  background: #ef4444;
+}
+
+.toast-sigi.info .toast-icono {
+  background: #3b82f6;
+}
+
+.toast-sigi .toast-texto {
+  flex: 1;
+}
+
+.toast-sigi .toast-titulo {
+  font-weight: 600;
+  font-size: 14px;
+  margin: 0 0 2px 0;
+  color: #1f2937;
+}
+
+.toast-sigi .toast-mensaje {
+  font-size: 13px;
+  margin: 0;
+  color: #4b5563;
+  line-height: 1.4;
+}
+
+.toast-sigi .toast-cerrar {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  color: #9ca3af;
+  line-height: 1;
+  padding: 0;
+  margin-left: 4px;
+}
+
+.toast-sigi .toast-cerrar:hover {
+  color: #4b5563;
+}
+
+.toast-sigi .toast-barra {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 0 0 10px 10px;
+  animation: toast-progreso linear forwards;
+}
+
+.toast-sigi {
+  position: relative;
+  overflow: hidden;
+}
+
+@keyframes toast-in {
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes toast-out {
+  to {
+    opacity: 0;
+    transform: translateX(40px) scale(0.95);
+  }
+}
+
+@keyframes icon-pop {
+  from {
+    transform: scale(0);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+@keyframes toast-progreso {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
 /* ---------- Responsive ---------- */
 
 @media (max-width: 1000px) {

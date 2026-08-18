@@ -458,3 +458,188 @@ def generar_reporte_consistencia_sigi(registros) -> str:
     for registro in registros:
         lineas.append(_fila_consistencia_sigi(registro))
     return "\n".join(lineas) + "\n"
+# ---------------------------------------------------------------------------
+# Helper común
+# ---------------------------------------------------------------------------
+def _formatear_expediente(expediente, anio=None) -> str:
+    """Devuelve el expediente con formato EXP-AAAA-NUMERO."""
+    if expediente is None:
+        return ""
+    texto = str(expediente).strip()
+    if texto.upper().startswith("EXP-"):
+        return texto.upper()
+    if "-" in texto:
+        # Asumimos que ya viene como AAAA-NUMERO
+        return f"EXP-{texto}"
+    anio = anio or datetime.now().year
+    return f"EXP-{anio}-{texto}"
+
+
+# ---------------------------------------------------------------------------
+# Reporte Reescritas SIGI
+# ---------------------------------------------------------------------------
+COLUMNAS_REESCRITAS_SIGI = [
+    "EXPEDIENTE",
+    "NUMERO_ACTA",
+    "ESTADO_SEMYT",
+    "ESTADO_SIGEMI",
+    "ESTADO_SIGI",
+    "CONSISTENCIA",
+    "REESCRITA",
+    "PROCEDENCIA",
+    "IDX_EXPEDIENTE",
+    "DETERMINACION_FINAL",
+]
+
+
+def buscar_para_reescritas_sigi(db):
+    """Todas las actas marcadas como reescrita=True, agrupadas por
+    grupo_reescritura y ordenadas cronológicamente: la más vieja de cada
+    grupo es la 'Original', las que vienen después son 'Reemplazo'."""
+    return (
+        db.query(models.Registro)
+        .filter(models.Registro.reescrita.is_(True))
+        .order_by(
+            models.Registro.grupo_reescritura.asc(),
+            models.Registro.fecha_hora.asc(),
+            models.Registro.id.asc(),
+        )
+        .all()
+    )
+
+
+def _fila_reescrita_sigi(registro, procedencia: str, idx_expediente: str) -> str:
+    consistente = registro.consistente
+    if consistente is True:
+        consistencia = "CONSISTENTE"
+    elif consistente is False:
+        consistencia = "INCONSISTENTE"
+    else:
+        consistencia = "PENDIENTE"
+
+    anio = registro.fecha_hora.year if getattr(registro, "fecha_hora", None) else None
+    fila = [
+        _formatear_expediente(registro.expediente, anio),
+        registro.acta,
+        _estado(registro.estado_semyt),
+        _estado(registro.estado_sigemi),
+        _estado(registro.estado_sigi),
+        consistencia,
+        "True",
+        procedencia,
+        idx_expediente,
+        "Archivar",
+    ]
+    return "|".join(_limpiar(valor) for valor in fila)
+
+
+def generar_reporte_reescritas_sigi(registros) -> str:
+    lineas = ["|".join(COLUMNAS_REESCRITAS_SIGI)]
+
+    # Agrupamos respetando el orden cronológico en que ya vienen los registros
+    grupos = {}
+    for registro in registros:
+        grupos.setdefault(registro.grupo_reescritura, []).append(registro)
+
+    for grupo in grupos.values():
+        original = grupo[0]
+        reemplazos = grupo[1:]
+
+        anio_original = original.fecha_hora.year if getattr(original, "fecha_hora", None) else None
+        exp_original = _formatear_expediente(original.expediente, anio_original)
+
+        exps_reemplazos = []
+        for reemplazo in reemplazos:
+            anio_r = reemplazo.fecha_hora.year if getattr(reemplazo, "fecha_hora", None) else None
+            exps_reemplazos.append(_formatear_expediente(reemplazo.expediente, anio_r))
+
+        # Fila de la Original -> apunta al/los expediente/s que la reescribieron
+        lineas.append(_fila_reescrita_sigi(original, "ORIGINAL", ", ".join(exps_reemplazos)))
+
+        # Filas de los Reemplazos -> apuntan a la Original
+        for reemplazo in reemplazos:
+            lineas.append(_fila_reescrita_sigi(reemplazo, "REEMPLAZO", exp_original))
+
+    return "\n".join(lineas) + "\n"
+
+
+# ---------------------------------------------------------------------------
+# Reporte Duplicadas SIGI
+# ---------------------------------------------------------------------------
+COLUMNAS_DUPLICADAS_SIGI = [
+    "EXPEDIENTE",
+    "NUMERO_ACTA",
+    "ESTADO_SEMYT",
+    "ESTADO_SIGEMI",
+    "ESTADO_SIGI",
+    "CONSISTENCIA",
+    "DUPLICADA",
+    "PROCEDENCIA",
+    "IDX_EXPEDIENTE",
+    "DETERMINACION_FINAL",
+]
+
+
+def buscar_para_duplicadas_sigi(db):
+    """Todas las actas marcadas como duplicada=True, agrupadas por
+    grupo_duplicada y ordenadas por id: la primera cargada es la
+    'Original', las siguientes son 'Duplicada'."""
+    return (
+        db.query(models.Registro)
+        .filter(models.Registro.duplicada.is_(True))
+        .order_by(
+            models.Registro.grupo_duplicada.asc(),
+            models.Registro.id.asc(),
+        )
+        .all()
+    )
+
+def _fila_duplicada_sigi(registro, procedencia: str, idx_expediente: str) -> str:
+    consistente = registro.consistente
+    if consistente is True:
+        consistencia = "CONSISTENTE"
+    elif consistente is False:
+        consistencia = "INCONSISTENTE"
+    else:
+        consistencia = "PENDIENTE"
+
+    anio = registro.fecha_hora.year if getattr(registro, "fecha_hora", None) else None
+    fila = [
+        _formatear_expediente(registro.expediente, anio),
+        registro.acta,
+        _estado(registro.estado_semyt),
+        _estado(registro.estado_sigemi),
+        _estado(registro.estado_sigi),
+        consistencia,
+        "True",
+        procedencia,
+        idx_expediente,
+        "Archivar",
+    ]
+    return "|".join(_limpiar(valor) for valor in fila)
+
+
+def generar_reporte_duplicadas_sigi(registros) -> str:
+    lineas = ["|".join(COLUMNAS_DUPLICADAS_SIGI)]
+
+    grupos = {}
+    for registro in registros:
+        grupos.setdefault(registro.grupo_duplicada, []).append(registro)
+
+    for grupo in grupos.values():
+        original = grupo[0]
+        duplicadas = grupo[1:]
+
+        anio_original = original.fecha_hora.year if getattr(original, "fecha_hora", None) else None
+        exp_original = _formatear_expediente(original.expediente, anio_original)
+
+        exps_duplicadas = []
+        for duplicada in duplicadas:
+            anio_d = duplicada.fecha_hora.year if getattr(duplicada, "fecha_hora", None) else None
+            exps_duplicadas.append(_formatear_expediente(duplicada.expediente, anio_d))
+
+        lineas.append(_fila_duplicada_sigi(original, "ORIGINAL", ", ".join(exps_duplicadas)))
+        for duplicada in duplicadas:
+            lineas.append(_fila_duplicada_sigi(duplicada, "DUPLICADA", exp_original))
+
+    return "\n".join(lineas) + "\n"
