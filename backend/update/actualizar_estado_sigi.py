@@ -49,70 +49,50 @@ from app.services.sistemas.sigi.web import web_sigi
 from app.services.sistemas.sigi.web.web_sigi import log
 
 from alta.llenar_actas_sigi import URL_SIGI, ARCHIVO_SESION, buscar as buscar_expediente
+from app.services.sigi_vinculos import actualizar_vinculo, eliminar_vinculo_no_encontrado
 
-
-async def _procesar_expediente_pendiente(
-    db: Session,
-    page,
-    registro,
-    idx_expediente: int,
-    idx_estado: Optional[int],
-    commit: bool,
-    primera_busqueda_global: bool,
+async def _procesar_vinculo_pendiente(
+    db: Session, page, vinculo, idx_expediente: int, idx_estado: Optional[int],
+    commit: bool, primera_busqueda_global: bool,
 ) -> str:
-    """
-    Busca el expediente de `registro` individualmente (misma estrategia
-    que llenar_actas_sigi.buscar: reintentos + verificación de match
-    exacto). Devuelve 'actualizado' | 'sin_cambios' | 'no_encontrado' | 'error'.
-
-    NOTA: igual que en la versión anterior (camino 1), acá NO se abre el
-    detalle -- el estado se lee directo de la columna de la grilla, así
-    que si el expediente pasó a 'Archivado' en esta misma corrida, el
-    motivo de archivo va a quedar sin cargar (necesita el detalle para
-    leerlo). Mismo comportamiento de siempre, no es una regresión nueva.
-    """
     try:
         fila = await buscar_expediente(
-            page, registro.expediente, idx_expediente,
+            page, vinculo.expediente, idx_expediente,
             primera_busqueda_global=primera_busqueda_global,
         )
-    except Exception as exc:  # noqa: BLE001
-        log("EXPEDIENTE", f"❌ Error buscando expediente {registro.expediente} "
-                           f"(acta {registro.acta}): {exc}")
+    except Exception as exc:
+        log("EXPEDIENTE", f"❌ Error buscando expediente {vinculo.expediente} "
+                           f"(acta {vinculo.registro.acta}): {exc}")
         return "error"
 
     if fila is None:
-        log("EXPEDIENTE", f"↩ expediente {registro.expediente} (acta {registro.acta}): "
-                           f"no apareció en SIGI -- se desvincula (vuelve a 'No Cargada' "
-                           f"para que llenar_actas_sigi.py lo re-busque más adelante).")
+        log("EXPEDIENTE", f"↩ expediente {vinculo.expediente} (acta {vinculo.registro.acta}): "
+                           f"no apareció en SIGI -- se elimina el vínculo.")
         if commit:
-            if reglas_sigi.desvincular_expediente_no_encontrado(db, registro):
-                db.commit()
+            eliminar_vinculo_no_encontrado(db, vinculo)
+            db.commit()
         else:
-            log("EXPEDIENTE", "  (dry-run) NO se graba la desvinculación")
+            log("EXPEDIENTE", "  (dry-run) NO se elimina")
         return "no_encontrado"
 
     valores = await web_sigi.leer_celdas_con_reintento(fila, {"estado": idx_estado})
     estado_fila = valores.get("estado")
-
-    cambios = reglas_sigi.armar_cambios_estado(estado_fila)
-    if cambios is None:
-        log("EXPEDIENTE", f"  ⚠️ expediente {registro.expediente}: estado '{estado_fila}' "
-                           f"no se pudo mapear")
+    nuevo_estado = reglas_sigi.mapear_estado(estado_fila)
+    if nuevo_estado is None:
+        log("EXPEDIENTE", f"  ⚠️ expediente {vinculo.expediente}: estado '{estado_fila}' no se pudo mapear")
         return "error"
 
-    if not reglas_sigi.hay_cambio_real(registro, cambios):
-        return "sin_cambios"
-
     if commit:
-        reglas_sigi.aplicar_actualizacion(db, registro, cambios)
-        db.commit()
-        log("EXPEDIENTE", f"  ✅ expediente {registro.expediente} (acta {registro.acta}): "
-                           f"estado actualizado a {cambios.get('estado_sigi')}")
+        hubo_cambio = actualizar_vinculo(db, vinculo, estado_sigi=nuevo_estado)
+        if hubo_cambio:
+            db.commit()
+            log("EXPEDIENTE", f"  ✅ expediente {vinculo.expediente} (acta {vinculo.registro.acta}): "
+                               f"-> {nuevo_estado}")
+            return "actualizado"
+        return "sin_cambios"
     else:
-        log("EXPEDIENTE", f"  (dry-run) expediente {registro.expediente} (acta {registro.acta}): "
-                           f"pasaría a {cambios.get('estado_sigi')}, NO se graba")
-    return "actualizado"
+        log("EXPEDIENTE", f"  (dry-run) expediente {vinculo.expediente}: pasaría a {nuevo_estado}")
+        return "actualizado" if vinculo.estado_sigi != nuevo_estado else "sin_cambios"
 
 
 async def ejecutar_actualizacion_estado(
@@ -125,15 +105,15 @@ async def ejecutar_actualizacion_estado(
     modo = "COMMIT (graba de verdad)" if commit else "DRY-RUN (no toca la base)"
     log("INICIO", f"Modo: {modo}")
 
-    registros = reglas_sigi.registros_con_expediente_pendientes(db)
-    log("INICIO", f"{len(registros)} expediente(s) con estado activo (ni Archivado, ni "
+    vinculos = reglas_sigi.vinculos_pendientes(db)
+    log("INICIO", f"{len(vinculos)} expediente(s) con estado activo (ni Archivado, ni "
                   f"No Cargada, ni sin estado) -- se re-consultan UNO POR UNO, pausado "
                   f"(--delay {delay}s), para no repetir el bug de coincidencias erróneas "
                   f"del recorrido rápido de grilla.")
 
     if limite:
-        registros = registros[:limite]
-        log("LIMITE", f"Recortado a {len(registros)} por --limit.")
+        vinculos = vinculos[:limite]
+        log("LIMITE", f"Recortado a {len(vinculos)} por --limit.")
 
     await web_sigi.filtrar_por_tipo_acta_estacionamiento(page)
     idx_expediente, idx_estado = await web_sigi.indices_expediente_estado(page)
@@ -152,14 +132,14 @@ async def ejecutar_actualizacion_estado(
     }
 
     primera_busqueda = True
-    total = len(registros)
-    for i, registro in enumerate(registros, start=1):
+    total = len(vinculos)
+    for i, registro in enumerate(vinculos, start=1):
         if not primera_busqueda and delay > 0:
             await asyncio.sleep(delay)
         es_primera = primera_busqueda
         primera_busqueda = False
 
-        resultado = await _procesar_expediente_pendiente(
+        resultado = await _procesar_vinculo_pendiente(
             db, page, registro, idx_expediente, idx_estado, commit,
             primera_busqueda_global=es_primera,
         )

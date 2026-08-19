@@ -308,11 +308,12 @@ function renderTabla(registros) {
     tr.innerHTML = `
       <td class="expediente-cell">
         <div class="sub">JUZ-${r.juzgado ?? "-"}</div>
-        <div class="exp">${formatearExpediente(r.expediente)}
+        <div class="exp">${formatearExpediente(r.expediente)}${badgeSigi(r)}
         ${r.es_duplicada ? ' <span class="badge-duplicada" title="Esta acta tiene más de un expediente asociado">⚠ Duplicada</span>' : ''}
         ${r.reescrita ? ' <span class="badge-reescrita" title="Mismo vehículo, mismo día y misma dirección que otra acta, con distinto número">↻ Reescrita</span>' : ''}
         ${r.otros_expedientes_duplicada?.length ? `<div class="sub">Duplicada con: ${r.otros_expedientes_duplicada.join(", ")}</div>` : ''}
         ${r.otros_expedientes_reescritura?.length ? `<div class="sub">Reescrita con: ${r.otros_expedientes_reescritura.join(", ")}</div>` : ''}</div>
+        ${listaOtrosExpedientesSigi(r)}
         <div class="sub">ACT-${r.acta}</div>
         <div class="sub">${formatearCausa(r.causa)}</div>
       </td>
@@ -322,7 +323,7 @@ function renderTabla(registros) {
       <td>${formatearFechaLabrada(r.fecha_hora)}</td>
       <td>${renderCeldaEstadoSigemi(r)}</td>
       <td>${renderCeldaEstado(r.id, "estado_semyt", r.estado_semyt,null, null,)}</td>
-      <td>${renderCeldaEstadoSigi(r)}</td>
+      <td>${renderCeldaEstadoSigiMultiple(r)}</td>
       <td>
         <div class="consistencia-accion-cell">
           ${renderCeldaConsistencia(r)}
@@ -334,6 +335,9 @@ function renderTabla(registros) {
     `;
     tbody.appendChild(tr);
   }
+  tbody.querySelectorAll("select.motivo-archivo-select-vinculo").forEach((sel) => {
+    sel.addEventListener("change", onCambiarMotivoArchivoVinculo);
+  });
   tbody.querySelectorAll(".btn-cargar-foto").forEach((btn) => {
     btn.addEventListener("click", onCargarFoto);
   });
@@ -343,6 +347,24 @@ function renderTabla(registros) {
   tbody.querySelectorAll(".btn-refrescar").forEach((btn) => {
     btn.addEventListener("click", onRefrescarFila);
   });
+}
+
+function otrosExpedientesSigi(r) {
+  if (!r.vinculos_sigi || r.vinculos_sigi.length < 2) return [];
+  return r.vinculos_sigi.slice(1).map((v) => v.expediente); // el [0] es el "principal"
+}
+
+function badgeSigi(r) {
+  if (r.sigi_duplicada) return ' <span class="badge-duplicada-sigi" title="Este número de acta ya existía en SIGI con otro expediente">⚠ Duplicada</span>';
+  if (r.sigi_reescrita) return ' <span class="badge-reescrita-sigi" title="SIGI encontró otra acta con mismo vehículo, día y dirección">↻ Reescrita</span>';
+  return "";
+}
+
+function listaOtrosExpedientesSigi(r) {
+  const otros = otrosExpedientesSigi(r);
+  if (!otros.length) return "";
+  const etiqueta = r.sigi_duplicada ? "Duplicada" : r.sigi_reescrita ? "Reescrita" : "Vinculada";
+  return `<div class="sub sigi-otros-expedientes">${etiqueta}: ${otros.join(", ")}</div>`;
 }
 
 /** Celda genérica de estado, con select + fecha de cobro opcional debajo (si corresponde). */
@@ -449,21 +471,49 @@ function renderCeldaEstadoSigemi(r) {
   );
 }
 
-function renderCeldaEstadoSigi(r) {
-  let motivoHtml = "";
-  if (r.estado_sigi === "Archivado") {
-    const esPagada = categoriaEstadoVisual("estado_sigi", r.estado_sigi, r.motivo_archivo_sigi) === "pagada";
-    motivoHtml = renderMotivoArchivo(
-      r.id, r.motivo_archivo_sigi, opcionesEstados.motivosArchivoSigi, "sigi", esPagada
-    );
+function renderCeldaEstadoSigiMultiple(r) {
+  if (!r.vinculos_sigi || r.vinculos_sigi.length === 0) {
+    return renderCeldaEstado(r.id, "estado_sigi", null, null, null, null);
   }
-
-  return renderCeldaEstado(
-    r.id, "estado_sigi", r.estado_sigi, null,
-    "fecha_cobro_sigi", r.fecha_cobro_sigi, r.motivo_archivo_sigi, motivoHtml
-  );
+  return r.vinculos_sigi.map((v) => {
+    let motivoHtml = "";
+    if (v.estado_sigi === "Archivado") {
+      motivoHtml = renderMotivoArchivoVinculo(v, r.id, opcionesEstados.motivosArchivoSigi);
+    }
+    const celda = renderCeldaEstado(
+      r.id, "estado_sigi", v.estado_sigi, null,
+      "fecha_cobro_sigi", v.fecha_cobro_sigi, v.motivo_archivo_sigi, motivoHtml
+    );
+    return `<div class="vinculo-sigi-item" data-vinculo-id="${v.id}">${celda}</div>`;
+  }).join("");
 }
 
+function renderMotivoArchivoVinculo(vinculo, registroId, opciones) {
+  if (vinculo.motivo_archivo_sigi) {
+    return `<span class="motivo-archivo-texto">${vinculo.motivo_archivo_sigi}</span>`;
+  }
+  const opts = opciones.map((o) => `<option value="${o}">${o}</option>`).join("");
+  return `
+    <select class="motivo-archivo-select-vinculo" data-registro-id="${registroId}" data-vinculo-id="${vinculo.id}">
+      <option value="">Motivo de archivo…</option>
+      ${opts}
+    </select>`;
+}
+
+async function onCambiarMotivoArchivoVinculo(ev) {
+  const sel = ev.target;
+  const registroId = sel.dataset.registroId;
+  const vinculoId = sel.dataset.vinculoId;
+  const valor = sel.value || null;
+
+  await fetch(`${API_BASE}/${registroId}/vinculos-sigi/${vinculoId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ motivo_archivo_sigi: valor }),
+  });
+
+  await cargarRegistros();
+}
 /** Celda de consistencia: visto/cruz según si SIGEMI y SEMyT coinciden en el resultado del acta. */
 function renderCeldaConsistencia(r) {
   if (r.consistente === true) {

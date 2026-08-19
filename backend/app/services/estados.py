@@ -131,6 +131,13 @@ def aplicar_cambios_estado(
     No hace commit: eso queda a cargo del caller, para poder aplicar varios
     registros dentro de una misma transacción (ej: import masivo).
     """
+    campos_sigi_prohibidos = {"estado_sigi", "motivo_archivo_sigi", "fecha_cobro_sigi"}
+    if campos_sigi_prohibidos & cambios.keys():
+        raise ValueError(
+            "estado_sigi/motivo_archivo_sigi ya no se editan vía aplicar_cambios_estado -- "
+            "usar app.services.sigi_vinculos.actualizar_vinculo sobre el VinculoSigi puntual."
+        )
+        
     if momento is None:
         momento = datetime.now()
 

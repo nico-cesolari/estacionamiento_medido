@@ -199,3 +199,15 @@ def exportar_duplicadas_sigi(db: Session = Depends(get_db)):
         media_type="text/plain; charset=utf-8",
         headers={"Content-Disposition": f'attachment; filename="{nombre}"'},
     )
+
+@router.patch("/{registro_id}/vinculos-sigi/{vinculo_id}", response_model=schemas.RegistroOut)
+def actualizar_vinculo_sigi(
+    registro_id: int, vinculo_id: int,
+    cambios: schemas.VinculoSigiUpdate, db: Session = Depends(get_db),
+):
+    registro = registros_service.actualizar_vinculo_sigi(
+        db, registro_id, vinculo_id, cambios.model_dump(exclude_unset=True)
+    )
+    if not registro:
+        raise HTTPException(status_code=404, detail="Registro o vínculo no encontrado")
+    return registro

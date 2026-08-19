@@ -179,8 +179,6 @@ Volver a levantarl:
 docker compose start
 Ver logs:
 docker compose logs -f db
-Borrar todo (¡incluye los datos!):
-docker compose down -v
 ## PASOS PARA LEVANTAR PROYECTO
 docker compose down
 Levantar proyecto

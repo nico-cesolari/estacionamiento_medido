@@ -7,7 +7,6 @@ from ..models.models import EstadoSigemi, EstadoSemyt, EstadoSigi, MotivoArchivo
 
 class RegistroOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-
     id: int
     juzgado: Optional[int] = None
     expediente: Optional[str] = None
@@ -20,11 +19,7 @@ class RegistroOut(BaseModel):
     estado_sigemi: Optional[EstadoSigemi] = None
     motivo_archivo_sigemi: Optional[MotivoArchivoSigemi] = None
     estado_semyt: Optional[EstadoSemyt] = None
-    estado_sigi: Optional[EstadoSigi] = None
-    motivo_archivo_sigi: Optional[MotivoArchivoSigi] = None
     fecha_cobro_sigemi: Optional[datetime] = None
-    fecha_cobro_sigi: Optional[datetime] = None
-
     # Campos calculados (no viven en la tabla): comparan el "resultado" del
     # Ver crud.calcular_consistencia() para la lógica y las categorías.
     consistente: Optional[bool] = None
@@ -34,6 +29,9 @@ class RegistroOut(BaseModel):
     reescrita: Optional[bool] = None  
     otros_expedientes_duplicada: Optional[List[str]] = None
     otros_expedientes_reescritura: Optional[List[str]] = None
+    vinculos_sigi: List[VinculoSigiOut] = []
+    sigi_duplicada: Optional[bool] = None
+    sigi_reescrita: Optional[bool] = None
 
 class RegistroUpdate(BaseModel):
     """Para el PATCH cuando alguien cambia un estado desde el combo del frontend."""
@@ -92,3 +90,18 @@ class ExportarRequest(BaseModel):
 
 class ExportarConteo(BaseModel):
     total: int
+
+class VinculoSigiOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    expediente: str
+    acta_sigi: Optional[str] = None
+    estado_sigi: EstadoSigi
+    motivo_archivo_sigi: Optional[MotivoArchivoSigi] = None
+    fecha_cobro_sigi: Optional[datetime] = None
+    origen: str
+    consistente: Optional[bool] = None
+    
+class VinculoSigiUpdate(BaseModel):
+    estado_sigi: Optional[EstadoSigi] = None
+    motivo_archivo_sigi: Optional[MotivoArchivoSigi] = None

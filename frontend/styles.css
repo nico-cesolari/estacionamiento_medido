@@ -534,6 +534,37 @@ tbody tr:hover { background: #fafafa; }
 }
 .expediente-cell .sub { color: var(--texto-suave); font-size: 12px; }
 
+.vinculo-sigi-item + .vinculo-sigi-item {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--borde);
+}
+.badge-duplicada-sigi {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--rojo-bg);
+  color: var(--rojo-texto);
+  border: 1px solid var(--rojo-borde);
+  vertical-align: middle;
+}
+.badge-reescrita-sigi {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--violeta-bg);
+  color: var(--violeta-texto);
+  border: 1px solid var(--violeta-borde);
+  vertical-align: middle;
+}
+.sigi-otros-expedientes {
+  font-style: italic;
+}
+
 .dato-vacio {
   color: var(--texto-suave);
   font-style: italic;

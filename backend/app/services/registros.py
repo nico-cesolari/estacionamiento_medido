@@ -16,6 +16,8 @@ from app.services.estados import aplicar_cambios_estado
 from app.services.filtros import aplicar_filtros_registros
 from app.services.query_helpers import aplicar_rango_fechas
 from app.services.duplicados import anotar_duplicadas, anotar_info_relaciones
+from sqlalchemy.orm import selectinload
+from app.services.sigi_vinculos import anotar_info_sigi, actualizar_vinculo
 
 def buscar_registros(
     db: Session,
@@ -36,7 +38,7 @@ def buscar_registros(
     solo_duplicadas: Optional[bool] = None,
     solo_reescritas: Optional[bool] = None,
 ):
-    query = db.query(models.Registro)
+    query = db.query(models.Registro).options(selectinload(models.Registro.vinculos_sigi))
 
     query = aplicar_filtros_registros(
         query, db,
@@ -54,12 +56,32 @@ def buscar_registros(
 
     anotar_duplicadas(db, resultados)
     anotar_info_relaciones(db, resultados)
+    anotar_info_sigi(resultados)
     return resultados, total, total_pages
 
 
 def obtener_registro(db: Session, registro_id: int) -> Optional["models.Registro"]:
     return db.query(models.Registro).filter(models.Registro.id == registro_id).first()
 
+def actualizar_vinculo_sigi(db: Session, registro_id: int, vinculo_id: int, cambios: dict):
+    """PATCH puntual de UN vínculo SIGI (no del registro entero)."""
+    registro = obtener_registro(db, registro_id)
+    if registro is None:
+        return None
+    vinculo = next((v for v in registro.vinculos_sigi if v.id == vinculo_id), None)
+    if vinculo is None:
+        return None
+    actualizar_vinculo(
+        db, vinculo,
+        estado_sigi=cambios.get("estado_sigi"),
+        motivo_archivo_sigi=cambios.get("motivo_archivo_sigi"),
+    )
+    db.commit()
+    db.refresh(registro)
+    anotar_duplicadas(db, [registro])
+    anotar_info_relaciones(db, [registro])
+    anotar_info_sigi([registro])
+    return registro
 
 def actualizar_estados(db: Session, registro_id: int, cambios: dict) -> Optional["models.Registro"]:
     """PATCH de un registro puntual: usa el mismo camino que las cargas

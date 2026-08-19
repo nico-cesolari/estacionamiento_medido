@@ -105,6 +105,9 @@ from app.services.sistemas.comun.sesion import PaginaConSesion
 from app.paths import CARPETA_SESIONES_API_REST_PAYMENT
 from app.services.sistemas.sigi.reglas import reglas_sigi
 from app.services.sistemas.sigi.web import web_sigi
+from app.models import models
+from app.services.sigi_vinculos import buscar_registro_por_acta, buscar_registro_reescrito, crear_vinculo
+from alta.cargar_actas_semyt import cargar_actas_eliminadas 
 
 URL_SIGI = "https://juzgado.villamaria.gob.ar/juzgado"
 ARCHIVO_SESION = "sesion_sigi.json"
@@ -463,24 +466,22 @@ async def _leer_primer_expediente_de_la_grilla(page, idx_expediente: int) -> Opt
     valores = await web_sigi.leer_celdas_con_reintento(fila, {"expediente": idx_expediente})
     return valores.get("expediente")
 
-
 async def _procesar_expediente_encontrado(
     db: Session,
     page,
     fila,
     expediente_completo: str,
     idx_estado: Optional[int],
-    actas_conocidas: dict,
+    actas_eliminadas_semyt: set,
     commit: bool,
 ) -> str:
     """
-    Solo expediente + estado_sigi. NO crea registros nuevos: 'patente' es
-    NOT NULL en la base, así que si el acta leída no corresponde a ningún
-    registro ya existente (cargado antes por otro lado, ej. SEMyT), no
-    hay forma de insertarla con los datos que trae este script -- se
-    descarta y se loguea.
-
-    Devuelve 'actualizado' | 'sin_registro_base' | 'sin_acta'.
+    Devuelve uno de:
+      'duplicada'         -- el Nº de acta ya existía con otro expediente -> vínculo nuevo
+      'reescrita'          -- acta "parecida" (patente+día+dirección) encontrada -> vínculo nuevo
+      'alta_eliminada'     -- acta no existía, pero SEMyT confirma que se eliminó -> registro nuevo
+      'sin_registro_base'  -- no matcheó nada -> se descarta
+      'sin_acta'           -- no se pudo leer el Nº de acta en el detalle
     """
     valores = await web_sigi.leer_celdas_con_reintento(fila, {"estado": idx_estado})
     estado_fila = valores.get("estado")
@@ -491,31 +492,113 @@ async def _procesar_expediente_encontrado(
         return "sin_acta"
 
     numero_acta = await web_sigi.leer_numero_acta(page)
-    acta_norm = reglas_sigi.normalizar_acta(numero_acta) if numero_acta else None
-    resultado = "sin_acta"
-
     if not numero_acta:
         web_sigi.log("EXPEDIENTE", f"  ❌ {expediente_completo}: no se pudo leer el Nº de acta en el detalle")
-    else:
-        registro_existente = actas_conocidas.get(acta_norm) if acta_norm else None
+        await web_sigi.cerrar_detalle(page)
+        return "sin_acta"
 
-        if registro_existente is None:
-            web_sigi.log("EXPEDIENTE", f"  ↩ acta {numero_acta} (expediente {expediente_completo}) no tiene "
-                                        f"ningún registro en la base -- se descarta (no se crea nada, falta "
-                                        f"patente y demás datos obligatorios).")
-            resultado = "sin_registro_base"
+    # Datos extra: hacen falta tanto para intentar matchear reescritura
+    # como para el alta-desde-eliminadas (patente es obligatoria en el modelo).
+    texto_detalle = await page.locator("body").inner_text()
+    patente_leida = reglas_sigi.extraer_patente_de_texto(texto_detalle)
+    direccion_leida = reglas_sigi.extraer_direccion_de_texto(texto_detalle)
+    fecha_hora_leida = reglas_sigi.extraer_fecha_hora_de_texto(texto_detalle)
+    motivo_texto = await web_sigi.leer_primer_texto(page.locator(web_sigi.SELECTOR_MOTIVO_EN_DETALLE))
+    nuevo_motivo_sigi = reglas_sigi.mapear_motivo(motivo_texto)
+
+    resultado = "sin_registro_base"
+
+    # --- CASO 1: DUPLICADA -- el Nº de acta YA existe en la base ---
+    registro_por_acta = buscar_registro_por_acta(db, numero_acta)
+
+    if registro_por_acta is not None:
+        expedientes_previos = [v.expediente for v in registro_por_acta.vinculos_sigi]
+        web_sigi.log(
+            "EXPEDIENTE",
+            f"  🔁 acta {numero_acta} ya existe (registro id={registro_por_acta.id}) con "
+            f"expediente(s) {expedientes_previos} -- {expediente_completo} es nuevo -> DUPLICADA",
+        )
+        if commit:
+            v = crear_vinculo(db, registro_por_acta, expediente_completo, nuevo_estado_sigi,
+                               nuevo_motivo_sigi, origen="duplicada")
+            v.acta_sigi = numero_acta
+            db.commit()
+            web_sigi.log("EXPEDIENTE", f"  ✅ vínculo duplicada: acta {numero_acta}, "
+                                        f"expediente={expediente_completo}, estado_sigi={estado_legible}")
         else:
+            web_sigi.log("EXPEDIENTE", f"  (dry-run) vínculo duplicada: acta {numero_acta}, "
+                                        f"expediente={expediente_completo}, estado_sigi={estado_legible}")
+        resultado = "duplicada"
+
+    else:
+        # --- CASO 2: REESCRITA -- no matchea por acta, pero sí por
+        # patente+día+dirección con OTRO registro ya existente ---
+        registro_reescrito = buscar_registro_reescrito(
+            db, patente_leida, direccion_leida, fecha_hora_leida, excluir_acta=numero_acta,
+        )
+
+        if registro_reescrito is not None:
+            web_sigi.log(
+                "EXPEDIENTE",
+                f"  ↻ acta {numero_acta} (expediente {expediente_completo}) parece REESCRITURA del "
+                f"registro id={registro_reescrito.id} (acta original {registro_reescrito.acta}, "
+                f"patente={patente_leida}, dirección={direccion_leida})",
+            )
             if commit:
-                registro_existente.expediente = expediente_completo
-                if nuevo_estado_sigi is not None:
-                    reglas_sigi.aplicar_actualizacion(db, registro_existente, {"estado_sigi": nuevo_estado_sigi})
+                v = crear_vinculo(db, registro_reescrito, expediente_completo, nuevo_estado_sigi,
+                                   nuevo_motivo_sigi, origen="reescrita")
+                v.acta_sigi = numero_acta
                 db.commit()
-                web_sigi.log("EXPEDIENTE", f"  ✅ acta {numero_acta}: expediente={expediente_completo}, "
+                web_sigi.log("EXPEDIENTE", f"  ✅ vínculo reescrita sobre acta "
+                                            f"{registro_reescrito.acta}: expediente={expediente_completo}, "
                                             f"estado_sigi={estado_legible}")
             else:
-                web_sigi.log("EXPEDIENTE", f"  (dry-run) acta {numero_acta}: expediente={expediente_completo}, "
-                                            f"estado_sigi={estado_legible}, NO se graba")
-            resultado = "actualizado"
+                web_sigi.log("EXPEDIENTE", f"  (dry-run) vínculo reescrita sobre acta "
+                                            f"{registro_reescrito.acta}: expediente={expediente_completo}")
+            resultado = "reescrita"
+
+        # --- CASO 3: ALTA DESDE ELIMINADAS ---
+        elif numero_acta in actas_eliminadas_semyt:
+            if not patente_leida:
+                web_sigi.log(
+                    "EXPEDIENTE",
+                    f"  ⚠️ acta {numero_acta} está en actas_eliminadas_semyt.json pero sin patente "
+                    f"legible (obligatoria) -- se descarta.",
+                )
+            else:
+                web_sigi.log(
+                    "EXPEDIENTE",
+                    f"  🆕 acta {numero_acta} no existe en la base pero SÍ está en "
+                    f"actas_eliminadas_semyt.json -- ALTA con estado_semyt=Eliminada "
+                    f"(patente={patente_leida}, dirección={direccion_leida}, fecha={fecha_hora_leida})",
+                )
+                if commit:
+                    nuevo_registro = models.Registro(
+                        acta=reglas_sigi.normalizar_acta(numero_acta),
+                        patente=patente_leida,
+                        direccion=direccion_leida,
+                        fecha_hora=fecha_hora_leida,
+                        estado_semyt=models.EstadoSemyt.eliminada,
+                        foto_url=None,
+                    )
+                    db.add(nuevo_registro)
+                    db.flush()
+                    v = crear_vinculo(db, nuevo_registro, expediente_completo, nuevo_estado_sigi,
+                                       nuevo_motivo_sigi, origen="directo")
+                    v.acta_sigi = numero_acta
+                    db.commit()
+                    web_sigi.log("EXPEDIENTE", f"  ✅ ALTA acta {numero_acta} (registro "
+                                                f"id={nuevo_registro.id}, expediente={expediente_completo})")
+                else:
+                    web_sigi.log("EXPEDIENTE", f"  (dry-run) ALTA acta {numero_acta}, "
+                                                f"expediente={expediente_completo} -- NO se graba")
+                resultado = "alta_eliminada"
+        else:
+            web_sigi.log(
+                "EXPEDIENTE",
+                f"  ↩ acta {numero_acta} (expediente {expediente_completo}) sin match por acta, sin "
+                f"match por datos parecidos, y no figura en eliminadas de SEMyT -- se descarta.",
+            )
 
     await web_sigi.cerrar_detalle(page)
     return resultado
@@ -565,6 +648,7 @@ async def ejecutar(
     # representativo de cada acta (el primero de la lista).
     actas_conocidas = {acta: regs[0] for acta, regs in actas_conocidas_todas.items() if regs}
     actas_ignoradas = cargar_actas_sigi_ignoradas()
+    actas_eliminadas_semyt = set(cargar_actas_eliminadas())
 
     web_sigi.log(
         "INICIO",
@@ -574,7 +658,11 @@ async def ejecutar(
         f"{len(actas_ignoradas)} expediente(s) ignorado(s)"
     )
 
-    contadores = {"ya_en_db": 0,"ignorados": 0, "altas": 0, "clones": 0, "no_encontrados": 0, "sin_acta": 0, "errores": 0}
+    contadores = {
+        "ya_en_db": 0, "ignorados": 0,
+        "duplicadas": 0, "reescritas": 0, "altas_eliminadas": 0,
+        "sin_registro_base": 0, "sin_acta": 0, "errores": 0,
+    }
     procesados = 0
     primera_busqueda = True
     for numero in range(NUMERO_INICIO, NUMERO_FIN + 1):
@@ -643,16 +731,15 @@ async def ejecutar(
             continue
 
         resultado = await _procesar_expediente_encontrado(
-            db, page, fila, expediente_completo, idx_estado, actas_conocidas, commit
+            db, page, fila, expediente_completo, idx_estado, actas_eliminadas_semyt, commit,
         )
-        if resultado == "alta":
-            contadores["altas"] += 1
+        if resultado in ("duplicada", "reescrita", "alta_eliminada"):
+            contadores[resultado if resultado != "alta_eliminada" else "altas_eliminadas"] += 1
             expedientes_conocidos.add(expediente_norm)
-        elif resultado == "clon":
-            contadores["clones"] += 1
-            expedientes_conocidos.add(expediente_norm)
-        else:
+        elif resultado == "sin_acta":
             contadores["sin_acta"] += 1
+        else:
+            contadores["sin_registro_base"] += 1
 
         procesados += 1
         if procesados % 50 == 0:

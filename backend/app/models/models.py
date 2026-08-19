@@ -13,7 +13,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm.attributes import get_history
-
+from typing import Optional
 from ..database import Base
 
 class EstadoSigemi(str, enum.Enum):
@@ -74,7 +74,6 @@ class Registro(Base):
     id = Column(Integer, primary_key=True, index=True)
     juzgado = Column(Integer, nullable=True, index=True)
     # Identificadores (vienen de los 3 sistemas de origen)
-    expediente = Column(String, index=True, nullable=True)
     acta = Column(String, index=True, unique=True, nullable=False)
     causa = Column(String, index=True, nullable=True)
     patente = Column(String, index=True, nullable=False)
@@ -107,13 +106,10 @@ class Registro(Base):
     # reales -- se deja como estaba (nullable, sin default) hasta que
     # SEMyT sea la fuente que decida si hace falta agregarlo.
     estado_semyt = Column(SAEnum(EstadoSemyt), nullable=True, default=None, index=True)
-    estado_sigi = Column(SAEnum(EstadoSigi), nullable=False, default=EstadoSigi.no_cargada, index=True)
-    motivo_archivo_sigi = Column(SAEnum(MotivoArchivoSigi), nullable=True, default=None, index=True)
 
     # Fecha de cobro: sólo tiene sentido cuando el estado correspondiente
     # implica pago (SIGEMI "Pagada", SEMyT "Pagada en Juzgado").
     fecha_cobro_sigemi = Column(DateTime, nullable=True)
-    fecha_cobro_sigi = Column(DateTime, nullable=True)
     # Consistencia entre SEMyT/SIGEMI/SIGI: antes se calculaba 100% en Python
     # en cada consulta (ver crud.calcular_consistencia), lo que obligaba a
     # traer TODA la tabla filtrada a memoria para poder filtrar por este
@@ -136,8 +132,74 @@ class Registro(Base):
         order_by="HistorialEstado.fecha_inicio",
         cascade="all, delete-orphan",
     )
+    
+    vinculos_sigi = relationship(
+        "VinculoSigi",
+        back_populates="registro",
+        order_by="VinculoSigi.expediente",  
+        cascade="all, delete-orphan",
+    )
 
+    @property
+    def vinculo_sigi_principal(self) -> Optional["VinculoSigi"]:
+        """El vínculo con expediente más chico -- lo que se muestra como
+        'el' expediente/estado_sigi de la fila en la grilla principal
+        cuando no hay más de uno. Ordenar por expediente string es
+        aproximado (EXP-2026-0080 < EXP-2026-176985 alfabéticamente
+        coincide con el orden numérico gracias al padding), pero para
+        casos raros con distinto año conviene ordenar en Python por el
+        número real -- ver sigi_vinculos.ordenar_vinculos."""
+        from app.services.sigi_vinculos import ordenar_vinculos
+        vinculos = ordenar_vinculos(self.vinculos_sigi)
+        return vinculos[0] if vinculos else None
 
+    @property
+    def tiene_multiples_vinculos_sigi(self) -> bool:
+        return len(self.vinculos_sigi) > 1
+    
+    @property
+    def expediente(self):
+        v = self.vinculo_sigi_principal
+        return v.expediente if v else None
+
+    @property
+    def estado_sigi(self):
+        v = self.vinculo_sigi_principal
+        return v.estado_sigi if v else EstadoSigi.no_cargada
+
+    @property
+    def motivo_archivo_sigi(self):
+        v = self.vinculo_sigi_principal
+        return v.motivo_archivo_sigi if v else None
+
+    @property
+    def fecha_cobro_sigi(self):
+        v = self.vinculo_sigi_principal
+        return v.fecha_cobro_sigi if v else None
+
+class VinculoSigi(Base):
+    __tablename__ = "vinculos_sigi"
+    __table_args__ = (
+        Index("ix_vinculos_sigi_registro_id", "registro_id"),
+        Index("ix_vinculos_sigi_expediente", "expediente"),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    registro_id = Column(Integer, ForeignKey("registros.id", ondelete="CASCADE"), nullable=False)
+    expediente = Column(String, nullable=False)
+    estado_sigi = Column(SAEnum(EstadoSigi), nullable=False, default=EstadoSigi.no_cargada, index=True)
+    motivo_archivo_sigi = Column(SAEnum(MotivoArchivoSigi), nullable=True, default=None)
+    fecha_cobro_sigi = Column(DateTime, nullable=True)
+    acta_sigi = Column(String, nullable=True)
+    # 'directo'  : se cargó buscando este expediente puntual (flujo normal)
+    # 'duplicada': el Nº de acta ya existía en la base con OTRO expediente
+    # 'reescrita': patente+día+dirección matcheaban otra acta ya cargada
+    origen = Column(String, nullable=False, default="directo")
+    consistente = Column(Boolean, nullable=True, default=None, index=True)
+    creado_en = Column(DateTime, nullable=False, default=datetime.now)
+
+    registro = relationship("Registro", back_populates="vinculos_sigi")
+    
 class SistemaEstado(str, enum.Enum):
     """Los 3 sistemas de origen cuyo estado seguimos en el historial."""
     sigemi = "SIGEMI"

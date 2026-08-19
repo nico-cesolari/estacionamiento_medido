@@ -37,7 +37,7 @@ def aplicar_filtros_registros(
     *,
     estado_sigemi: Optional[str] = None,
     estado_semyt: Optional[str] = None,
-    estado_sigi: Optional[str] = None,
+    estado_sigi= None,
     motivo_archivo: Optional[str] = None,
     juzgado: Optional[int] = None,
     expediente: Optional[str] = None,
@@ -55,7 +55,9 @@ def aplicar_filtros_registros(
         query = query.filter(models.Registro.estado_semyt == estado_semyt)
 
     if estado_sigi:
-        query = query.filter(models.Registro.estado_sigi == estado_sigi)
+        query = query.filter(
+            models.Registro.vinculos_sigi.any(models.VinculoSigi.estado_sigi == estado_sigi)
+        )
 
     if motivo_archivo:
         condiciones = []
@@ -65,7 +67,9 @@ def aplicar_filtros_registros(
             )
         if motivo_archivo in VALORES_MOTIVO_SIGI:
             condiciones.append(
-                models.Registro.motivo_archivo_sigi == models.MotivoArchivoSigi(motivo_archivo)
+                models.Registro.vinculos_sigi.any(
+                    models.VinculoSigi.motivo_archivo_sigi == models.MotivoArchivoSigi(motivo_archivo)
+                )
             )
         if condiciones:
             query = query.filter(or_(*condiciones))

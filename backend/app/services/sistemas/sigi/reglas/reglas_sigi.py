@@ -221,49 +221,33 @@ def armar_datos_alta_por_acta(estado_texto: Optional[str], motivo_texto: Optiona
 
 
 def crear_registro_nuevo_por_acta(
-    db: Session,
-    *,
-    expediente: Optional[str],
-    acta: str,
-    patente: str,
-    direccion: Optional[str],
-    fecha_hora,
-    estado_texto: Optional[str],
-    motivo_texto: Optional[str] = None,
+    db: Session, *, expediente, acta, patente, direccion, fecha_hora,
+    estado_texto=None, motivo_texto=None,
 ) -> "models.Registro":
-    """
-    Para cargar_actas_sigi.py: crea un Registro nuevo para un acta que
-    apareció en SIGI pero no existía todavía en la base (no hizo match
-    contra ningún registro local). No hace commit -- eso queda a cargo
-    de quien orquesta la corrida, igual que aplicar_actualizacion.
-
-    estado_semyt se fija siempre en 'Eliminada': un acta que se da de
-    alta por acá nunca pasó por SEMyT, así que ese estado no aplica
-    (decisión de negocio explícita, no un default técnico).
-    """
-    datos_estado = armar_datos_alta_por_acta(estado_texto, motivo_texto)
+    from app.services.sigi_vinculos import crear_vinculo
     registro = models.Registro(
-        expediente=expediente,
+        expediente=None,  # ya no existe esta columna -- si esto tira
+                           # error de atributo, es la señal de que la
+                           # migración del modelo (2.1) no se aplicó
         acta=normalizar_acta(acta),
         patente=patente,
         direccion=direccion,
         fecha_hora=fecha_hora,
         estado_semyt=models.EstadoSemyt.eliminada,
-        **datos_estado,
     )
     db.add(registro)
+    db.flush()  # necesitamos registro.id para el vínculo
+
+    nuevo_estado = mapear_estado(estado_texto) or estado_no_cargada()
+    nuevo_motivo = mapear_motivo(motivo_texto)
+    crear_vinculo(db, registro, expediente, nuevo_estado, nuevo_motivo, origen="directo")
     return registro
 
 
-def hay_cambio_real(registro: "models.Registro", cambios: dict) -> bool:
-    """
-    True si aplicar `cambios` modificaría algo del registro. Evita pisar
-    (y generar historial de más para) un estado/motivo que ya está
-    guardado tal cual.
-    """
-    if registro.estado_sigi != cambios.get("estado_sigi"):
+def hay_cambio_real(vinculo: "models.VinculoSigi", cambios: dict) -> bool:
+    if vinculo.estado_sigi != cambios.get("estado_sigi"):
         return True
-    if "motivo_archivo_sigi" in cambios and registro.motivo_archivo_sigi != cambios["motivo_archivo_sigi"]:
+    if "motivo_archivo_sigi" in cambios and vinculo.motivo_archivo_sigi != cambios["motivo_archivo_sigi"]:
         return True
     return False
 
@@ -293,21 +277,10 @@ def clonar_registro(registro: "models.Registro") -> "models.Registro":
 # Qué registros le tocan a cada paso.
 # ---------------------------------------------------------------------------
 def todos_los_expedientes_cargados(db: Session) -> dict:
-    """Para sincronizar_actas_sigi.py: TODOS los registros que ya tienen
-    expediente (incluidas los archivados -- acá SÍ importan, porque son
-    justamente las que hay que reconocer como "ya cargada" y saltear sin
-    abrir detalle; excluirlas llevaría a tratarlas como desconocidas y
-    buscarlas de nuevo por acta en cada corrida).
-
-    Devuelve {expediente_normalizado: Registro}. Si dos registros
-    comparten expediente (no debería pasar, pero por las dudas) gana el
-    último leído -- no es el uso pensado de esta función."""
-    registros = (
-        db.query(models.Registro)
-        .filter(models.Registro.expediente.isnot(None), models.Registro.expediente != "")
-        .all()
-    )
-    return {normalizar_expediente(r.expediente): r for r in registros}
+    """{expediente_normalizado: VinculoSigi} de TODOS los vínculos
+    existentes (sin importar el registro)."""
+    vinculos = db.query(models.VinculoSigi).all()
+    return {normalizar_expediente(v.expediente): v for v in vinculos}
 
 
 def todas_las_actas_conocidas(db: Session) -> dict:
@@ -329,19 +302,15 @@ def todas_las_actas_conocidas(db: Session) -> dict:
     return agrupado
 
 
-def registros_con_expediente_pendientes(db: Session):
-    """Expedientes ya cargados cuyo estado_sigi todavía puede cambiar --
-    se excluyen los que llegaron a un estado terminal o sin información
-    real: Archivado (terminal), No Cargada (sin dato real todavía) y,
-    como caso extremo de datos corruptos, sin estado_sigi en absoluto."""
+def vinculos_pendientes(db: Session):
+    """Vínculos SIGI cuyo estado todavía puede cambiar (no Archivado,
+    no No Cargada)."""
     return (
-        db.query(models.Registro)
+        db.query(models.VinculoSigi)
         .filter(
-            models.Registro.expediente.isnot(None),
-            models.Registro.expediente != "",
-            models.Registro.estado_sigi.isnot(None),
-            models.Registro.estado_sigi != models.EstadoSigi.no_cargada,
-            models.Registro.estado_sigi != models.EstadoSigi.archivado,
+            models.VinculoSigi.estado_sigi.isnot(None),
+            models.VinculoSigi.estado_sigi != models.EstadoSigi.no_cargada,
+            models.VinculoSigi.estado_sigi != models.EstadoSigi.archivado,
         )
         .all()
     )
