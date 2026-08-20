@@ -141,6 +141,11 @@ def exportar_txt(body: schemas.ExportarRequest, db: Session = Depends(get_db)):
     registros = exportacion.buscar_para_exportar(
         db, filtros, fecha_desde=body.fecha_desde, fecha_hasta=body.fecha_hasta
     )
+    if not registros:
+        raise HTTPException(
+            status_code=404,
+            detail="Sin registros para exportar"
+        )
     contenido = exportacion.generar_reporte_txt(
         registros, filtros, fecha_desde=body.fecha_desde, fecha_hasta=body.fecha_hasta
     )
@@ -158,6 +163,11 @@ def exportar_consistencia_sigi(db: Session = Depends(get_db)):
     estado_sigi cargado. DETERMINACION_FINAL = 'Archivar' cuando
     corresponde (ver services/consistencia.py::REGLAS_ARCHIVAR_SIGI)."""
     registros = exportacion.buscar_para_consistencia_sigi(db)
+    if not registros:
+        raise HTTPException(
+            status_code=404,
+            detail="Sin registros para exportar"
+        )
     contenido = exportacion.generar_reporte_consistencia_sigi(registros)
     nombre = f"Inconsistencia_SIGI_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
     return PlainTextResponse(
@@ -174,7 +184,10 @@ def exportar_reescritas_sigi(db: Session = Depends(get_db)):
     DETERMINACION_FINAL=Archivar siempre."""
     registros = exportacion.buscar_para_reescritas_sigi(db)
     if not registros:
-        raise HTTPException(status_code=404, detail="No hay actas inconsistentes")
+        raise HTTPException(
+            status_code=404,
+            detail="Sin registros para exportar"
+        )
     contenido = exportacion.generar_reporte_reescritas_sigi(registros)
     nombre = f"Reescritas_SIGI_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
     return PlainTextResponse(
@@ -191,7 +204,10 @@ def exportar_duplicadas_sigi(db: Session = Depends(get_db)):
     la Nueva/duplicada, y DETERMINACION_FINAL=Archivar siempre."""
     registros = exportacion.buscar_para_duplicadas_sigi(db)
     if not registros:
-        raise HTTPException(status_code=404, detail="No hay actas inconsistentes")
+        raise HTTPException(
+            status_code=404,
+            detail="Sin registros para exportar"
+        )
     contenido = exportacion.generar_reporte_duplicadas_sigi(registros)
     nombre = f"Duplicadas_SIGI_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
     return PlainTextResponse(

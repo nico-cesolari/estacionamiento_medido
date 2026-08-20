@@ -313,16 +313,16 @@ function renderTabla(registros) {
         ${r.reescrita ? ' <span class="badge-reescrita" title="Mismo vehículo, mismo día y misma dirección que otra acta, con distinto número">↻ Reescrita</span>' : ''}
         ${r.otros_expedientes_duplicada?.length ? `<div class="sub">Duplicada con: ${r.otros_expedientes_duplicada.join(", ")}</div>` : ''}
         ${r.otros_expedientes_reescritura?.length ? `<div class="sub">Reescrita con: ${r.otros_expedientes_reescritura.join(", ")}</div>` : ''}</div>
-        ${listaOtrosExpedientesSigi(r)}
         <div class="sub">ACT-${r.acta}</div>
         <div class="sub">${formatearCausa(r.causa)}</div>
+        ${listaOtrosExpedientesSigi(r)}
       </td>
       <td class="foto-cell">${renderCeldaFoto(r)}</td>
       <td class="patente-cell">${r.patente}</td>
       <td class="direccion-cell">${formatearDireccion(r.direccion)}</td>
       <td>${formatearFechaLabrada(r.fecha_hora)}</td>
       <td>${renderCeldaEstadoSigemi(r)}</td>
-      <td>${renderCeldaEstado(r.id, "estado_semyt", r.estado_semyt,null, null,)}</td>
+      <td>${renderCeldaEstadoSemyt(r)}</td>
       <td>${renderCeldaEstadoSigiMultiple(r)}</td>
       <td>
         <div class="consistencia-accion-cell">
@@ -335,7 +335,7 @@ function renderTabla(registros) {
     `;
     tbody.appendChild(tr);
   }
-  tbody.querySelectorAll("select.motivo-archivo-select-vinculo").forEach((sel) => {
+  tbody.querySelectorAll("select.motivo-archivo-select").forEach((sel) => {
     sel.addEventListener("change", onCambiarMotivoArchivoVinculo);
   });
   tbody.querySelectorAll(".btn-cargar-foto").forEach((btn) => {
@@ -360,11 +360,89 @@ function badgeSigi(r) {
   return "";
 }
 
+/** Bajo el estado SEMyT: si esta acta está Eliminada porque en realidad
+ * fue reescrita bajo otra (mismo vehículo/día/dirección, ver
+ * duplicados.py::anotar_info_relaciones), muestra a qué acta y en qué
+ * estado_semyt está esa otra HOY. Si esa acta asociada existe pero por
+ * algún motivo no se le pudo resolver el estado, muestra sólo el número. */
+function renderAsociacionSemyt(r) {
+  if (r.estado_semyt !== "Eliminada" || !r.acta_semyt_asociada) return "";
+  const estadoHtml = r.estado_semyt_asociado
+    ? `<span class="estado-label estado-categoria-${categoriaEstadoVisual("estado_semyt", r.estado_semyt_asociado)}">${r.estado_semyt_asociado}</span>`
+    : `<span class="sub">(estado no determinado)</span>`;
+  return `<div class="sub">↻ Reescrita en ACT-${r.acta_semyt_asociada}: ${estadoHtml}</div>`;
+}
+
+function claveOrdenExpediente(expediente) {
+  const m = /(\d{4})-(\d+)/.exec(expediente || "");
+  if (!m) return [9999, 0, expediente || ""];
+  return [Number(m[1]), Number(m[2]), expediente || ""];
+}
+
+function compararClaveOrden(a, b) {
+  if (a[0] !== b[0]) return a[0] - b[0];
+  if (a[1] !== b[1]) return a[1] - b[1];
+  return a[2] < b[2] ? -1 : a[2] > b[2] ? 1 : 0;
+}
+
+function ordenarVinculosSigi(vinculos) {
+  return [...vinculos].sort((v1, v2) =>
+    compararClaveOrden(claveOrdenExpediente(v1.expediente), claveOrdenExpediente(v2.expediente))
+  );
+}
+
+function detalleVinculoPrestado(v) {
+  if (v.origen === "reescrita") {
+    if (!v.acta_sigi) return v.expediente || null;
+    const actaTexto = `ACT-${limpiarNumeroActa(v.acta_sigi)}`;
+    return v.expediente ? `Reescrita: ${v.expediente} (${actaTexto})` : actaTexto;
+  }
+  if (v.origen === "duplicada") {
+    return v.expediente ? `Duplicada: ${v.expediente}` : null;
+  }
+  return v.expediente || null;
+}
+
+function detalleVinculoExtra(v, registro, expedienteParaMostrar) {
+  if (v.origen === "reescrita") {
+    const actaTexto = v.acta_sigi ? `ACT-${limpiarNumeroActa(v.acta_sigi)}` : "acta sin registrar";
+    if (!expedienteParaMostrar) {
+      return `Reescrita: (${actaTexto})`;
+    }
+    return `Reescrita: ${expedienteParaMostrar} (${actaTexto})`;
+  }
+  if (v.origen === "duplicada") {
+    const actaTexto = `ACT-${limpiarNumeroActa(v.acta_sigi || registro.acta)}`;
+    if (!expedienteParaMostrar) {
+      return `Duplicada: (${actaTexto})`;
+    }
+    return `Duplicada: ${expedienteParaMostrar} (${actaTexto})`;
+  }
+  return null;
+}
+
 function listaOtrosExpedientesSigi(r) {
-  const otros = otrosExpedientesSigi(r);
-  if (!otros.length) return "";
-  const etiqueta = r.sigi_duplicada ? "Duplicada" : r.sigi_reescrita ? "Reescrita" : "Vinculada";
-  return `<div class="sub sigi-otros-expedientes">${etiqueta}: ${otros.join(", ")}</div>`;
+  const vinculos = r.vinculos_sigi || [];
+  if (!vinculos.length) return "";
+
+  const ordenados = ordenarVinculosSigi(vinculos);
+  const principal = ordenados[0];
+  const extras = ordenados.slice(1);
+
+  const lineas = [];
+
+  extras.forEach((v) => {
+    const linea = detalleVinculoExtra(v, r, v.expediente);
+    if (linea) lineas.push(linea);
+  });
+
+  if (extras.length === 0 && principal && principal.origen !== "directo") {
+    const linea = detalleVinculoExtra(principal, r, null);
+    if (linea) lineas.push(linea);
+  }
+
+  if (!lineas.length) return "";
+  return `<div class="sub sigi-otros-expedientes">${lineas.join(" · ")}</div>`;
 }
 
 /** Celda genérica de estado, con select + fecha de cobro opcional debajo (si corresponde). */
@@ -387,8 +465,14 @@ function categoriaEstadoVisual(campo, valor, motivo = null) {
   }
 
   if (campo === "estado_sigi") {
-    if (valor === "Archivado" && motivo === "Pagada") return "pagada";
-    if (valor === "Archivado") return "resuelta";
+    if (
+      valor === "Archivado" ||
+      valor === "Resuelta sin Archivar" ||
+      valor === "Archivado Sin Resolución"
+    ) {
+      return "resuelta";
+    }
+
     return "vencida";
   }
 
@@ -471,33 +555,94 @@ function renderCeldaEstadoSigemi(r) {
   );
 }
 
+function renderCeldaEstadoSemyt(r) {
+  const esReescrita = (r.vinculos_sigi || []).some((v) => v.origen === "reescrita");
+  const yaEliminada = r.estado_semyt === "Eliminada";
+
+  // Si no es reescrita, o si ya figura Eliminada de por sí, se muestra
+  // como siempre (un solo badge) -- evita duplicar "Eliminada" dos veces.
+  if (!esReescrita || yaEliminada) {
+    return renderCeldaEstado(r.id, "estado_semyt", r.estado_semyt, null, null, null);
+  }
+
+  // Reescrita: no existe una fila propia para el acta que reemplazó a
+  // ésta (ver origen='reescrita' en VinculoSigi) -- por defecto se
+  // infiere que del lado SEMyT esta acta quedó "Eliminada", y se
+  // muestra además el estado vigente actual, para no perder esa info.
+  const eliminadaHtml = renderCeldaEstado(r.id, "estado_semyt", "Eliminada", null, null, null);
+  const actualHtml = renderCeldaEstado(r.id, "estado_semyt", r.estado_semyt, null, null, null);
+  return `<div class="estado-multiple">${eliminadaHtml}${actualHtml}</div>`;
+}
+
 function renderCeldaEstadoSigiMultiple(r) {
   if (!r.vinculos_sigi || r.vinculos_sigi.length === 0) {
-    return renderCeldaEstado(r.id, "estado_sigi", null, null, null, null);
+    return renderCeldaEstado(
+      r.id,
+      "estado_sigi",
+      null,
+      null,
+      null,
+      null
+    );
   }
+
   return r.vinculos_sigi.map((v) => {
     let motivoHtml = "";
-    if (v.estado_sigi === "Archivado") {
-      motivoHtml = renderMotivoArchivoVinculo(v, r.id, opcionesEstados.motivosArchivoSigi);
+
+    if (
+      v.estado_sigi === "Archivado" ||
+      v.estado_sigi === "Resuelta sin Archivar"
+    ) {
+      motivoHtml = renderMotivoArchivoVinculo(
+        v,
+        r.id,
+        opcionesEstados.motivosArchivoSigi
+      );
     }
+
     const celda = renderCeldaEstado(
-      r.id, "estado_sigi", v.estado_sigi, null,
-      "fecha_cobro_sigi", v.fecha_cobro_sigi, v.motivo_archivo_sigi, motivoHtml
+      r.id,
+      "estado_sigi",
+      v.estado_sigi,
+      null,
+      "fecha_cobro_sigi",
+      v.fecha_cobro_sigi,
+      v.motivo_archivo_sigi,
+      motivoHtml
     );
-    return `<div class="vinculo-sigi-item" data-vinculo-id="${v.id}">${celda}</div>`;
+
+    return `
+      <div
+        class="vinculo-sigi-item"
+        data-vinculo-id="${v.id}"
+      >
+        ${celda}
+      </div>
+    `;
   }).join("");
 }
 
 function renderMotivoArchivoVinculo(vinculo, registroId, opciones) {
   if (vinculo.motivo_archivo_sigi) {
-    return `<span class="motivo-archivo-texto">${vinculo.motivo_archivo_sigi}</span>`;
+    return `
+      <span class="motivo-archivo-texto">
+        ${vinculo.motivo_archivo_sigi}
+      </span>
+    `;
   }
-  const opts = opciones.map((o) => `<option value="${o}">${o}</option>`).join("");
+  const opts = opciones
+    .map((o) => `<option value="${o}">${o}</option>`)
+    .join("");
   return `
-    <select class="motivo-archivo-select-vinculo" data-registro-id="${registroId}" data-vinculo-id="${vinculo.id}">
+    <select
+      class="motivo-archivo-select"
+      data-registro-id="${registroId}"
+      data-vinculo-id="${vinculo.id}"
+    >
       <option value="">Motivo de archivo…</option>
       ${opts}
-    </select>`;
+    </select>
+  `;
 }
 
 async function onCambiarMotivoArchivoVinculo(ev) {
@@ -701,6 +846,10 @@ async function descargarConsistenciaSigi() {
 /* ---------------- Exportar Reescritas / Duplicadas SIGI ---------------- */
 const REESCRITAS_SIGI_API = `${API_BASE}/exportar/reescritas-sigi`;
 const DUPLICADAS_SIGI_API = `${API_BASE}/exportar/duplicadas-sigi`;
+
+function limpiarNumeroActa(valor) {
+  return (valor || "").replace(/\./g, "");
+}
 
 async function descargarReporteConAviso(url, btn) {
   btn.disabled = true;

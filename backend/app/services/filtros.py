@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.models import models
 from app.services.duplicados import (
     aplicar_filtro_duplicadas,
+    aplicar_filtro_reescritas,
     aplicar_filtro_patente,
 )
 
@@ -79,7 +80,11 @@ def aplicar_filtros_registros(
 
     # --- Coincidencia EXACTA (no "contiene") ---
     if expediente:
-        query = query.filter(models.Registro.expediente.ilike(expediente.strip()))
+        query = query.filter(
+            models.Registro.vinculos_sigi.any(
+                models.VinculoSigi.expediente.ilike(expediente.strip())
+            )
+        )
 
     if acta:
         query = query.filter(models.Registro.acta == _normalizar_numero_con_puntos(acta))
@@ -94,7 +99,7 @@ def aplicar_filtros_registros(
         query = aplicar_filtro_duplicadas(query, db)
 
     if solo_reescritas:
-        query = query.filter(models.Registro.reescrita.is_(True))
+        query = aplicar_filtro_reescritas(query)
 
     if consistencia == "SI":
         query = query.filter(models.Registro.consistente.is_(True))

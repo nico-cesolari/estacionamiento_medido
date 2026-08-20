@@ -98,7 +98,6 @@ from typing import Optional
 import json
 from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 from sqlalchemy.orm import Session
-
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from app.database import SessionLocal
 from app.services.sistemas.comun.sesion import PaginaConSesion
@@ -254,7 +253,7 @@ async def _leer_total_resultados(page) -> Optional[int]:
     return int(m.group(3).replace(".", "").replace(",", ""))
 
 
-async def _escribir_filtro_y_confirmar(page, input_filtro, expediente_completo: str, intentos_submit: int = 3) -> None:
+async def _escribir_filtro_y_confirmar(page, input_filtro, expediente_completo: str, intentos_submit: int = 3) -> Optional[int]:
     """Escribe expediente_completo en el input y confirma con Enter,
     verificando con el contador 'Mostrando A a B de C resultados' que el
     filtro REALMENTE se aplicó (C chico) y no quedó mostrando la grilla
@@ -263,7 +262,13 @@ async def _escribir_filtro_y_confirmar(page, input_filtro, expediente_completo: 
     seguía mostrando el total general). Si detecta que no se aplicó,
     reintenta el fill()+Enter (con un click previo para forzar foco real,
     por si el primer fill() no alcanzó a "engancharse" con el listener de
-    búsqueda de la SPA)."""
+    búsqueda de la SPA).
+
+    Devuelve el total de resultados YA CONFIRMADO (puede ser 0) para que
+    el llamador (buscar()) pueda usarlo como atajo -- ver OPTIMIZACIÓN
+    en buscar(). Devuelve None si no se pudo confirmar que el filtro se
+    aplicara tras `intentos_submit` intentos (en ese caso el llamador no
+    puede confiar en ningún conteo y debe seguir con el flujo normal)."""
     for intento in range(1, intentos_submit + 1):
         if intento > 1:
             await input_filtro.click()
@@ -275,7 +280,7 @@ async def _escribir_filtro_y_confirmar(page, input_filtro, expediente_completo: 
 
         total = await _leer_total_resultados(page)
         if total is not None and total <= UMBRAL_TOTAL_SIN_FILTRAR:
-            return  # filtro aplicado de verdad
+            return total  # filtro aplicado de verdad
 
         web_sigi.log(
             "EXPEDIENTE",
@@ -290,6 +295,7 @@ async def _escribir_filtro_y_confirmar(page, input_filtro, expediente_completo: 
         f"  ⚠️ No se pudo confirmar que el filtro se aplicara tras {intentos_submit} intentos -- "
         f"sigo igual, puede devolver falsos negativos.",
     )
+    return None
 
 
 async def buscar(
@@ -346,7 +352,7 @@ async def buscar(
             "docstring del módulo)."
         )
 
-    await _escribir_filtro_y_confirmar(page, input_filtro, expediente_completo)
+    total_confirmado = await _escribir_filtro_y_confirmar(page, input_filtro, expediente_completo)
 
     if primera_busqueda_global:
         web_sigi.log("EXPEDIENTE", f"  ⏳ Primera búsqueda de la corrida ({expediente_completo}): "
@@ -356,6 +362,37 @@ async def buscar(
     else:
         await web_sigi.esperar_red(page)
         await page.wait_for_timeout(300)
+
+    # OPTIMIZACIÓN (cuello de botella principal en corridas largas): el
+    # caso más frecuente al recorrer un rango grande de expedientes es
+    # "no existe" (no_encontrado). Sin este atajo, ESE caso es el más
+    # caro de todos: recorre hasta max_paginas páginas y lo repite
+    # `intentos` veces (4, o 6 en la primera búsqueda global) con
+    # `espera_ms` de pausa entre cada intento -- todo para terminar
+    # confirmando que no hay nada.
+    #
+    # Pero _escribir_filtro_y_confirmar YA leyó el contador "Mostrando A
+    # a B de C resultados" de forma confiable (esperó esperar_red +
+    # 400ms antes de leerlo). Si ese conteo confirmado es 0, es una señal
+    # fuerte -- no una fila individual que puede tardar en pintarse, sino
+    # el TOTAL de la búsqueda filtrada -- de que ese expediente no existe.
+    # Se hace una única relectura corta de más (por si el 0 fue un
+    # instante de transición) antes de confiar en el atajo. No se aplica
+    # en `primera_busqueda_global` porque esa transición puntual ya está
+    # documentada como más lenta/inestable (ver AJUSTAR en el docstring
+    # del módulo) y preferimos el flujo completo ahí.
+    # AJUSTAR: si en la práctica aparecen falsos "no encontrado" por este
+    # atajo, subir la pausa de la relectura o sacar el bloque entero.
+    if total_confirmado == 0 and not primera_busqueda_global:
+        await page.wait_for_timeout(500)
+        total_recheck = await _leer_total_resultados(page)
+        if total_recheck == 0:
+            web_sigi.log(
+                "EXPEDIENTE",
+                f"  ⏭️ {expediente_completo}: filtro confirmado con 0 resultados -- "
+                f"no existe, se descarta sin recorrer páginas ni reintentos.",
+            )
+            return None
 
     esperado_norm = reglas_sigi.normalizar_expediente(expediente_completo)
 
@@ -508,30 +545,108 @@ async def _procesar_expediente_encontrado(
 
     resultado = "sin_registro_base"
 
-    # --- CASO 1: DUPLICADA -- el Nº de acta YA existe en la base ---
+    # --- CASO 1: EL Nº DE ACTA YA EXISTE EN LA BASE ---
     registro_por_acta = buscar_registro_por_acta(db, numero_acta)
 
     if registro_por_acta is not None:
-        expedientes_previos = [v.expediente for v in registro_por_acta.vinculos_sigi]
-        web_sigi.log(
-            "EXPEDIENTE",
-            f"  🔁 acta {numero_acta} ya existe (registro id={registro_por_acta.id}) con "
-            f"expediente(s) {expedientes_previos} -- {expediente_completo} es nuevo -> DUPLICADA",
-        )
-        if commit:
-            v = crear_vinculo(db, registro_por_acta, expediente_completo, nuevo_estado_sigi,
-                               nuevo_motivo_sigi, origen="duplicada")
-            v.acta_sigi = numero_acta
-            db.commit()
-            web_sigi.log("EXPEDIENTE", f"  ✅ vínculo duplicada: acta {numero_acta}, "
-                                        f"expediente={expediente_completo}, estado_sigi={estado_legible}")
+        expedientes_previos = {
+            reglas_sigi.normalizar_expediente(v.expediente)
+            for v in registro_por_acta.vinculos_sigi
+            if v.expediente
+        }
+
+        expediente_norm = reglas_sigi.normalizar_expediente(expediente_completo)
+
+        # ---------------------------------------------------------
+        # CASO 1A: el acta existe pero NO tiene expediente SIGI
+        # ---------------------------------------------------------
+        if not expedientes_previos:
+            web_sigi.log(
+                "EXPEDIENTE",
+                f"  📝 acta {numero_acta} ya existe (registro id={registro_por_acta.id}) "
+                f"pero NO tiene expediente SIGI -> se completa con {expediente_completo}",
+            )
+
+            if commit:
+                v = crear_vinculo(
+                    db,
+                    registro_por_acta,
+                    expediente_completo,
+                    nuevo_estado_sigi,
+                    nuevo_motivo_sigi,
+                    origen="directo",
+                )
+                v.acta_sigi = reglas_sigi.normalizar_acta(numero_acta)
+
+                db.commit()
+
+                web_sigi.log(
+                    "EXPEDIENTE",
+                    f"  ✅ expediente {expediente_completo} agregado al acta "
+                    f"{numero_acta} (registro id={registro_por_acta.id})",
+                )
+            else:
+                web_sigi.log(
+                    "EXPEDIENTE",
+                    f"  (dry-run) se agregaría expediente {expediente_completo} "
+                    f"al acta {numero_acta} -- NO se graba",
+                )
+
+            resultado = "completada"
+
+        # ---------------------------------------------------------
+        # CASO 1B: el acta YA tiene exactamente este expediente
+        # ---------------------------------------------------------
+        elif expediente_norm in expedientes_previos:
+            web_sigi.log(
+                "EXPEDIENTE",
+                f"  ℹ️ acta {numero_acta} ya existe (registro id={registro_por_acta.id}) "
+                f"y ya tiene el expediente {expediente_completo} -> YA EXISTENTE",
+            )
+
+            resultado = "ya_existente"
+
+        # ---------------------------------------------------------
+        # CASO 1C: el acta existe y tiene OTRO expediente
+        # ---------------------------------------------------------
         else:
-            web_sigi.log("EXPEDIENTE", f"  (dry-run) vínculo duplicada: acta {numero_acta}, "
-                                        f"expediente={expediente_completo}, estado_sigi={estado_legible}")
-        resultado = "duplicada"
+            web_sigi.log(
+                "EXPEDIENTE",
+                f"  🔁 acta {numero_acta} ya existe (registro id={registro_por_acta.id}) "
+                f"con expediente(s) {sorted(expedientes_previos)} -- "
+                f"{expediente_completo} es diferente -> DUPLICADA",
+            )
+
+            if commit:
+                v = crear_vinculo(
+                    db,
+                    registro_por_acta,
+                    expediente_completo,
+                    nuevo_estado_sigi,
+                    nuevo_motivo_sigi,
+                    origen="duplicada",
+                )
+                v.acta_sigi = reglas_sigi.normalizar_acta(numero_acta)
+
+                db.commit()
+
+                web_sigi.log(
+                    "EXPEDIENTE",
+                    f"  ✅ vínculo duplicada: acta {numero_acta}, "
+                    f"expediente={expediente_completo}, "
+                    f"estado_sigi={estado_legible}",
+                )
+            else:
+                web_sigi.log(
+                    "EXPEDIENTE",
+                    f"  (dry-run) vínculo duplicada: acta {numero_acta}, "
+                    f"expediente={expediente_completo}",
+                )
+
+            resultado = "duplicada"
 
     else:
-        # --- CASO 2: REESCRITA -- no matchea por acta, pero sí por
+        # --- CASO 2: REESCRITA ---
         # patente+día+dirección con OTRO registro ya existente ---
         registro_reescrito = buscar_registro_reescrito(
             db, patente_leida, direccion_leida, fecha_hora_leida, excluir_acta=numero_acta,
@@ -547,7 +662,7 @@ async def _procesar_expediente_encontrado(
             if commit:
                 v = crear_vinculo(db, registro_reescrito, expediente_completo, nuevo_estado_sigi,
                                    nuevo_motivo_sigi, origen="reescrita")
-                v.acta_sigi = numero_acta
+                v.acta_sigi = reglas_sigi.normalizar_acta(numero_acta)
                 db.commit()
                 web_sigi.log("EXPEDIENTE", f"  ✅ vínculo reescrita sobre acta "
                                             f"{registro_reescrito.acta}: expediente={expediente_completo}, "
@@ -585,7 +700,7 @@ async def _procesar_expediente_encontrado(
                     db.flush()
                     v = crear_vinculo(db, nuevo_registro, expediente_completo, nuevo_estado_sigi,
                                        nuevo_motivo_sigi, origen="directo")
-                    v.acta_sigi = numero_acta
+                    v.acta_sigi = reglas_sigi.normalizar_acta(numero_acta)
                     db.commit()
                     web_sigi.log("EXPEDIENTE", f"  ✅ ALTA acta {numero_acta} (registro "
                                                 f"id={nuevo_registro.id}, expediente={expediente_completo})")
@@ -643,25 +758,37 @@ async def ejecutar(
                             f"recorriendo desde {NUMERO_INICIO} hasta {NUMERO_FIN}")
 
     expedientes_conocidos = set(reglas_sigi.todos_los_expedientes_cargados(db).keys())
-    actas_conocidas_todas = reglas_sigi.todas_las_actas_conocidas(db)
-    # Para el chequeo "¿ya existe esta acta?" alcanza con un registro
-    # representativo de cada acta (el primero de la lista).
-    actas_conocidas = {acta: regs[0] for acta, regs in actas_conocidas_todas.items() if regs}
-    actas_ignoradas = cargar_actas_sigi_ignoradas()
     actas_eliminadas_semyt = set(cargar_actas_eliminadas())
+    actas_ignoradas = cargar_actas_sigi_ignoradas()
 
     web_sigi.log(
         "INICIO",
         f"{len(expedientes_conocidos)} expediente(s) ya en la base "
         f"(se saltean sin buscar), "
-        f"{len(actas_conocidas)} acta(s) distinta(s) conocidas, "
+        f"{len(actas_eliminadas_semyt)} acta(s) eliminada(s) de SEMyT (fallback para altas nuevas), "
         f"{len(actas_ignoradas)} expediente(s) ignorado(s)"
     )
 
     contadores = {
-        "ya_en_db": 0, "ignorados": 0,
-        "duplicadas": 0, "reescritas": 0, "altas_eliminadas": 0,
-        "sin_registro_base": 0, "sin_acta": 0, "errores": 0,
+        "ya_en_db": 0,
+        "ignorados": 0,
+        "duplicadas": 0,
+        "reescritas": 0,
+        "altas_eliminadas": 0,
+        "completadas": 0,
+        "ya_existentes": 0,
+        "sin_registro_base": 0,
+        "sin_acta": 0,
+        "no_encontrados": 0,
+        "errores": 0,
+    }
+    
+    _CLAVE_CONTADOR = {
+        "duplicada": "duplicadas",
+        "reescrita": "reescritas",
+        "alta_eliminada": "altas_eliminadas",
+        "completada": "completadas",
+        "ya_existente": "ya_existentes",
     }
     procesados = 0
     primera_busqueda = True
@@ -731,10 +858,10 @@ async def ejecutar(
             continue
 
         resultado = await _procesar_expediente_encontrado(
-            db, page, fila, expediente_completo, idx_estado, actas_eliminadas_semyt, commit,
+            db, page, fila, expediente_completo, idx_estado, actas_eliminadas_semyt, commit
         )
-        if resultado in ("duplicada", "reescrita", "alta_eliminada"):
-            contadores[resultado if resultado != "alta_eliminada" else "altas_eliminadas"] += 1
+        if resultado in _CLAVE_CONTADOR:
+            contadores[_CLAVE_CONTADOR[resultado]] += 1
             expedientes_conocidos.add(expediente_norm)
         elif resultado == "sin_acta":
             contadores["sin_acta"] += 1

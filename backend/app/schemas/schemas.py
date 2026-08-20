@@ -4,7 +4,17 @@ from pydantic import BaseModel, ConfigDict
 
 from ..models.models import EstadoSigemi, EstadoSemyt, EstadoSigi, MotivoArchivoSigemi, MotivoArchivoSigi
 
-
+class VinculoSigiOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    expediente: str
+    acta_sigi: Optional[str] = None
+    estado_sigi: EstadoSigi
+    motivo_archivo_sigi: Optional[MotivoArchivoSigi] = None
+    fecha_cobro_sigi: Optional[datetime] = None
+    origen: str
+    consistente: Optional[bool] = None
+    
 class RegistroOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
@@ -29,6 +39,13 @@ class RegistroOut(BaseModel):
     reescrita: Optional[bool] = None  
     otros_expedientes_duplicada: Optional[List[str]] = None
     otros_expedientes_reescritura: Optional[List[str]] = None
+    # Sólo se completan cuando estado_semyt == 'Eliminada' y esa acta
+    # comparte grupo_reescritura con otra acta viva -- ver
+    # duplicados.py::anotar_info_relaciones. No son columnas, se calculan
+    # al listar (por eso estado_semyt_asociado siempre refleja el estado
+    # ACTUAL de la otra acta, sin desincronizarse).
+    acta_semyt_asociada: Optional[str] = None
+    estado_semyt_asociado: Optional[EstadoSemyt] = None
     vinculos_sigi: List[VinculoSigiOut] = []
     sigi_duplicada: Optional[bool] = None
     sigi_reescrita: Optional[bool] = None
@@ -90,17 +107,6 @@ class ExportarRequest(BaseModel):
 
 class ExportarConteo(BaseModel):
     total: int
-
-class VinculoSigiOut(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-    id: int
-    expediente: str
-    acta_sigi: Optional[str] = None
-    estado_sigi: EstadoSigi
-    motivo_archivo_sigi: Optional[MotivoArchivoSigi] = None
-    fecha_cobro_sigi: Optional[datetime] = None
-    origen: str
-    consistente: Optional[bool] = None
     
 class VinculoSigiUpdate(BaseModel):
     estado_sigi: Optional[EstadoSigi] = None

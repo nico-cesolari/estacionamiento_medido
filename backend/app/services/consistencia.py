@@ -224,33 +224,21 @@ def actualizar_consistencia(registros):
 # REGLAS_ARCHIVAR_SIGI, sin tocar los que ya funcionan.
 # ---------------------------------------------------------------------------
 
-def _sigi_sigue_vigente(registro) -> bool:
-    """True si SIGI todavía tiene el trámite como activo (no archivado,
-    pero con estado real cargado -- 'No Cargada' no cuenta, ahí no
-    sabemos nada todavía)."""
-    return categoria_sigi(registro.estado_sigi, registro.motivo_archivo_sigi) == "VENCIDA"
+def _sigi_sigue_vigente_vinculo(vinculo) -> bool:
+    return categoria_sigi(vinculo.estado_sigi, vinculo.motivo_archivo_sigi) == "VENCIDA"
 
 
-REGLAS_ARCHIVAR_SIGI = [
-    # Caso 1: SEMyT Y SIGEMI ya dieron el trámite por resuelto (pagado o
-    # resuelto de cualquier forma), pero SIGI lo sigue mostrando vigente.
-    lambda r: (
+REGLAS_ARCHIVAR_SIGI_VINCULO = [
+    lambda r, v: (
         categoria_semyt(r.estado_semyt) in ("PAGADA", "RESUELTA")
         and categoria_sigemi(r.estado_sigemi, r.motivo_archivo_sigemi) in ("PAGADA", "RESUELTA")
-        and _sigi_sigue_vigente(r)
+        and _sigi_sigue_vigente_vinculo(v)
     ),
-    # Caso 2: SEMyT lo rechazó (RECHAZADA), y SIGI lo sigue mostrando
-    # vigente -- sin importar lo que diga SIGEMI.
-    lambda r: (
+    lambda r, v: (
         r.estado_semyt == models.EstadoSemyt.rechazada
-        and _sigi_sigue_vigente(r)
+        and _sigi_sigue_vigente_vinculo(v)
     ),
-    # Sumar acá futuras reglas de negocio a medida que se identifiquen.
 ]
 
-
-def debe_archivar_sigi(registro) -> bool:
-    """True si corresponde DETERMINACION_FINAL = 'Archivar' en el reporte
-    de Consistencia SIGI (ver REGLAS_ARCHIVAR_SIGI para el detalle de
-    cada caso)."""
-    return any(regla(registro) for regla in REGLAS_ARCHIVAR_SIGI)
+def debe_archivar_sigi_vinculo(registro, vinculo) -> bool:
+    return any(regla(registro, vinculo) for regla in REGLAS_ARCHIVAR_SIGI_VINCULO)

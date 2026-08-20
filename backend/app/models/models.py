@@ -9,7 +9,7 @@ import re
 import enum
 from sqlalchemy import (
     Column, Integer, String, DateTime, Boolean, Enum as SAEnum, ForeignKey,
-    Index, event, func, select, update,
+    Index, event, func, select, update, or_,
 )
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm.attributes import get_history
@@ -176,7 +176,7 @@ class Registro(Base):
     def fecha_cobro_sigi(self):
         v = self.vinculo_sigi_principal
         return v.fecha_cobro_sigi if v else None
-
+    
 class VinculoSigi(Base):
     __tablename__ = "vinculos_sigi"
     __table_args__ = (
@@ -310,6 +310,7 @@ def _condiciones_grupo_reescritura(tabla, patente_norm, dia, direccion_norm, exc
         patente_norm_col == patente_norm,
         dia_col == dia,
         direccion_norm_col == direccion_norm,
+        or_(tabla.c.estado_semyt.is_(None), tabla.c.estado_semyt != EstadoSemyt.rechazada),
     ]
     if excluir_id is not None:
         condiciones.append(tabla.c.id != excluir_id)
@@ -377,6 +378,10 @@ def _limpiar_grupo_anterior_duplicada(connection, target):
 
 def _recalcular_reescritura(connection, target):
     tabla = Registro.__table__
+    if target.estado_semyt == EstadoSemyt.rechazada:
+        target.reescrita = False
+        target.grupo_reescritura = None
+        return
     patente_norm = _normalizar_patente_py(target.patente)
     direccion_norm = _normalizar_direccion_py(target.direccion)
     dia = target.fecha_hora.date() if target.fecha_hora else None
@@ -411,14 +416,21 @@ def _recalcular_reescritura(connection, target):
 
 
 def _limpiar_grupo_anterior_reescritura(connection, target):
-    """En un update: si patente/dirección/fecha cambiaron, el grupo VIEJO
-    puede haber quedado sin sentido (0 o 1 fila, o todas con la misma
-    acta) -> hay que desmarcarlo."""
+    """En un update: si patente/dirección/fecha cambiaron, O si
+    estado_semyt pasó a Rechazada (deja de contar para reescritura, ver
+    _condiciones_grupo_reescritura), el grupo VIEJO puede haber quedado
+    sin sentido (0 o 1 fila, o todas con la misma acta) -> hay que
+    desmarcarlo."""
     hist_patente = get_history(target, "patente")
     hist_direccion = get_history(target, "direccion")
     hist_fecha = get_history(target, "fecha_hora")
+    hist_estado_semyt = get_history(target, "estado_semyt")
 
-    if not (hist_patente.deleted or hist_direccion.deleted or hist_fecha.deleted):
+    paso_a_rechazada = bool(
+        hist_estado_semyt.added and hist_estado_semyt.added[0] == EstadoSemyt.rechazada
+    )
+
+    if not (hist_patente.deleted or hist_direccion.deleted or hist_fecha.deleted or paso_a_rechazada):
         return  # nada de esto cambió, no hay grupo viejo que limpiar
 
     patente_anterior = hist_patente.deleted[0] if hist_patente.deleted else target.patente
@@ -458,3 +470,4 @@ def _relaciones_al_actualizar(mapper, connection, target):
     _limpiar_grupo_anterior_reescritura(connection, target)
     _recalcular_duplicada(connection, target)
     _recalcular_reescritura(connection, target)
+

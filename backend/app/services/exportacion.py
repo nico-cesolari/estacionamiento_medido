@@ -9,6 +9,7 @@ from app.services.duplicados import aplicar_filtro_patente
 from app.services.query_helpers import aplicar_rango_fechas
 from sqlalchemy.orm import selectinload
 from app.services.sigi_vinculos import _clave_orden_expediente
+from app.services.consistencia import debe_archivar_sigi_vinculo
 
 ORDEN_ESTADO_SIGI = {estado: idx for idx, estado in enumerate(models.EstadoSigi)}
 # ---------------------------------------------------------------------------
@@ -23,7 +24,7 @@ CAMPOS_EXPORTABLES = {
     },
     "expediente": {
         "tipo": "texto",
-        "columna": models.Registro.expediente,
+        "columna": None,
         "etiqueta": "Nº Expediente",
     },
     "acta": {
@@ -78,7 +79,7 @@ CAMPOS_EXPORTABLES = {
     },
     "fecha_cobro_sigi": {
         "tipo": "fecha",
-        "columna": models.Registro.fecha_cobro_sigi,
+        "columna": None,
         "etiqueta": "Fecha de cobro SIGI",
     },
     "fecha_cobro_sigemi": {
@@ -88,44 +89,15 @@ CAMPOS_EXPORTABLES = {
     },
 }
 
-
 # ---------------------------------------------------------------------------
 # Filtros
 # ---------------------------------------------------------------------------
 # aplicar_rango_fechas ahora vive en app/services/query_helpers.py (antes
 # había una copia idéntica acá y otra en services/filtros.py -- un solo
 # lugar previene que se corrija en uno y se olviden del otro).
-
-
-def aplicar_filtros_avanzados(
-    query,
-    filtros: List[dict],
-):
+def aplicar_filtros_avanzados(query, filtros: List[dict]):
     """
-    Aplica los filtros libres utilizados por "Exportar Actas".
-
-    Cada filtro tiene:
-        {
-            "campo": ...,
-            "modo": "coincide" | "no_coincide",
-            "valor": ...
-        }
-
-    Texto:
-        coincide     -> contiene, case-insensitive
-        no_coincide  -> no contiene
-
-    Patente:
-        utiliza la normalización centralizada de duplicados.py.
-
-    Estado:
-        comparación exacta.
-
-    Fecha:
-        comparación por día completo.
-
-    Número:
-        comparación numérica.
+    (docstring igual)
     """
     for filtro in filtros:
         campo = filtro.get("campo")
@@ -133,7 +105,6 @@ def aplicar_filtros_avanzados(
         valor = (filtro.get("valor") or "").strip()
 
         info = CAMPOS_EXPORTABLES.get(campo)
-
         if not info or not valor:
             continue
 
@@ -142,87 +113,56 @@ def aplicar_filtros_avanzados(
         negar = modo == "no_coincide"
 
         if tipo == "texto":
+            if campo == "expediente":
+                positiva = models.Registro.vinculos_sigi.any(
+                    models.VinculoSigi.expediente.ilike(f"%{valor}%")
+                )
+                condicion = ~positiva if negar else positiva
+                query = query.filter(condicion)
+                continue
 
             if campo == "patente":
-                query = aplicar_filtro_patente(
-                    query,
-                    valor,
-                    negar=negar,
-                )
+                query = aplicar_filtro_patente(query, valor, negar=negar)
                 continue
 
             positiva = columna.ilike(f"%{valor}%")
-
-            condicion = (
-                or_(columna.is_(None), ~positiva)
-                if negar
-                else positiva
-            )
+            condicion = or_(columna.is_(None), ~positiva) if negar else positiva
 
         elif tipo == "estado":
+            condicion = (columna != valor) if negar else (columna == valor)
 
-            condicion = (
-                columna != valor
-                if negar
-                else columna == valor
-            )
-        if tipo == "estado_sigi_vinculo":
+        elif tipo == "estado_sigi_vinculo":
             atributo = "estado_sigi" if campo == "estado_sigi" else "motivo_archivo_sigi"
             condicion_vinculo = getattr(models.VinculoSigi, atributo) == valor
             positiva = models.Registro.vinculos_sigi.any(condicion_vinculo)
             condicion = ~positiva if negar else positiva
-            query = query.filter(condicion)
-            continue
 
-        if campo == "fecha_cobro_sigi":
+        elif tipo == "fecha":
             try:
                 dia = datetime.strptime(valor, "%Y-%m-%d")
             except ValueError:
                 continue
             siguiente = dia + timedelta(days=1)
-            condicion_vinculo = and_(
-                models.VinculoSigi.fecha_cobro_sigi >= dia,
-                models.VinculoSigi.fecha_cobro_sigi < siguiente,
-            )
-            positiva = models.Registro.vinculos_sigi.any(condicion_vinculo)
-            condicion = ~positiva if negar else positiva
-            query = query.filter(condicion)
-            continue
-        elif tipo == "fecha":
 
-            try:
-                dia = datetime.strptime(
-                    valor,
-                    "%Y-%m-%d",
+            if campo == "fecha_cobro_sigi":
+                condicion_vinculo = and_(
+                    models.VinculoSigi.fecha_cobro_sigi >= dia,
+                    models.VinculoSigi.fecha_cobro_sigi < siguiente,
                 )
-            except ValueError:
-                continue
+                positiva = models.Registro.vinculos_sigi.any(condicion_vinculo)
+            else:
+                positiva = (columna >= dia) & (columna < siguiente)
 
-            siguiente = dia + timedelta(days=1)
-
-            positiva = (
-                (columna >= dia)
-                & (columna < siguiente)
-            )
-
-            condicion = (
-                or_(columna.is_(None), ~positiva)
-                if negar
-                else positiva
+            condicion = or_(columna.is_(None), ~positiva) if negar and columna is not None else (
+                ~positiva if negar else positiva
             )
 
         elif tipo == "numero":
-
             try:
                 valor_num = int(valor)
             except ValueError:
                 continue
-
-            condicion = (
-                columna != valor_num
-                if negar
-                else columna == valor_num
-            )
+            condicion = (columna != valor_num) if negar else (columna == valor_num)
 
         else:
             continue
@@ -427,8 +367,6 @@ def generar_reporte_txt_streaming(
     yield "|".join(COLUMNAS_REPORTE) + "\n"
     for registro in iterar_para_exportar(db, filtros, fecha_desde, fecha_hasta, tamano_lote):
         yield _fila_reporte(registro) + "\n"
-        
-from app.services.consistencia import debe_archivar_sigi
 
 COLUMNAS_CONSISTENCIA_SIGI = [
     "EXPEDIENTE",
@@ -440,52 +378,56 @@ COLUMNAS_CONSISTENCIA_SIGI = [
     "DETERMINACION_FINAL",
 ]
 
-
 def buscar_para_consistencia_sigi(db):
-    """Sólo actas que SIGI ya está siguiendo activamente (estado_sigi
-    distinto de 'No Cargada') Y para las que corresponde archivar en SIGI
-    (DETERMINACION_FINAL = 'Archivar', ver debe_archivar_sigi). Las que
-    no tienen una determinación clara (null) quedan afuera del reporte."""
+    """Devuelve pares (registro, vinculo) -- uno por CADA vínculo SIGI
+    activo (distinto de 'No Cargada') para el que corresponde archivar
+    (ver debe_archivar_sigi_vinculo, evaluado por vínculo individual)."""
     registros = (
         db.query(models.Registro)
-        .filter(models.Registro.estado_sigi != models.EstadoSigi.no_cargada)
+        .filter(
+            models.Registro.vinculos_sigi.any(
+                models.VinculoSigi.estado_sigi != models.EstadoSigi.no_cargada
+            )
+        )
+        .options(selectinload(models.Registro.vinculos_sigi))
         .order_by(models.Registro.fecha_hora.desc().nullslast(), models.Registro.id.desc())
         .all()
     )
-    return [r for r in registros if debe_archivar_sigi(r)]
+    pares = []
+    for r in registros:
+        for v in r.vinculos_sigi:
+            if v.estado_sigi != models.EstadoSigi.no_cargada and debe_archivar_sigi_vinculo(r, v):
+                pares.append((r, v))
+    return pares
 
-def _fila_consistencia_sigi(registro) -> str:
-    consistente = registro.consistente
-    if consistente is True:
-        consistencia = "CONSISTENTE"
-    elif consistente is False:
-        consistencia = "INCONSISTENTE"
-    else:
-        consistencia = "PENDIENTE"
-
-    determinacion = "Archivar" if debe_archivar_sigi(registro) else ""
-
+def _fila_consistencia_sigi(registro, vinculo) -> str:
+    consistencia = (
+        "INCONSISTENTE" if vinculo.consistente is False
+        else "CONSISTENTE" if vinculo.consistente is True
+        else "PENDIENTE"
+    )
     fila = [
-        registro.expediente,
-        registro.acta,
+        vinculo.expediente,
+        vinculo.acta_sigi or registro.acta,
         _estado(registro.estado_semyt),
         _estado(registro.estado_sigemi),
-        _estado(registro.estado_sigi),
+        _estado(vinculo.estado_sigi),
         consistencia,
-        determinacion,
+        "Archivar",
     ]
-    return "|".join(_limpiar(valor) for valor in fila)
-
-
-def generar_reporte_consistencia_sigi(registros) -> str:
+    return "|".join(_limpiar(v) for v in fila)
+ 
+ 
+def generar_reporte_consistencia_sigi(pares) -> str:
     lineas = ["|".join(COLUMNAS_CONSISTENCIA_SIGI)]
-    for registro in registros:
-        lineas.append(_fila_consistencia_sigi(registro))
+    for registro, vinculo in pares:
+        lineas.append(_fila_consistencia_sigi(registro, vinculo))
     return "\n".join(lineas) + "\n"
+ 
 # ---------------------------------------------------------------------------
 # Helper común
 # ---------------------------------------------------------------------------
-
+ 
 def _registros_con_vinculo_origen(db, origen: str):
     """Registros que tienen AL MENOS un vínculo SIGI del origen pedido
     ('duplicada' o 'reescrita'). Trae TODOS los vínculos de cada registro
@@ -499,36 +441,35 @@ def _registros_con_vinculo_origen(db, origen: str):
         .order_by(models.Registro.acta.asc(), models.Registro.id.asc())
         .all()
     )
-
-
+ 
+ 
 def buscar_para_reescritas_sigi(db):
     return _registros_con_vinculo_origen(db, "reescrita")
-
-
+ 
+ 
 def buscar_para_duplicadas_sigi(db):
     return _registros_con_vinculo_origen(db, "duplicada")
-
-
+ 
+ 
 COLUMNAS_REESCRITAS_SIGI = [
     "EXPEDIENTE", "NUMERO_ACTA", "ESTADO_SEMYT", "ESTADO_SIGEMI", "ESTADO_SIGI",
     "CONSISTENCIA", "REESCRITA", "IDX_EXPEDIENTE", "IDX_ESTADO_SIGI", "DETERMINACION_FINAL",
 ]
-
+ 
 COLUMNAS_DUPLICADAS_SIGI = [
     "EXPEDIENTE", "NUMERO_ACTA", "ESTADO_SEMYT", "ESTADO_SIGEMI", "ESTADO_SIGI",
     "CONSISTENCIA", "DUPLICADA", "IDX_EXPEDIENTE", "IDX_ESTADO_SIGI", "DETERMINACION_FINAL",
 ]
-
-
-def _fila_vinculo_sigi(registro, vinculo, idx_expediente: int, flag_nombre: str) -> str:
+ 
+ 
+def _fila_vinculo_sigi(registro, vinculo, otro_expediente: str, otro_estado_sigi: str) -> str:
     consistencia = (
         "INCONSISTENTE" if vinculo.consistente is False
         else "CONSISTENTE" if vinculo.consistente is True
         else "PENDIENTE"
     )
     numero_acta = vinculo.acta_sigi or registro.acta
-    idx_estado_sigi = ORDEN_ESTADO_SIGI.get(vinculo.estado_sigi, "")
-
+ 
     fila = [
         vinculo.expediente,
         numero_acta,
@@ -537,43 +478,69 @@ def _fila_vinculo_sigi(registro, vinculo, idx_expediente: int, flag_nombre: str)
         _estado(vinculo.estado_sigi),
         consistencia,
         "True",  # REESCRITA o DUPLICADA, según flag_nombre -- el valor va siempre en la misma columna
-        str(idx_expediente),
-        str(idx_estado_sigi),
+        otro_expediente,     # IDX_EXPEDIENTE: el/los OTRO(S) expediente(s) vinculado(s) a la misma acta
+        otro_estado_sigi,    # IDX_ESTADO_SIGI: estado SIGI de ese/esos otro(s) expediente(s)
         "Archivar",
     ]
     return "|".join(_limpiar(v) for v in fila)
-
-
-def _generar_reporte_vinculos_sigi(registros, columnas) -> str:
+ 
+ 
+def _generar_reporte_vinculos_sigi(registros, columnas):
     """
-    Una fila por VÍNCULO (no por registro): si un acta tiene 3 expedientes
-    en SIGI, aparecen 3 filas con IDX_EXPEDIENTE=1,2,3. Filtros aplicados
-    fila por fila:
+    Una fila por VÍNCULO (no por registro): si un acta tiene varios
+    expedientes en SIGI, aparece una fila por cada vínculo que pasa los
+    filtros. IDX_EXPEDIENTE / IDX_ESTADO_SIGI muestran el/los OTRO(S)
+    expediente(s) de la misma acta (y su estado SIGI) -- no el propio,
+    que ya está en las columnas EXPEDIENTE/ESTADO_SIGI. Si un vínculo no
+    tiene ningún otro expediente vinculado en la misma acta, no hay nada
+    que archivar/reescribir en relación a otro, así que esa fila se
+    saltea directamente.
+ 
+    Filtros aplicados fila por fila:
       - expediente vacío -> se saltea (no debería pasar, expediente es
         NOT NULL en vinculos_sigi, pero se deja como defensa).
       - estado_sigi == 'No Cargada' -> se saltea (pedido explícito).
       - consistente distinto de False -> se saltea (sólo interesa lo
         inconsistente, que es lo que hay que archivar).
+      - sin otro expediente vinculado en la misma acta -> se saltea.
+ 
+    Devuelve None si no quedó ninguna fila de datos (sólo encabezado):
+    en ese caso no hay nada para descargar.
     """
     lineas = ["|".join(columnas)]
     for registro in registros:
         vinculos_ordenados = sorted(
             registro.vinculos_sigi, key=lambda v: _clave_orden_expediente(v.expediente)
         )
-        for idx, vinculo in enumerate(vinculos_ordenados, start=1):
+        for vinculo in vinculos_ordenados:
             if not vinculo.expediente:
                 continue
             if vinculo.estado_sigi == models.EstadoSigi.no_cargada:
                 continue
             if vinculo.consistente is not False:
                 continue
-            lineas.append(_fila_vinculo_sigi(registro, vinculo, idx, ""))
+ 
+            otros = [
+                v for v in vinculos_ordenados
+                if v is not vinculo and v.expediente
+            ]
+            if not otros:
+                continue
+ 
+            otro_expediente = ", ".join(v.expediente for v in otros)
+            otro_estado_sigi = ", ".join(_estado(v.estado_sigi) for v in otros)
+ 
+            lineas.append(_fila_vinculo_sigi(registro, vinculo, otro_expediente, otro_estado_sigi))
+ 
+    if len(lineas) == 1:
+        return None
+ 
     return "\n".join(lineas) + "\n"
-
-
-def generar_reporte_reescritas_sigi(registros) -> str:
+ 
+ 
+def generar_reporte_reescritas_sigi(registros):
     return _generar_reporte_vinculos_sigi(registros, COLUMNAS_REESCRITAS_SIGI)
-
-
-def generar_reporte_duplicadas_sigi(registros) -> str:
+ 
+ 
+def generar_reporte_duplicadas_sigi(registros):
     return _generar_reporte_vinculos_sigi(registros, COLUMNAS_DUPLICADAS_SIGI)

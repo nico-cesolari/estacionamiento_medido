@@ -534,11 +534,17 @@ tbody tr:hover { background: #fafafa; }
 }
 .expediente-cell .sub { color: var(--texto-suave); font-size: 12px; }
 
+.vinculo-sigi-item {
+  width: 100%;
+  box-sizing: border-box;
+}
+
 .vinculo-sigi-item + .vinculo-sigi-item {
   margin-top: 6px;
   padding-top: 6px;
   border-top: 1px dashed var(--borde);
 }
+
 .badge-duplicada-sigi {
   display: inline-block;
   font-size: 0.7rem;
@@ -549,7 +555,9 @@ tbody tr:hover { background: #fafafa; }
   color: var(--rojo-texto);
   border: 1px solid var(--rojo-borde);
   vertical-align: middle;
+  margin-left: 8px;
 }
+
 .badge-reescrita-sigi {
   display: inline-block;
   font-size: 0.7rem;
@@ -560,7 +568,9 @@ tbody tr:hover { background: #fafafa; }
   color: var(--violeta-texto);
   border: 1px solid var(--violeta-borde);
   vertical-align: middle;
+  margin-left: 8px;
 }
+
 .sigi-otros-expedientes {
   font-style: italic;
 }
@@ -738,6 +748,20 @@ select.estado-select {
   border-color: var(--borde) !important;
 }
 
+.estado-categoria-eliminada {
+  background: var(--amarillo-bg) !important;
+  color: var(--amarillo-texto) !important;
+  border-color: var(--amarillo-borde) !important;
+  opacity: 0.5;
+}
+
+/* Cuando una fila muestra más de un estado SEMyT (caso reescrita) */
+.estado-multiple {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
 /* Motivo de archivo (SIGEMI): sólo aparece cuando el estado es "Archivado". */
 select.motivo-archivo-select {
   font-size: 12px;
@@ -750,6 +774,7 @@ select.motivo-archivo-select {
   width: 100%;
   min-width: 150px;
 }
+
 .motivo-archivo-texto { display: block; font-size: 12px; color: var(--texto-suave); margin-top: 2px; }
 /* Consistencia entre SIGEMI y SEMyT */
 .consistencia {
@@ -852,6 +877,7 @@ select.motivo-archivo-select {
 }
 .pagina-input[type="number"] {
   -moz-appearance: textfield;
+  appearance: none;
 }
 .pagina-label { color: var(--texto-suave); line-height: 34px; }
 
@@ -892,6 +918,14 @@ thead th:last-child, tbody td:last-child {
   border-radius: 4px;
   padding: 1px 6px;
   font-size: 0.75rem;
+}
+
+.badge-duplicada-sigi,
+.badge-reescrita-sigi,
+.badge-duplicada,
+.badge-reescrita {
+  position: relative;
+  top: -1.5px;
 }
 
 /*boton Inconsistencia sigi*/

@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.models import models
 from app.services.sistemas.comun.texto import limpiar_patente as _normalizar_patente_texto
+from sqlalchemy.orm import selectinload
 
 # ---------------------------------------------------------------------------
 # Normalización
@@ -127,6 +128,14 @@ def _query_grupos_reescritos(db: Session):
             models.Registro.fecha_hora.isnot(None),
             models.Registro.direccion.isnot(None),
             models.Registro.direccion != "",
+            # Ver nota en models.py::_condiciones_grupo_reescritura: una
+            # acta Rechazada en SEMyT no es una reescritura real -- es
+            # una carga repetida a mano, no el mismo trámite con otro
+            # número. No debe ni formar grupo ni arrastrar a otras.
+            or_(
+                models.Registro.estado_semyt.is_(None),
+                models.Registro.estado_semyt != models.EstadoSemyt.rechazada,
+            ),
         )
         .group_by(
             patente_norm,
@@ -197,6 +206,13 @@ def calcular_actas_reescritas(
                 patente_norm_col == patente_norm,
                 dia_col == dia,
                 direccion_norm_col == direccion_norm,
+                # Misma exclusión que _query_grupos_reescritos: una acta
+                # Rechazada no es reescritura real, no se marca ni se
+                # cuenta como parte del grupo.
+                or_(
+                    models.Registro.estado_semyt.is_(None),
+                    models.Registro.estado_semyt != models.EstadoSemyt.rechazada,
+                ),
             )
             .order_by(
                 models.Registro.fecha_hora,
@@ -292,11 +308,44 @@ def aplicar_filtro_patente(query, patente: str, negar: bool = False, exacto: boo
     return query.filter(positiva)
 
 def aplicar_filtro_duplicadas(query, db: Session):
+    """
+    Duplicada en CUALQUIERA de los dos sentidos:
+      - "SEMyT": el mismo Nº de acta aparece en más de un Registro.
+      - "SIGI": el mismo acta ya existía en la base con OTRO expediente
+        SIGI (VinculoSigi.origen == 'duplicada', ver
+        llenar_actas_sigi.py::_procesar_expediente_encontrado).
+    Se devuelven consistentes E inconsistentes (a diferencia del reporte
+    "Exportar Actas > Duplicadas SIGI", que sólo trae inconsistentes).
+    Se excluyen las actas Rechazadas en SEMyT.
+    """
     actas_duplicadas = _query_actas_duplicadas(db)
     return query.filter(
-        models.Registro.acta.in_(actas_duplicadas)
+        or_(
+            models.Registro.acta.in_(actas_duplicadas),
+            models.Registro.vinculos_sigi.any(models.VinculoSigi.origen == "duplicada"),
+        ),
+        or_(
+            models.Registro.estado_semyt.is_(None),
+            models.Registro.estado_semyt != models.EstadoSemyt.rechazada,
+        ),
     )
 
+def aplicar_filtro_reescritas(query):
+    """Mismo criterio que aplicar_filtro_duplicadas, para reescrituras:
+    combina Registro.reescrita ("SEMyT", ver calcular_actas_reescritas)
+    con VinculoSigi.origen == 'reescrita' ("SIGI"). Consistentes e
+    inconsistentes, salvo Rechazada en SEMyT."""
+    return query.filter(
+        or_(
+            models.Registro.reescrita.is_(True),
+            models.Registro.vinculos_sigi.any(models.VinculoSigi.origen == "reescrita"),
+        ),
+        or_(
+            models.Registro.estado_semyt.is_(None),
+            models.Registro.estado_semyt != models.EstadoSemyt.rechazada,
+        ),
+    )
+    
 TAMANO_LOTE_DUPLICADAS = 1000
 
 def calcular_actas_duplicadas(db: Session, tamano_lote: int = TAMANO_LOTE_DUPLICADAS) -> dict:
@@ -353,28 +402,36 @@ def calcular_actas_duplicadas(db: Session, tamano_lote: int = TAMANO_LOTE_DUPLIC
 def anotar_info_relaciones(db: Session, registros: List["models.Registro"]):
     """Agrega, en memoria (no son columnas), otros_expedientes_duplicada y
     otros_expedientes_reescritura: lista de expedientes de las filas
-    hermanas del mismo grupo, para mostrar en la misma fila del frontend."""
+    hermanas del mismo grupo, para mostrar en la misma fila del frontend.
+
+    NOTA: expediente ya no es una columna SQL (vive en vinculos_sigi,
+    ver Parte 1-4) -- por eso acá se traen los Registro completos (con
+    sus vinculos_sigi precargados) en vez de pedir Registro.expediente
+    como columna suelta dentro de un db.query(...)."""
     grupos_dup = {r.grupo_duplicada for r in registros if r.grupo_duplicada}
     grupos_re = {r.grupo_reescritura for r in registros if r.grupo_reescritura}
 
     hermanos_dup = {}
     if grupos_dup:
-        for grupo, expediente, id_ in (
-            db.query(models.Registro.grupo_duplicada, models.Registro.expediente, models.Registro.id)
+        filas = (
+            db.query(models.Registro)
             .filter(models.Registro.grupo_duplicada.in_(grupos_dup))
+            .options(selectinload(models.Registro.vinculos_sigi))
             .all()
-        ):
-            hermanos_dup.setdefault(grupo, []).append((id_, expediente))
+        )
+        for r in filas:
+            hermanos_dup.setdefault(r.grupo_duplicada, []).append((r.id, r.expediente))
 
     hermanos_re = {}
     if grupos_re:
-        for grupo, expediente, acta, id_ in (
-            db.query(models.Registro.grupo_reescritura, models.Registro.expediente,
-                      models.Registro.acta, models.Registro.id)
+        filas = (
+            db.query(models.Registro)
             .filter(models.Registro.grupo_reescritura.in_(grupos_re))
+            .options(selectinload(models.Registro.vinculos_sigi))
             .all()
-        ):
-            hermanos_re.setdefault(grupo, []).append((id_, expediente, acta))
+        )
+        for r in filas:
+            hermanos_re.setdefault(r.grupo_reescritura, []).append((r.id, r.expediente, r.acta, r.estado_semyt))
 
     for r in registros:
         r.otros_expedientes_duplicada = [
@@ -383,5 +440,32 @@ def anotar_info_relaciones(db: Session, registros: List["models.Registro"]):
 
         r.otros_expedientes_reescritura = [
             f"{exp or 'Sin expediente'} (ACT-{acta})"
-            for (id_, exp, acta) in hermanos_re.get(r.grupo_reescritura, []) if id_ != r.id
+            for (id_, exp, acta, _estado_semyt) in hermanos_re.get(r.grupo_reescritura, []) if id_ != r.id
         ] if r.grupo_reescritura else None
+
+        # -----------------------------------------------------------------
+        # SEMyT "Eliminada por reescritura": no es un estado nuevo -- sigue
+        # siendo estado_semyt == 'Eliminada'. Lo que faltaba mostrar es A
+        # QUÉ acta se reescribió y en qué estado_semyt está esa otra acta
+        # HOY. Se resuelve con el mismo grupo_reescritura que ya arma
+        # otros_expedientes_reescritura -- no hace falta guardar nada nuevo
+        # en la tabla, ni un valor de enum nuevo: se recalcula solo cada
+        # vez que se lista (así nunca queda desactualizado si la acta
+        # asociada cambia de estado más adelante).
+        # AJUSTAR: si algún acta Eliminada tiene MÁS de un hermano vivo en
+        # el mismo grupo (caso raro -- 3+ actas para el mismo
+        # patente+día+dirección), se muestra el primero que NO esté
+        # también eliminado; si no hay ninguno así, no se puede saber cuál
+        # es "la vigente" y se deja sin estado (sólo el número de acta).
+        # -----------------------------------------------------------------
+        r.acta_semyt_asociada = None
+        r.estado_semyt_asociado = None
+        if r.estado_semyt == models.EstadoSemyt.eliminada and r.grupo_reescritura:
+            hermanos = [h for h in hermanos_re.get(r.grupo_reescritura, []) if h[0] != r.id]
+            candidato = next(
+                (h for h in hermanos if h[3] != models.EstadoSemyt.eliminada),
+                hermanos[0] if hermanos else None,
+            )
+            if candidato is not None:
+                r.acta_semyt_asociada = candidato[2]
+                r.estado_semyt_asociado = candidato[3]

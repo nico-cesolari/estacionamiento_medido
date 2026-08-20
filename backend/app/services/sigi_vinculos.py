@@ -17,6 +17,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional, List
 
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.models import models
@@ -104,6 +105,14 @@ def buscar_registro_reescrito(
             models.Registro.patente.isnot(None),
             models.Registro.direccion.isnot(None),
             models.Registro.fecha_hora.isnot(None),
+            # Mismo criterio que models.py::_condiciones_grupo_reescritura
+            # y duplicados.py::_query_grupos_reescritos: una acta Rechazada
+            # en SEMyT no es una reescritura real -- es una carga repetida
+            # a mano, no debe matchear como candidata.
+            or_(
+                models.Registro.estado_semyt.is_(None),
+                models.Registro.estado_semyt != models.EstadoSemyt.rechazada,
+            ),
         )
         .all()
     )
